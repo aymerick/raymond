@@ -75,45 +75,35 @@ type Lexer struct {
 	tokens   chan Token // channel of scanned tokens
 	nextFunc lexFunc    // the next function to execute
 
-	pos     int // current scan position in input string
-	width   int // size of last rune scanned from input string
-	start   int // start position of the token we are scanning
-	lastPos int // position of last token retrieved by consummer
+	pos   int // current scan position in input string
+	width int // size of last rune scanned from input string
+	start int // start position of the token we are scanning
 }
 
 var (
 	// characters not allowed in an identifier
-	unallowedIDChars string
-
-	// regular expressions
-	rOpenRaw, rCloseRaw, rOpenUnescaped, rCloseUnescaped,
-	rOpenBlock, rOpenEndBlock, rOpenPartial,
-	rInverse, rOpenInverse, rOpenInverseChain, rOpen, rClose,
-	rOpenBlockParams, rID *regexp.Regexp
-)
-
-func init() {
 	unallowedIDChars = " \t!\"#%&'()*+,./;<=>@[\\]^`{|}~"
 
-	rOpenRaw = regexp.MustCompile(`^{{{{`)
-	rCloseRaw = regexp.MustCompile(`^}}}}`)
-	rOpenUnescaped = regexp.MustCompile(`^{{~?{`)
+	// regular expressions
+	rOpenRaw        = regexp.MustCompile(`^{{{{`)
+	rCloseRaw       = regexp.MustCompile(`^}}}}`)
+	rOpenUnescaped  = regexp.MustCompile(`^{{~?{`)
 	rCloseUnescaped = regexp.MustCompile(`^}~?}}`)
-	rOpenBlock = regexp.MustCompile(`^{{~?#`)
-	rOpenEndBlock = regexp.MustCompile(`^{{~?/`)
-	rOpenPartial = regexp.MustCompile(`^{{~?>`)
+	rOpenBlock      = regexp.MustCompile(`^{{~?#`)
+	rOpenEndBlock   = regexp.MustCompile(`^{{~?/`)
+	rOpenPartial    = regexp.MustCompile(`^{{~?>`)
 	// {{^}} or {{else}}
-	rInverse = regexp.MustCompile(`^({{~?\^\s*~?}}|{{~?\s*else\s*~?}})`)
-	rOpenInverse = regexp.MustCompile(`^{{~?\^`)
+	rInverse          = regexp.MustCompile(`^({{~?\^\s*~?}}|{{~?\s*else\s*~?}})`)
+	rOpenInverse      = regexp.MustCompile(`^{{~?\^`)
 	rOpenInverseChain = regexp.MustCompile(`^{{~?\s*else`)
 	// {{ or {{&
-	rOpen = regexp.MustCompile(`^{{~?&?`)
+	rOpen  = regexp.MustCompile(`^{{~?&?`)
 	rClose = regexp.MustCompile(`^~?}}`)
 
 	rOpenBlockParams = regexp.MustCompile(`^as\s+\|`)
 
 	rID = regexp.MustCompile(`^[^` + regexp.QuoteMeta(unallowedIDChars) + `]+`)
-}
+)
 
 // scans given input
 func Scan(input string, name string) *Lexer {
@@ -131,19 +121,18 @@ func Scan(input string, name string) *Lexer {
 // returns the next scanned token
 func (l *Lexer) NextToken() Token {
 	result := <-l.tokens
-	l.lastPos = result.pos
 
 	return result
 }
 
-// runs lexical analysis
+// starts lexical analysis
 func (l *Lexer) run() {
 	for l.nextFunc = lexContent; l.nextFunc != nil; {
 		l.nextFunc = l.nextFunc(l)
 	}
 }
 
-// returns next rune from input, or eof of there is nothing left to scan
+// returns next character from input, or eof of there is nothing left to scan
 func (l *Lexer) next() rune {
 	if l.pos >= len(l.input) {
 		l.width = 0
@@ -165,14 +154,14 @@ func (l *Lexer) emit(kind TokenKind) {
 	l.start = l.pos
 }
 
-// returns but does not consume the next rune in the input
+// returns but does not consume the next character in the input
 func (l *Lexer) peek() rune {
 	r := l.next()
 	l.backup()
 	return r
 }
 
-// steps back one rune
+// steps back one character
 // @warning Can only be called once per call of next
 func (l *Lexer) backup() {
 	l.pos -= l.width
@@ -303,6 +292,26 @@ func lexExpression(l *Lexer) lexFunc {
 		return lexCloseMustache
 	}
 
+	// search some patterns before advancing scanning position
+	if l.matchRegexp(rOpenBlockParams) {
+		l.pos += len(l.findRegexp(rOpenBlockParams))
+		l.emit(TokenOpenBlockParams)
+		return lexExpression
+	}
+
+	if l.isString("true") {
+		l.pos += len("true")
+		l.emit(TokenBoolean)
+		return lexExpression
+	}
+
+	if l.isString("false") {
+		l.pos += len("false")
+		l.emit(TokenBoolean)
+		return lexExpression
+	}
+
+	// ok, let's scan next character
 	switch r := l.next(); {
 	case r == eof:
 		return l.errorf("Unclosed expression")
@@ -321,22 +330,13 @@ func lexExpression(l *Lexer) lexFunc {
 		return lexString
 	case r == '/' || r == '.':
 		l.emit(TokenSep)
-	case l.matchRegexp(rOpenBlockParams):
-		l.pos += len(l.findRegexp(rOpenBlockParams))
-		l.emit(TokenOpenBlockParams)
 	case r == '|':
 		l.emit(TokenCloseBlockParams)
-	case l.isString("true"):
-		l.pos += len("true")
-		l.emit(TokenBoolean)
-	case l.isString("false"):
-		l.pos += len("false")
-		l.emit(TokenBoolean)
 	case strings.IndexRune(unallowedIDChars, r) < 0:
 		l.backup()
 		return lexIdentifier
 	default:
-		return l.errorf("Unrecognized character in expression: %#U", r)
+		return l.errorf("Unexpected character in expression: %#U", r)
 	}
 
 	return lexExpression
@@ -371,6 +371,9 @@ func lexString(l *Lexer) lexFunc {
 	// get string delimiter
 	delim := l.next()
 
+	// ignore delimiter
+	l.ignore()
+
 Loop:
 	for {
 		switch l.next() {
@@ -386,7 +389,15 @@ Loop:
 		}
 	}
 
+	// remove end delimiter
+	l.backup()
+
+	// emit string
 	l.emit(TokenString)
+
+	// skip end delimiter
+	l.next()
+	l.ignore()
 
 	return lexExpression
 }
