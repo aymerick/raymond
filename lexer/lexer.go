@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 )
 
@@ -172,6 +173,25 @@ func (l *Lexer) ignore() {
 	l.start = l.pos
 }
 
+// scans the next character if it is included in given string
+func (l *Lexer) accept(valid string) bool {
+	if strings.IndexRune(valid, l.next()) >= 0 {
+		return true
+	}
+
+	l.backup()
+
+	return false
+}
+
+// scans all following characters that are part of given string
+func (l *Lexer) acceptRun(valid string) {
+	for strings.IndexRune(valid, l.next()) >= 0 {
+	}
+
+	l.backup()
+}
+
 func (l *Lexer) errorf(format string, args ...interface{}) lexFunc {
 	l.tokens <- Token{TokenError, l.start, fmt.Sprintf(format, args...)}
 	return nil
@@ -332,26 +352,15 @@ func lexExpression(l *Lexer) lexFunc {
 		l.emit(TokenSep)
 	case r == '|':
 		l.emit(TokenCloseBlockParams)
+	case r == '+' || r == '-' || (r >= '0' && r <= '9'):
+		l.backup()
+		return lexNumber
 	case strings.IndexRune(unallowedIDChars, r) < 0:
 		l.backup()
 		return lexIdentifier
 	default:
 		return l.errorf("Unexpected character in expression: %#U", r)
 	}
-
-	return lexExpression
-}
-
-// scans an ID
-func lexIdentifier(l *Lexer) lexFunc {
-	str := l.findRegexp(rID)
-	if len(str) == 0 {
-		// this is rotten
-		panic("Identifier expected")
-	}
-
-	l.pos += len(str)
-	l.emit(TokenID)
 
 	return lexExpression
 }
@@ -366,7 +375,7 @@ func lexSpaces(l *Lexer) lexFunc {
 	return lexExpression
 }
 
-// scans a quoted string
+// @note partly borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
 func lexString(l *Lexer) lexFunc {
 	// get string delimiter
 	delim := l.next()
@@ -402,7 +411,84 @@ Loop:
 	return lexExpression
 }
 
+// lexNumber scans a number: decimal, octal, hex, float, or imaginary. This
+// isn't a perfect number scanner - for instance it accepts "." and "0x0.2"
+// and "089" - but when it's wrong the input is invalid and the parser (via
+// strconv) will notice.
+//
+// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
+func lexNumber(l *Lexer) lexFunc {
+	if !l.scanNumber() {
+		return l.errorf("bad number syntax: %q", l.input[l.start:l.pos])
+	}
+	if sign := l.peek(); sign == '+' || sign == '-' {
+		// Complex: 1+2i. No spaces, must end in 'i'.
+		if !l.scanNumber() || l.input[l.pos-1] != 'i' {
+			return l.errorf("bad number syntax: %q", l.input[l.start:l.pos])
+		}
+		l.emit(TokenNumber)
+	} else {
+		l.emit(TokenNumber)
+	}
+	return lexExpression
+}
+
+// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
+func (l *Lexer) scanNumber() bool {
+	// Optional leading sign.
+	l.accept("+-")
+
+	// Is it hex?
+	digits := "0123456789"
+
+	if l.accept("0") && l.accept("xX") {
+		digits = "0123456789abcdefABCDEF"
+	}
+
+	l.acceptRun(digits)
+
+	if l.accept(".") {
+		l.acceptRun(digits)
+	}
+
+	if l.accept("eE") {
+		l.accept("+-")
+		l.acceptRun("0123456789")
+	}
+
+	// Is it imaginary?
+	l.accept("i")
+
+	// Next thing mustn't be alphanumeric.
+	if isAlphaNumeric(l.peek()) {
+		l.next()
+		return false
+	}
+
+	return true
+}
+
+// scans an ID
+func lexIdentifier(l *Lexer) lexFunc {
+	str := l.findRegexp(rID)
+	if len(str) == 0 {
+		// this is rotten
+		panic("Identifier expected")
+	}
+
+	l.pos += len(str)
+	l.emit(TokenID)
+
+	return lexExpression
+}
+
 // returns true if given character is a whitespace
 func isSpace(r rune) bool {
 	return r == ' ' || r == '\t'
+}
+
+// isAlphaNumeric reports whether r is an alphabetic, digit, or underscore.
+// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
+func isAlphaNumeric(r rune) bool {
+	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }

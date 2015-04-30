@@ -9,6 +9,7 @@ import (
 const (
 	DUMP_ALL_TOKENS_VAL = true
 	DUMP_TOKEN_POS      = false
+	VERBOSE             = false
 )
 
 type lexTest struct {
@@ -83,6 +84,7 @@ func tokContent(val string) Token { return Token{TokenContent, 0, val} }
 func tokID(val string) Token      { return Token{TokenID, 0, val} }
 func tokSep(val string) Token     { return Token{TokenSep, 0, val} }
 func tokString(val string) Token  { return Token{TokenString, 0, val} }
+func tokNumber(val string) Token  { return Token{TokenNumber, 0, val} }
 func tokInverse(val string) Token { return Token{TokenInverse, 0, val} }
 func tokBool(val string) Token    { return Token{TokenBoolean, 0, val} }
 func tokError(val string) Token   { return Token{TokenError, 0, val} }
@@ -322,26 +324,26 @@ var lexTests = []lexTest{
 	// 	`{{ foo 'bar\\'baz' }}`,
 	// 	[]Token{},
 	// },
-	// {
-	// 	`tokenizes numbers`,
-	// 	`{{ foo 1 }}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`tokenizes floats`,
-	// 	`{{ foo 1.1 }}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`tokenizes negative numbers`,
-	// 	`{{ foo -1 }}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`tokenizes negative floats`,
-	// 	`{{ foo -1.1 }}`,
-	// 	[]Token{},
-	// },
+	{
+		`tokenizes numbers`,
+		`{{ foo 1 }}`,
+		[]Token{tokOpen, tokID("foo"), tokNumber("1"), tokClose, tokEOF},
+	},
+	{
+		`tokenizes floats`,
+		`{{ foo 1.1 }}`,
+		[]Token{tokOpen, tokID("foo"), tokNumber("1.1"), tokClose, tokEOF},
+	},
+	{
+		`tokenizes negative numbers`,
+		`{{ foo -1 }}`,
+		[]Token{tokOpen, tokID("foo"), tokNumber("-1"), tokClose, tokEOF},
+	},
+	{
+		`tokenizes negative floats`,
+		`{{ foo -1.1 }}`,
+		[]Token{tokOpen, tokID("foo"), tokNumber("-1.1"), tokClose, tokEOF},
+	},
 	{
 		`tokenizes boolean true`,
 		`{{ foo true }}`,
@@ -367,11 +369,11 @@ var lexTests = []lexTest{
 		`{{ foo bar baz=bat }}`,
 		[]Token{tokOpen, tokID("foo"), tokID("bar"), tokID("baz"), tokEquals, tokID("bat"), tokClose, tokEOF},
 	},
-	// {
-	// 	`tokenizes hash arguments (3)`,
-	// 	`{{ foo bar baz=1 }}`,
-	// 	[]Token{},
-	// },
+	{
+		`tokenizes hash arguments (3)`,
+		`{{ foo bar baz=1 }}`,
+		[]Token{tokOpen, tokID("foo"), tokID("bar"), tokID("baz"), tokEquals, tokNumber("1"), tokClose, tokEOF},
+	},
 	{
 		`tokenizes hash arguments (4)`,
 		`{{ foo bar baz=true }}`,
@@ -442,11 +444,11 @@ var lexTests = []lexTest{
 		`{{foo (bar (lol rofl)) (baz)}}`,
 		[]Token{tokOpen, tokID("foo"), tokOpenSexpr, tokID("bar"), tokOpenSexpr, tokID("lol"), tokID("rofl"), tokCloseSexpr, tokCloseSexpr, tokOpenSexpr, tokID("baz"), tokCloseSexpr, tokClose, tokEOF},
 	},
-	// {
-	// 	`tokenizes nested subexpressions: literals`,
-	// 	`{{foo (bar (lol true) false) (baz 1) (blah 'b') (blorg \"c\")}}`,
-	// 	[]Token{tokOpen, tokID("foo"), tokOpenSexpr, tokID("bar"), tokOpenSexpr, tokID("lol"), tokBool("true"), tokCloseSexpr, tokBool("false"), tokCloseSexpr, ".........", tokClose, tokEOF},
-	// },
+	{
+		`tokenizes nested subexpressions: literals`,
+		`{{foo (bar (lol true) false) (baz 1) (blah 'b') (blorg "c")}}`,
+		[]Token{tokOpen, tokID("foo"), tokOpenSexpr, tokID("bar"), tokOpenSexpr, tokID("lol"), tokBool("true"), tokCloseSexpr, tokBool("false"), tokCloseSexpr, tokOpenSexpr, tokID("baz"), tokNumber("1"), tokCloseSexpr, tokOpenSexpr, tokID("blah"), tokString("b"), tokCloseSexpr, tokOpenSexpr, tokID("blorg"), tokString("c"), tokCloseSexpr, tokClose, tokEOF},
+	},
 	{
 		`tokenizes block params (1)`,
 		`{{#foo as |bar|}}`,
@@ -514,8 +516,10 @@ func equal(i1, i2 []Token, checkPos bool) bool {
 
 func TestLexer(t *testing.T) {
 	for _, test := range lexTests {
-		log.Printf("\n\n**********************************")
-		log.Printf("Testing: %s", test.name)
+		if VERBOSE {
+			log.Printf("\n\n**********************************")
+			log.Printf("Testing: %s", test.name)
+		}
 		tokens := collect(&test)
 		if !equal(tokens, test.tokens, false) {
 			t.Errorf("Test '%s' failed with input: '%s'\nexpected\n\t%v\ngot\n\t%+v\n", test.name, test.input, test.tokens, tokens)
