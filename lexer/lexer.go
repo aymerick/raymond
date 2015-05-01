@@ -220,14 +220,17 @@ func lexContent(l *Lexer) lexFunc {
 
 	// find opening mustaches
 	if str := l.findRegexp(rOpenCommentDash); str != "" {
+		// {{!--
 		l.closeComment = rCloseCommentDash
 
 		next = lexComment
 	} else if str := l.findRegexp(rOpenComment); str != "" {
+		// {{!
 		l.closeComment = rCloseComment
 
 		next = lexComment
 	} else if l.isString(OPEN_MUSTACHE) {
+		// {{
 		next = lexOpenMustache
 	}
 
@@ -248,9 +251,8 @@ func lexContent(l *Lexer) lexFunc {
 			l.emit(TokenContent)
 		}
 
-		l.emit(TokenEOF)
-
 		// this is over
+		l.emit(TokenEOF)
 		return nil
 	}
 
@@ -331,29 +333,32 @@ func lexExpression(l *Lexer) lexFunc {
 
 	// search some patterns before advancing scanning position
 	if str := l.findRegexp(rOpenBlockParams); str != "" {
+		// "as |"
 		l.pos += len(str)
 		l.emit(TokenOpenBlockParams)
 		return lexExpression
 	}
 
 	if l.isString("true") {
+		// true
 		l.pos += len("true")
 		l.emit(TokenBoolean)
 		return lexExpression
 	}
 
 	if l.isString("false") {
+		// false
 		l.pos += len("false")
 		l.emit(TokenBoolean)
 		return lexExpression
 	}
 
-	// ok, let's scan next character
+	// let's scan next character
 	switch r := l.next(); {
 	case r == eof:
 		return l.errorf("Unclosed expression")
-	case isSpace(r):
-		return lexSpaces
+	case isIgnorable(r):
+		return lexIgnorable
 	case r == '(':
 		l.emit(TokenOpenSexpr)
 	case r == ')':
@@ -398,9 +403,9 @@ func lexComment(l *Lexer) lexFunc {
 	return lexComment
 }
 
-// scans all following space characters and ignore them
-func lexSpaces(l *Lexer) lexFunc {
-	for isSpace(l.peek()) {
+// scans all following ignorable characters
+func lexIgnorable(l *Lexer) lexFunc {
+	for isIgnorable(l.peek()) {
 		l.next()
 	}
 	l.ignore()
@@ -515,9 +520,9 @@ func lexIdentifier(l *Lexer) lexFunc {
 	return lexExpression
 }
 
-// returns true if given character is a whitespace
-func isSpace(r rune) bool {
-	return r == ' ' || r == '\t'
+// returns true if given character is ignorable (ie. whitespace of line feed)
+func isIgnorable(r rune) bool {
+	return r == ' ' || r == '\t' || r == '\n'
 }
 
 // isAlphaNumeric reports whether r is an alphabetic, digit, or underscore.

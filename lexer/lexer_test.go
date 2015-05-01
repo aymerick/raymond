@@ -215,11 +215,11 @@ var lexTests = []lexTest{
 		`{{  foo  }}`,
 		[]Token{tokOpen, tokID("foo"), tokClose, tokEOF},
 	},
-	// {
-	// 	`tokenizes a simple mustache with line breaks as "OPEN ID ID CLOSE"`,
-	// 	`{{  foo  \n   bar }}`,
-	// 	[]Token{tokOpen, tokID("foo"), tokID("bar"), tokClose, tokEOF},
-	// },
+	{
+		`tokenizes a simple mustache with line breaks as "OPEN ID ID CLOSE"`,
+		"{{  foo  \n   bar }}",
+		[]Token{tokOpen, tokID("foo"), tokID("bar"), tokClose, tokEOF},
+	},
 	{
 		`tokenizes raw content as "CONTENT"`,
 		`foo {{ bar }} baz`,
