@@ -28,7 +28,7 @@ const (
 	TokenOpenInverseChain // [x] 17. OPEN_INVERSE_CHAIN: <mu>"{{"{LEFT_STRIP}?\s*"else"
 	TokenOpenPartial      // [x] 11. OPEN_PARTIAL: <mu>"{{"{LEFT_STRIP}?">"
 	TokenEndRawBlock      // [ ] 04. END_RAW_BLOCK: <raw>"{{{{/"[^\s!"#%-,\.\/;->@\[-\^`\{-~]+/[=}\s\/.]"}}}}"
-	TokenComment          // [ ] 06. COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" - 20. begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" - 21. COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
+	TokenComment          // [x] 06. COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" - 20. begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" - 21. COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
 
 	// inside mustaches
 	TokenOpenSexpr        // [x] 07. OPEN_SEXPR: <mu>"("
@@ -45,15 +45,16 @@ const (
 	TokenContent // [ ] 01. begin 'mu', begin 'emu', CONTENT: [^\x00]*?/("{{") - 02. CONTENT: [^\x00]+ - 03. CONTENT: <emu>[^\x00]{2,}?/("{{"|"\\{{"|"\\\\{{"|<<EOF>>) - 05: CONTENT: <raw>[^\x00]*?/("{{{{/")
 	TokenID      // [x] 24. ID: <mu>".." - 25. ID: <mu>"."/{LOOKAHEAD} - 39. ID: <mu>{ID} - 40. ID: <mu>'['[^\]]*']'
 	TokenString  // [x] 29. STRING: <mu>'"'("\\"["]|[^"])*'"' - 30. STRING: <mu>"'"("\\"[']|[^'])*"'"
-	TokenNumber  // [ ] 36. NUMBER: <mu>\-?[0-9]+(?:\.[0-9]+)?/{LITERAL_LOOKAHEAD}
+	TokenNumber  // [x] 36. NUMBER: <mu>\-?[0-9]+(?:\.[0-9]+)?/{LITERAL_LOOKAHEAD}
 	TokenBoolean // [x] 32. BOOLEAN: <mu>"true"/{LITERAL_LOOKAHEAD} - 33. BOOLEAN: <mu>"false"/{LITERAL_LOOKAHEAD}
 )
 
 const (
 	// mustache detection
-	OPEN_MUSTACHE        = "{{"
-	CLOSE_MUSTACHE       = "}}"
-	CLOSE_STRIP_MUSTACHE = "~}}"
+	ESCAPED_OPEN_MUSTACHE = "\\{{"
+	OPEN_MUSTACHE         = "{{"
+	CLOSE_MUSTACHE        = "}}"
+	CLOSE_STRIP_MUSTACHE  = "~}}"
 )
 
 const eof = -1
@@ -219,7 +220,14 @@ func lexContent(l *Lexer) lexFunc {
 	var next lexFunc
 
 	// find opening mustaches
-	if str := l.findRegexp(rOpenCommentDash); str != "" {
+	if l.isString(ESCAPED_OPEN_MUSTACHE) {
+		// check \\{{
+		l.backup()
+		if r := l.next(); r != '\\' {
+			// \{{
+			next = lexEscapedOpenMustache
+		}
+	} else if str := l.findRegexp(rOpenCommentDash); str != "" {
 		// {{!--
 		l.closeComment = rCloseCommentDash
 
@@ -257,6 +265,20 @@ func lexContent(l *Lexer) lexFunc {
 	}
 
 	// continue content scanning
+	return lexContent
+}
+
+// scanning \{{
+func lexEscapedOpenMustache(l *Lexer) lexFunc {
+	// ignore escape character
+	l.next()
+	l.ignore()
+
+	// scan mustaches
+	for l.peek() == '{' {
+		l.next()
+	}
+
 	return lexContent
 }
 

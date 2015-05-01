@@ -109,67 +109,67 @@ var tokOpenBlockParams = Token{TokenOpenBlockParams, 0, "as |"}
 var tokCloseBlockParams = Token{TokenCloseBlockParams, 0, "|"}
 
 var lexTests = []lexTest{
-	// cf. https://github.com/golang/go/blob/master/src/text/template/parse/lex_test.go
-	{"empty", "", []Token{tokEOF}},
-	{"spaces", " \t\n", []Token{tokContent(" \t\n"), tokEOF}},
-	{"content", `now is the time`, []Token{tokContent(`now is the time`), tokEOF}},
+	// // cf. https://github.com/golang/go/blob/master/src/text/template/parse/lex_test.go
+	// {"empty", "", []Token{tokEOF}},
+	// {"spaces", " \t\n", []Token{tokContent(" \t\n"), tokEOF}},
+	// {"content", `now is the time`, []Token{tokContent(`now is the time`), tokEOF}},
 
-	// cf. https://github.com/wycats/handlebars.js/blob/master/spec/tokenizer.js
+	// // cf. https://github.com/wycats/handlebars.js/blob/master/spec/tokenizer.js
+	// {
+	// 	`tokenizes a simple mustache as "OPEN ID CLOSE"`,
+	// 	`{{foo}}`,
+	// 	[]Token{tokOpen, tokID("foo"), tokClose, tokEOF},
+	// },
+	// {
+	// 	`supports unescaping with &`,
+	// 	`{{&bar}}`,
+	// 	[]Token{tokOpenAmp, tokID("bar"), tokClose, tokEOF},
+	// },
+	// {
+	// 	`supports unescaping with {{{`,
+	// 	`{{{bar}}}`,
+	// 	[]Token{tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokEOF},
+	// },
 	{
-		`tokenizes a simple mustache as "OPEN ID CLOSE"`,
-		`{{foo}}`,
-		[]Token{tokOpen, tokID("foo"), tokClose, tokEOF},
+		`supports escaping delimiters`,
+		"{{foo}} \\{{bar}} {{baz}}",
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} "), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
 	{
-		`supports unescaping with &`,
-		`{{&bar}}`,
-		[]Token{tokOpenAmp, tokID("bar"), tokClose, tokEOF},
+		`supports escaping multiple delimiters`,
+		"{{foo}} \\{{bar}} \\{{baz}}",
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} "), tokContent("{{baz}}"), tokEOF},
 	},
 	{
-		`supports unescaping with {{{`,
-		`{{{bar}}}`,
-		[]Token{tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokEOF},
+		`supports escaping a triple stash`,
+		"{{foo}} \\{{{bar}}} {{baz}}",
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{{bar}}} "), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
-	// {
-	// 	`supports escaping delimiters`,
-	// 	`{{foo}} \\{{bar}} {{baz}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`supports escaping multiple delimiters`,
-	// 	`{{foo}} \\{{bar}} \\{{baz}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`supports escaping a triple stash`,
-	// 	`{{foo}} \\{{{bar}}} {{baz}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`supports escaping escape character`,
-	// 	`{{foo}} \\\\{{bar}} {{baz}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`supports escaping multiple escape characters`,
-	// 	`{{foo}} \\\\{{bar}} \\\\{{baz}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`supports escaped mustaches after escaped escape characters`,
-	// 	`{{foo}} \\\\{{bar}} \\{{baz}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`supports escaped escape characters after escaped mustaches`,
-	// 	`{{foo}} \\{{bar}} \\\\{{baz}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`supports escaped escape character on a triple stash`,
-	// 	`{{foo}} \\\\{{{bar}}} {{baz}}`,
-	// 	[]Token{},
-	// },
+	{
+		`supports escaping escape character`,
+		"{{foo}} \\\\{{bar}} {{baz}}",
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\\\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokOpen, tokID("baz"), tokClose, tokEOF},
+	},
+	{
+		`supports escaping multiple escape characters`,
+		"{{foo}} \\\\{{bar}} \\\\{{baz}}",
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\\\"), tokOpen, tokID("bar"), tokClose, tokContent(" \\\\"), tokOpen, tokID("baz"), tokClose, tokEOF},
+	},
+	{
+		`supports escaped mustaches after escaped escape characters`,
+		"{{foo}} \\\\{{bar}} \\{{baz}}",
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\\\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokContent("{{baz}}"), tokEOF},
+	},
+	{
+		`supports escaped escape characters after escaped mustaches`,
+		"{{foo}} \\{{bar}} \\\\{{baz}}",
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} \\\\"), tokOpen, tokID("baz"), tokClose, tokEOF},
+	},
+	{
+		`supports escaped escape character on a triple stash`,
+		"{{foo}} \\\\{{{bar}}} {{baz}}",
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\\\"), tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokContent(" "), tokOpen, tokID("baz"), tokClose, tokEOF},
+	},
 	{
 		`tokenizes a simple path`,
 		`{{foo/bar}}`,
@@ -523,7 +523,7 @@ func TestLexer(t *testing.T) {
 		}
 		tokens := collect(&test)
 		if !equal(tokens, test.tokens, false) {
-			t.Errorf("Test '%s' failed with input: '%s'\nexpected\n\t%v\ngot\n\t%+v\n", test.name, test.input, test.tokens, tokens)
+			t.Errorf("Test '%s' failed\ninput:\n\t'%s'\nexpected\n\t%v\ngot\n\t%+v\n", test.name, test.input, test.tokens, tokens)
 		}
 	}
 }
