@@ -79,6 +79,8 @@ type Lexer struct {
 	pos   int // current scan position in input string
 	width int // size of last rune scanned from input string
 	start int // start position of the token we are scanning
+
+	closeComment *regexp.Regexp // regexp to scan close of current comment
 }
 
 var (
@@ -98,10 +100,15 @@ var (
 	rOpenInverse      = regexp.MustCompile(`^{{~?\^`)
 	rOpenInverseChain = regexp.MustCompile(`^{{~?\s*else`)
 	// {{ or {{&
-	rOpen  = regexp.MustCompile(`^{{~?&?`)
-	rClose = regexp.MustCompile(`^~?}}`)
-
+	rOpen            = regexp.MustCompile(`^{{~?&?`)
+	rClose           = regexp.MustCompile(`^~?}}`)
 	rOpenBlockParams = regexp.MustCompile(`^as\s+\|`)
+	// {{!--  ... --}}
+	rOpenCommentDash  = regexp.MustCompile(`^{{~?!--\s*`)
+	rCloseCommentDash = regexp.MustCompile(`^\s*--~?}}`)
+	// {{! ... }}
+	rOpenComment  = regexp.MustCompile(`^{{~?!\s*`)
+	rCloseComment = regexp.MustCompile(`^\s*~?}}`)
 
 	rID = regexp.MustCompile(`^[^` + regexp.QuoteMeta(unallowedIDChars) + `]+`)
 )
@@ -202,11 +209,6 @@ func (l *Lexer) isString(str string) bool {
 	return strings.HasPrefix(l.input[l.pos:], str)
 }
 
-// returns true if current scanning position matches given regular expression
-func (l *Lexer) matchRegexp(r *regexp.Regexp) bool {
-	return r.MatchString(l.input[l.pos:])
-}
-
 // returns the first string from current scanning position that matches given regular expression
 func (l *Lexer) findRegexp(r *regexp.Regexp) string {
 	return r.FindString(l.input[l.pos:])
@@ -214,31 +216,46 @@ func (l *Lexer) findRegexp(r *regexp.Regexp) string {
 
 // scanning content (ie: not between mustaches)
 func lexContent(l *Lexer) lexFunc {
-	for {
-		// search open mustache delimiter
-		if l.isString(OPEN_MUSTACHE) {
-			if l.pos > l.start {
-				// emit scanned content
-				l.emit(TokenContent)
-			}
+	var next lexFunc
 
-			return lexOpenMustache
-		}
+	// find opening mustaches
+	if str := l.findRegexp(rOpenCommentDash); str != "" {
+		l.closeComment = rCloseCommentDash
 
-		// scan next rune
-		if l.next() == eof {
-			break
-		}
+		next = lexComment
+	} else if str := l.findRegexp(rOpenComment); str != "" {
+		l.closeComment = rCloseComment
+
+		next = lexComment
+	} else if l.isString(OPEN_MUSTACHE) {
+		next = lexOpenMustache
 	}
 
-	// emit scanned content
-	if l.pos > l.start {
-		l.emit(TokenContent)
+	if next != nil {
+		// emit scanned content
+		if l.pos > l.start {
+			l.emit(TokenContent)
+		}
+
+		// scan next token
+		return next
 	}
 
-	l.emit(TokenEOF)
+	// scan next rune
+	if l.next() == eof {
+		// emit scanned content
+		if l.pos > l.start {
+			l.emit(TokenContent)
+		}
 
-	return nil
+		l.emit(TokenEOF)
+
+		// this is over
+		return nil
+	}
+
+	// continue content scanning
+	return lexContent
 }
 
 // scanning {{
@@ -313,8 +330,8 @@ func lexExpression(l *Lexer) lexFunc {
 	}
 
 	// search some patterns before advancing scanning position
-	if l.matchRegexp(rOpenBlockParams) {
-		l.pos += len(l.findRegexp(rOpenBlockParams))
+	if str := l.findRegexp(rOpenBlockParams); str != "" {
+		l.pos += len(str)
 		l.emit(TokenOpenBlockParams)
 		return lexExpression
 	}
@@ -363,6 +380,22 @@ func lexExpression(l *Lexer) lexFunc {
 	}
 
 	return lexExpression
+}
+
+// scanning {{!-- or {{!
+func lexComment(l *Lexer) lexFunc {
+	if str := l.findRegexp(l.closeComment); str != "" {
+		l.pos += len(str)
+		l.emit(TokenComment)
+
+		return lexContent
+	}
+
+	if r := l.next(); r == eof {
+		return l.errorf("Unclosed comment")
+	}
+
+	return lexComment
 }
 
 // scans all following space characters and ignore them

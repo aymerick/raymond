@@ -88,6 +88,7 @@ func tokNumber(val string) Token  { return Token{TokenNumber, 0, val} }
 func tokInverse(val string) Token { return Token{TokenInverse, 0, val} }
 func tokBool(val string) Token    { return Token{TokenBoolean, 0, val} }
 func tokError(val string) Token   { return Token{TokenError, 0, val} }
+func tokComment(val string) Token { return Token{TokenComment, 0, val} }
 
 var tokEOF = Token{TokenEOF, 0, ""}
 var tokEquals = Token{TokenEquals, 0, "="}
@@ -249,21 +250,21 @@ var lexTests = []lexTest{
 		`{{>foo/bar.baz  }}`,
 		[]Token{tokOpenPartial, tokID("foo"), tokSep("/"), tokID("bar"), tokSep("."), tokID("baz"), tokClose, tokEOF},
 	},
-	// {
-	// 	`tokenizes a comment as "COMMENT"`,
-	// 	`foo {{! this is a comment }} bar {{ baz }}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`tokenizes a block comment as "COMMENT"`,
-	// 	`foo {{!-- this is a {{comment}} --}} bar {{ baz }}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`tokenizes a block comment with whitespace as "COMMENT"`,
-	// 	`foo {{!-- this is a\n{{comment}}\n--}} bar {{ baz }}`,
-	// 	[]Token{},
-	// },
+	{
+		`tokenizes a comment as "COMMENT"`,
+		`foo {{! this is a comment }} bar {{ baz }}`,
+		[]Token{tokContent("foo "), tokComment("{{! this is a comment }}"), tokContent(" bar "), tokOpen, tokID("baz"), tokClose, tokEOF},
+	},
+	{
+		`tokenizes a block comment as "COMMENT"`,
+		`foo {{!-- this is a {{comment}} --}} bar {{ baz }}`,
+		[]Token{tokContent("foo "), tokComment("{{!-- this is a {{comment}} --}}"), tokContent(" bar "), tokOpen, tokID("baz"), tokClose, tokEOF},
+	},
+	{
+		`tokenizes a block comment with whitespace as "COMMENT"`,
+		"foo {{!-- this is a\n{{comment}}\n--}} bar {{ baz }}",
+		[]Token{tokContent("foo "), tokComment("{{!-- this is a\n{{comment}}\n--}}"), tokContent(" bar "), tokOpen, tokID("baz"), tokClose, tokEOF},
+	},
 	{
 		`tokenizes open and closing blocks as OPEN_BLOCK, ID, CLOSE ..., OPEN_ENDBLOCK ID CLOSE`,
 		`{{#foo}}content{{/foo}}`,
