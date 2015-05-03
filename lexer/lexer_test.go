@@ -180,16 +180,16 @@ var lexTests = []lexTest{
 		`{{foo.bar}}`,
 		[]Token{tokOpen, tokID("foo"), tokSep("."), tokID("bar"), tokClose, tokEOF},
 	},
-	// {
-	// 	`allows path literals with []`,
-	// 	`{{foo.[bar]}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`allows multiple path literals on a line with []`,
-	// 	`{{foo.[bar]}}{{foo.[baz]}}`,
-	// 	[]Token{},
-	// },
+	{
+		`allows path literals with []`,
+		`{{foo.[bar]}}`,
+		[]Token{tokOpen, tokID("foo"), tokSep("."), tokID("[bar]"), tokClose, tokEOF},
+	},
+	{
+		`allows multiple path literals on a line with []`,
+		`{{foo.[bar]}}{{foo.[baz]}}`,
+		[]Token{tokOpen, tokID("foo"), tokSep("."), tokID("[bar]"), tokClose, tokOpen, tokID("foo"), tokSep("."), tokID("[baz]"), tokClose, tokEOF},
+	},
 	// {
 	// 	`tokenizes {{.}} as OPEN ID CLOSE`,
 	// 	`{{.}}`,

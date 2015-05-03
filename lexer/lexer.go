@@ -412,6 +412,8 @@ func lexExpression(l *Lexer) lexFunc {
 	case r == '+' || r == '-' || (r >= '0' && r <= '9'):
 		l.backup()
 		return lexNumber
+	case r == '[':
+		return lexPathLiteral
 	case strings.IndexRune(unallowedIDChars, r) < 0:
 		l.backup()
 		return lexIdentifier
@@ -548,6 +550,24 @@ func lexIdentifier(l *Lexer) lexFunc {
 	}
 
 	l.pos += len(str)
+	l.emit(TokenID)
+
+	return lexExpression
+}
+
+// scans an [ID]
+func lexPathLiteral(l *Lexer) lexFunc {
+	for {
+		r := l.next()
+		if r == eof || r == '\n' {
+			return l.errorf("Unterminated path literal")
+		}
+
+		if r == ']' {
+			break
+		}
+	}
+
 	l.emit(TokenID)
 
 	return lexExpression
