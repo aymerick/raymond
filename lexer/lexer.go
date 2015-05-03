@@ -163,6 +163,19 @@ func (l *Lexer) emit(kind TokenKind) {
 	l.start = l.pos
 }
 
+// emits a scanned string
+func (l *Lexer) emitString(delimiter rune) {
+	str := l.input[l.start:l.pos]
+
+	// replace escaped delimiters
+	str = strings.Replace(str, "\\"+string(delimiter), string(delimiter), -1)
+
+	l.tokens <- Token{TokenString, l.start, str}
+
+	// scanning a new token
+	l.start = l.pos
+}
+
 // returns but does not consume the next character in the input
 func (l *Lexer) peek() rune {
 	r := l.next()
@@ -435,34 +448,32 @@ func lexIgnorable(l *Lexer) lexFunc {
 	return lexExpression
 }
 
-// @note partly borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
 func lexString(l *Lexer) lexFunc {
 	// get string delimiter
 	delim := l.next()
+	var prev rune = 0
 
 	// ignore delimiter
 	l.ignore()
 
-Loop:
 	for {
-		switch l.next() {
-		case '\\':
-			if r := l.next(); r != eof && r != '\n' {
-				break
-			}
-			fallthrough
-		case eof, '\n':
+		r := l.next()
+		if r == eof || r == '\n' {
 			return l.errorf("Unterminated string")
-		case delim:
-			break Loop
 		}
+
+		if (r == delim) && (prev != '\\') {
+			break
+		}
+
+		prev = r
 	}
 
 	// remove end delimiter
 	l.backup()
 
 	// emit string
-	l.emit(TokenString)
+	l.emitString(delim)
 
 	// skip end delimiter
 	l.next()

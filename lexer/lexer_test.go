@@ -315,16 +315,16 @@ var lexTests = []lexTest{
 		`{{ foo bar "baz bat" }}`,
 		[]Token{tokOpen, tokID("foo"), tokID("bar"), tokString("baz bat"), tokClose, tokEOF},
 	},
-	// {
-	// 	`tokenizes String params with escapes quotes as STRING`,
-	// 	`{{ foo "bar\\"baz" }}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`tokenizes String params using single quotes with escapes quotes as STRING`,
-	// 	`{{ foo 'bar\\'baz' }}`,
-	// 	[]Token{},
-	// },
+	{
+		`tokenizes String params with escapes quotes as STRING`,
+		`{{ foo "bar\"baz" }}`,
+		[]Token{tokOpen, tokID("foo"), tokString(`bar"baz`), tokClose, tokEOF},
+	},
+	{
+		`tokenizes String params using single quotes with escapes quotes as STRING`,
+		`{{ foo 'bar\'baz' }}`,
+		[]Token{tokOpen, tokID("foo"), tokString(`bar'baz`), tokClose, tokEOF},
+	},
 	{
 		`tokenizes numbers`,
 		`{{ foo 1 }}`,
