@@ -86,7 +86,7 @@ type Lexer struct {
 
 var (
 	// characters not allowed in an identifier
-	unallowedIDChars = " \t!\"#%&'()*+,./;<=>@[\\]^`{|}~"
+	unallowedIDChars = " \n\t!\"#%&'()*+,./;<=>@[\\]^`{|}~"
 
 	// regular expressions
 	rOpenRaw        = regexp.MustCompile(`^{{{{`)

@@ -385,11 +385,11 @@ var lexTests = []lexTest{
 		`{{ foo bar baz=false }}`,
 		[]Token{tokOpen, tokID("foo"), tokID("bar"), tokID("baz"), tokEquals, tokBool("false"), tokClose, tokEOF},
 	},
-	// {
-	// 	`tokenizes hash arguments (6)`,
-	// 	"{{ foo bar\n  baz=bat }}",
-	// 	[]Token{},
-	// },
+	{
+		`tokenizes hash arguments (6)`,
+		"{{ foo bar\n  baz=bat }}",
+		[]Token{tokOpen, tokID("foo"), tokID("bar"), tokID("baz"), tokEquals, tokID("bat"), tokClose, tokEOF},
+	},
 	{
 		`tokenizes hash arguments (7)`,
 		`{{ foo bar baz="bat" }}`,
