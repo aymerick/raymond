@@ -109,27 +109,27 @@ var tokOpenBlockParams = Token{TokenOpenBlockParams, 0, "as |"}
 var tokCloseBlockParams = Token{TokenCloseBlockParams, 0, "|"}
 
 var lexTests = []lexTest{
-	// // cf. https://github.com/golang/go/blob/master/src/text/template/parse/lex_test.go
-	// {"empty", "", []Token{tokEOF}},
-	// {"spaces", " \t\n", []Token{tokContent(" \t\n"), tokEOF}},
-	// {"content", `now is the time`, []Token{tokContent(`now is the time`), tokEOF}},
+	// cf. https://github.com/golang/go/blob/master/src/text/template/parse/lex_test.go
+	{"empty", "", []Token{tokEOF}},
+	{"spaces", " \t\n", []Token{tokContent(" \t\n"), tokEOF}},
+	{"content", `now is the time`, []Token{tokContent(`now is the time`), tokEOF}},
 
-	// // cf. https://github.com/wycats/handlebars.js/blob/master/spec/tokenizer.js
-	// {
-	// 	`tokenizes a simple mustache as "OPEN ID CLOSE"`,
-	// 	`{{foo}}`,
-	// 	[]Token{tokOpen, tokID("foo"), tokClose, tokEOF},
-	// },
-	// {
-	// 	`supports unescaping with &`,
-	// 	`{{&bar}}`,
-	// 	[]Token{tokOpenAmp, tokID("bar"), tokClose, tokEOF},
-	// },
-	// {
-	// 	`supports unescaping with {{{`,
-	// 	`{{{bar}}}`,
-	// 	[]Token{tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokEOF},
-	// },
+	// cf. https://github.com/wycats/handlebars.js/blob/master/spec/tokenizer.js
+	{
+		`tokenizes a simple mustache as "OPEN ID CLOSE"`,
+		`{{foo}}`,
+		[]Token{tokOpen, tokID("foo"), tokClose, tokEOF},
+	},
+	{
+		`supports unescaping with &`,
+		`{{&bar}}`,
+		[]Token{tokOpenAmp, tokID("bar"), tokClose, tokEOF},
+	},
+	{
+		`supports unescaping with {{{`,
+		`{{{bar}}}`,
+		[]Token{tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokEOF},
+	},
 	{
 		`supports escaping delimiters`,
 		"{{foo}} \\{{bar}} {{baz}}",
