@@ -123,7 +123,7 @@ var lexTests = []lexTest{
 	},
 
 	//
-	// Tests borrowed from:
+	// Next tests come from:
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/tokenizer.js
 	//
 	{
