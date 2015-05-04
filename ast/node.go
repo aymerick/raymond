@@ -78,6 +78,10 @@ func (node *ProgramNode) String() string {
 
 func (node *ProgramNode) Accept(visitor Visitor) {
 	visitor.visitProgram(node)
+
+	for _, n := range node.Statements {
+		n.Accept(visitor)
+	}
 }
 
 //
@@ -87,19 +91,19 @@ func (node *ProgramNode) Accept(visitor Visitor) {
 type ContentNode struct {
 	NodeType
 	Pos
-	Content string
+	Value string
 }
 
 func NewContentNode(pos int, text string) *ContentNode {
 	return &ContentNode{
 		NodeType: NodeContent,
 		Pos:      Pos(pos),
-		Content:  text,
+		Value:    text,
 	}
 }
 
 func (node *ContentNode) String() string {
-	return fmt.Sprintf(textFormat, node.Content)
+	return fmt.Sprintf(textFormat, node.Value)
 }
 
 func (node *ContentNode) Accept(visitor Visitor) {
@@ -113,19 +117,19 @@ func (node *ContentNode) Accept(visitor Visitor) {
 type CommentNode struct {
 	NodeType
 	Pos
-	Comment string
+	Value string
 }
 
 func NewCommentNode(pos int, text string) *CommentNode {
 	return &CommentNode{
 		NodeType: NodeComment,
 		Pos:      Pos(pos),
-		Comment:  text,
+		Value:    text,
 	}
 }
 
 func (node *CommentNode) String() string {
-	return fmt.Sprintf(textFormat, node.Comment)
+	return fmt.Sprintf(textFormat, node.Value)
 }
 
 func (node *CommentNode) Accept(visitor Visitor) {

@@ -19,8 +19,8 @@ type parserTest struct {
 
 var parserTests = []parserTest{
 	{"Content", "Hello", "CONTENT[Hello]\n"},
-	{"Comment", "{{! This is a comment }}", "{{! ' This is a comment ' }}\n"},
-	{"Comment dash", "{{!-- This is a comment --}}", "{{! ' This is a comment ' }}\n"},
+	{"Comment", "{{! This is a comment }}", "{{! 'This is a comment' }}\n"},
+	{"Comment dash", "{{!-- This is a comment --}}", "{{! 'This is a comment' }}\n"},
 }
 
 func equal(a, b ast.Node) bool {

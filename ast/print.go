@@ -37,15 +37,13 @@ func (v *PrintVisitor) add(val string) {
 //
 
 func (v *PrintVisitor) visitProgram(node *ProgramNode) {
-	for _, n := range node.Statements {
-		n.Accept(v)
-	}
+	// NOOP
 }
 
 func (v *PrintVisitor) visitContent(node *ContentNode) {
-	v.add("CONTENT[" + node.Content + "]")
+	v.add("CONTENT[" + node.Value + "]")
 }
 
 func (v *PrintVisitor) visitComment(node *CommentNode) {
-	v.add("{{! '" + node.Comment + "' }}")
+	v.add("{{! '" + node.Value + "' }}")
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/aymerick/raymond/ast"
 	"github.com/aymerick/raymond/lexer"
@@ -90,138 +91,138 @@ func (p *Parser) parseComment() ast.Node {
 	value := rOpenComment.ReplaceAllString(tok.Val, "")
 	value = rCloseComment.ReplaceAllString(value, "")
 
-	return ast.NewCommentNode(tok.Pos, value)
+	return ast.NewCommentNode(tok.Pos, strings.TrimSpace(value))
 }
 
 // rawBlock : openRawBlock content END_RAW_BLOCK
 func (p *Parser) parseRawBlock() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK
 func (p *Parser) parseOpenRawBlock() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // block : openBlock program inverseChain? closeBlock
 //       | openInverse program inverseAndProgram? closeBlock
 func (p *Parser) parseBlock() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // openBlock : OPEN_BLOCK helperName param* hash? blockParams? CLOSE
 func (p *Parser) parseOpenBlock() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // openInverse : OPEN_INVERSE helperName param* hash? blockParams? CLOSE
 func (p *Parser) parseOpenInverse() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // openInverseChain : OPEN_INVERSE_CHAIN helperName param* hash? blockParams? CLOSE
 func (p *Parser) parseOpenInverseChain() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // inverseAndProgram : INVERSE program
 func (p *Parser) parseInverseAndProgram() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // inverseChain : openInverseChain program inverseChain?
 //              | inverseAndProgram
 func (p *Parser) parseInverseChain() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // closeBlock : OPEN_ENDBLOCK helperName CLOSE
 func (p *Parser) parseCloseBlock() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // mustache : OPEN helperName param* hash? CLOSE
 //          | OPEN_UNESCAPED helperName param* hash? CLOSE_UNESCAPED
 func (p *Parser) parseMustache() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // partial : OPEN_PARTIAL partialName param* hash? CLOSE
 func (p *Parser) parsePartial() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // param : helperName
 //       | sexpr
 func (p *Parser) parseParam() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // sexpr : OPEN_SEXPR helperName param* hash? CLOSE_SEXPR
 func (p *Parser) parseSexpr() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // hash : hashSegment+
 func (p *Parser) parseHash() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // hashSegment : ID EQUALS param
 func (p *Parser) parseHashSegment() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // blockParams : OPEN_BLOCK_PARAMS ID+ CLOSE_BLOCK_PARAMS
 func (p *Parser) parseBlockParams() (ast.Node, error) {
 
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // helperName : path | dataName | STRING | NUMBER | BOOLEAN | UNDEFINED | NULL
 func (p *Parser) parseHelperName() (ast.Node, error) {
 
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // partialName : helperName | sexpr
 func (p *Parser) parsePartialName() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // dataName : DATA pathSegments
 func (p *Parser) parseDataName() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // x path : pathSegments
 func (p *Parser) parsePath() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // pathSegments : pathSegments SEP ID
 //              | ID
 func (p *Parser) parsePathSegments() (ast.Node, error) {
 	// @todo !!!
-	return nil, nil
+	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // Ensure there is at least a token to parse
