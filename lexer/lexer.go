@@ -15,38 +15,36 @@ const (
 	TokenEOF
 
 	// mustache delimiters
-	TokenOpen             // [x] 19. OPEN: <mu>"{{"{LEFT_STRIP}?"&" - 22. OPEN: <mu>"{{"{LEFT_STRIP}?
-	TokenClose            // [x] 28. CLOSE: <mu>{RIGHT_STRIP}?"}}"
-	TokenOpenRawBlock     // [x] 09. OPEN_RAW_BLOCK: <mu>"{{{{"
-	TokenCloseRawBlock    // [x] 10. CLOSE_RAW_BLOCK: <mu>"}}}}"
-	TokenOpenUnescaped    // [x] 18. OPEN_UNESCAPED: <mu>"{{"{LEFT_STRIP}?"{"
-	TokenCloseUnescaped   // [x] 27. CLOSE_UNESCAPED: <mu>"}"{RIGHT_STRIP}?"}}"
-	TokenOpenBlock        // [x] 12. OPEN_BLOCK: <mu>"{{"{LEFT_STRIP}?"#"
-	TokenOpenEndBlock     // [x] 13. OPEN_ENDBLOCK: <mu>"{{"{LEFT_STRIP}?"/"
-	TokenInverse          // [x] 14. INVERSE: <mu>"{{"{LEFT_STRIP}?"^"\s*{RIGHT_STRIP}?"}}" - 15. INVERSE: <mu>"{{"{LEFT_STRIP}?\s*"else"\s*{RIGHT_STRIP}?"}}"
-	TokenOpenInverse      // [x] 16. OPEN_INVERSE: <mu>"{{"{LEFT_STRIP}?"^"
-	TokenOpenInverseChain // [x] 17. OPEN_INVERSE_CHAIN: <mu>"{{"{LEFT_STRIP}?\s*"else"
-	TokenOpenPartial      // [x] 11. OPEN_PARTIAL: <mu>"{{"{LEFT_STRIP}?">"
-	TokenEndRawBlock      // [ ] 04. END_RAW_BLOCK: <raw>"{{{{/"[^\s!"#%-,\.\/;->@\[-\^`\{-~]+/[=}\s\/.]"}}}}"
-	TokenComment          // [x] 06. COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" - 20. begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" - 21. COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
+	TokenOpen             // OPEN: <mu>"{{"{LEFT_STRIP}?"&" - 22. OPEN: <mu>"{{"{LEFT_STRIP}?
+	TokenClose            // CLOSE: <mu>{RIGHT_STRIP}?"}}"
+	TokenOpenRawBlock     // OPEN_RAW_BLOCK: <mu>"{{{{"
+	TokenCloseRawBlock    // CLOSE_RAW_BLOCK: <mu>"}}}}"
+	TokenOpenUnescaped    // OPEN_UNESCAPED: <mu>"{{"{LEFT_STRIP}?"{"
+	TokenCloseUnescaped   // CLOSE_UNESCAPED: <mu>"}"{RIGHT_STRIP}?"}}"
+	TokenOpenBlock        // OPEN_BLOCK: <mu>"{{"{LEFT_STRIP}?"#"
+	TokenOpenEndBlock     // OPEN_ENDBLOCK: <mu>"{{"{LEFT_STRIP}?"/"
+	TokenInverse          // INVERSE: <mu>"{{"{LEFT_STRIP}?"^"\s*{RIGHT_STRIP}?"}}" - 15. INVERSE: <mu>"{{"{LEFT_STRIP}?\s*"else"\s*{RIGHT_STRIP}?"}}"
+	TokenOpenInverse      // OPEN_INVERSE: <mu>"{{"{LEFT_STRIP}?"^"
+	TokenOpenInverseChain // OPEN_INVERSE_CHAIN: <mu>"{{"{LEFT_STRIP}?\s*"else"
+	TokenOpenPartial      // OPEN_PARTIAL: <mu>"{{"{LEFT_STRIP}?">"
+	TokenEndRawBlock      // END_RAW_BLOCK: <raw>"{{{{/"[^\s!"#%-,\.\/;->@\[-\^`\{-~]+/[=}\s\/.]"}}}}"
+	TokenComment          // COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" - 20. begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" - 21. COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
 
 	// inside mustaches
-	TokenOpenSexpr        // [x] 07. OPEN_SEXPR: <mu>"("
-	TokenCloseSexpr       // [x] 08. CLOSE_SEXPR: <mu>")"
-	TokenEquals           // [x] 23. EQUALS: <mu>"="
-	TokenData             // [x] 31. DATA: <mu>"@"
-	TokenSep              // [x] 26. SEP: <mu>[\/.]
-	TokenOpenBlockParams  // [x] 37. OPEN_BLOCK_PARAMS: <mu>"as"\s+"|"
-	TokenCloseBlockParams // [x] 38. CLOSE_BLOCK_PARAMS <mu>"|"
-	// TokenUndefined         // [ ] 34. UNDEFINED: <mu>"undefined"/{LITERAL_LOOKAHEAD}
-	// TokenNull              // [ ] 35. NULL: <mu>"null"/{LITERAL_LOOKAHEAD}
+	TokenOpenSexpr        // OPEN_SEXPR: <mu>"("
+	TokenCloseSexpr       // CLOSE_SEXPR: <mu>")"
+	TokenEquals           // EQUALS: <mu>"="
+	TokenData             // DATA: <mu>"@"
+	TokenSep              // SEP: <mu>[\/.]
+	TokenOpenBlockParams  // OPEN_BLOCK_PARAMS: <mu>"as"\s+"|"
+	TokenCloseBlockParams // CLOSE_BLOCK_PARAMS <mu>"|"
 
 	// tokens with content
-	TokenContent // [ ] 01. begin 'mu', begin 'emu', CONTENT: [^\x00]*?/("{{") - 02. CONTENT: [^\x00]+ - 03. CONTENT: <emu>[^\x00]{2,}?/("{{"|"\\{{"|"\\\\{{"|<<EOF>>) - 05: CONTENT: <raw>[^\x00]*?/("{{{{/")
-	TokenID      // [x] 24. ID: <mu>".." - 25. ID: <mu>"."/{LOOKAHEAD} - 39. ID: <mu>{ID} - 40. ID: <mu>'['[^\]]*']'
-	TokenString  // [x] 29. STRING: <mu>'"'("\\"["]|[^"])*'"' - 30. STRING: <mu>"'"("\\"[']|[^'])*"'"
-	TokenNumber  // [x] 36. NUMBER: <mu>\-?[0-9]+(?:\.[0-9]+)?/{LITERAL_LOOKAHEAD}
-	TokenBoolean // [x] 32. BOOLEAN: <mu>"true"/{LITERAL_LOOKAHEAD} - 33. BOOLEAN: <mu>"false"/{LITERAL_LOOKAHEAD}
+	TokenContent // begin 'mu', begin 'emu', CONTENT: [^\x00]*?/("{{") - 02. CONTENT: [^\x00]+ - 03. CONTENT: <emu>[^\x00]{2,}?/("{{"|"\\{{"|"\\\\{{"|<<EOF>>) - 05: CONTENT: <raw>[^\x00]*?/("{{{{/")
+	TokenID      // ID: <mu>".." - 25. ID: <mu>"."/{LOOKAHEAD} - 39. ID: <mu>{ID} - 40. ID: <mu>'['[^\]]*']'
+	TokenString  // STRING: <mu>'"'("\\"["]|[^"])*'"' - 30. STRING: <mu>"'"("\\"[']|[^'])*"'"
+	TokenNumber  // NUMBER: <mu>\-?[0-9]+(?:\.[0-9]+)?/{LITERAL_LOOKAHEAD}
+	TokenBoolean // BOOLEAN: <mu>"true"/{LITERAL_LOOKAHEAD} - 33. BOOLEAN: <mu>"false"/{LITERAL_LOOKAHEAD}
 )
 
 const (

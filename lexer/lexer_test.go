@@ -45,10 +45,8 @@ var tokenName = map[TokenKind]string{
 	TokenString:           "String",
 	TokenNumber:           "Number",
 	TokenBoolean:          "Boolean",
-	// TokenUndefined:        "Undefined",
-	// TokenNull:             "Null",
-	TokenData: "Data",
-	TokenSep:  "Sep",
+	TokenData:             "Data",
+	TokenSep:              "Sep",
 }
 
 func (k TokenKind) String() string {
@@ -109,12 +107,14 @@ var tokOpenBlockParams = Token{TokenOpenBlockParams, 0, "as |"}
 var tokCloseBlockParams = Token{TokenCloseBlockParams, 0, "|"}
 
 var lexTests = []lexTest{
-	// cf. https://github.com/golang/go/blob/master/src/text/template/parse/lex_test.go
 	{"empty", "", []Token{tokEOF}},
 	{"spaces", " \t\n", []Token{tokContent(" \t\n"), tokEOF}},
 	{"content", `now is the time`, []Token{tokContent(`now is the time`), tokEOF}},
 
-	// cf. https://github.com/wycats/handlebars.js/blob/master/spec/tokenizer.js
+	//
+	// Tests borrowed from:
+	//   https://github.com/wycats/handlebars.js/blob/master/spec/tokenizer.js
+	//
 	{
 		`tokenizes a simple mustache as "OPEN ID CLOSE"`,
 		`{{foo}}`,
@@ -355,11 +355,6 @@ var lexTests = []lexTest{
 		`{{ foo false }}`,
 		[]Token{tokOpen, tokID("foo"), tokBool("false"), tokClose, tokEOF},
 	},
-	// {
-	// 	`tokenizes undefined and null`,
-	// 	`{{ foo undefined null }}`,
-	// 	[]Token{},
-	// },
 	{
 		`tokenizes hash arguments (1)`,
 		`{{ foo bar=baz }}`,
