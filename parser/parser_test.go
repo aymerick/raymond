@@ -12,15 +12,15 @@ const (
 )
 
 type parserTest struct {
-	name  string
-	input string
-	node  ast.Node
+	name   string
+	input  string
+	output string
 }
 
 var parserTests = []parserTest{
-	{"Content", "Hello", ast.NewContentNode(0, "Hello")},
-	{"Comment", "{{! This is a comment }}", ast.NewCommentNode(0, " This is a comment ")},
-	{"Comment dash", "{{!-- This is a comment --}}", ast.NewCommentNode(0, " This is a comment ")},
+	{"Content", "Hello", "CONTENT[Hello]\n"},
+	{"Comment", "{{! This is a comment }}", "{{! ' This is a comment ' }}\n"},
+	{"Comment dash", "{{!-- This is a comment --}}", "{{! ' This is a comment ' }}\n"},
 }
 
 func equal(a, b ast.Node) bool {
@@ -35,8 +35,10 @@ func TestParser(t *testing.T) {
 		}
 
 		node, err := Parse(test.input)
-		if (err != nil) || (node == nil) || !equal(node, test.node) {
-			t.Errorf("Test '%s' failed\ninput:\n\t'%s'\nexpected\n\t%q\ngot\n\t%q\nerror:\n\t%s", test.name, test.input, test.node, node, err)
+		output := ast.PrintNode(node)
+
+		if (err != nil) || (test.output != output) {
+			t.Errorf("Test '%s' failed\ninput:\n\t'%s'\nexpected\n\t%q\ngot\n\t%q\nerror:\n\t%s", test.name, test.input, test.output, output, err)
 		}
 	}
 }

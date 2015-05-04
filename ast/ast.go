@@ -11,6 +11,14 @@ import (
 
 type NodeType int
 
+// AST visitor interface
+type Visitor interface {
+	visitProgram(node *ProgramNode)
+	visitContent(node *ContentNode)
+	visitComment(node *CommentNode)
+}
+
+// AST node interface
 type Node interface {
 	Type() NodeType
 
@@ -18,6 +26,8 @@ type Node interface {
 
 	// byte position of start of node in full original input string
 	Position() Pos
+
+	Accept(Visitor)
 }
 
 type Pos int
@@ -66,6 +76,10 @@ func (node *ProgramNode) String() string {
 	return b.String()
 }
 
+func (node *ProgramNode) Accept(visitor Visitor) {
+	visitor.visitProgram(node)
+}
+
 //
 // Content
 //
@@ -88,6 +102,10 @@ func (node *ContentNode) String() string {
 	return fmt.Sprintf(textFormat, node.Content)
 }
 
+func (node *ContentNode) Accept(visitor Visitor) {
+	visitor.visitContent(node)
+}
+
 //
 // Comment
 //
@@ -108,4 +126,8 @@ func NewCommentNode(pos int, text string) *CommentNode {
 
 func (node *CommentNode) String() string {
 	return fmt.Sprintf(textFormat, node.Comment)
+}
+
+func (node *CommentNode) Accept(visitor Visitor) {
+	visitor.visitComment(node)
 }
