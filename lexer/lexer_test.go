@@ -190,21 +190,21 @@ var lexTests = []lexTest{
 		`{{foo.[bar]}}{{foo.[baz]}}`,
 		[]Token{tokOpen, tokID("foo"), tokSep("."), tokID("[bar]"), tokClose, tokOpen, tokID("foo"), tokSep("."), tokID("[baz]"), tokClose, tokEOF},
 	},
-	// {
-	// 	`tokenizes {{.}} as OPEN ID CLOSE`,
-	// 	`{{.}}`,
-	// 	[]Token{tokOpen, tokID("."), tokClose, tokEOF},
-	// },
-	// {
-	// 	`tokenizes a path as "OPEN (ID SEP)* ID CLOSE"`,
-	// 	`{{../foo/bar}}`,
-	// 	[]Token{},
-	// },
-	// {
-	// 	`tokenizes a path with .. as a parent path`,
-	// 	`{{../foo.bar}}`,
-	// 	[]Token{},
-	// },
+	{
+		`tokenizes {{.}} as OPEN ID CLOSE`,
+		`{{.}}`,
+		[]Token{tokOpen, tokID("."), tokClose, tokEOF},
+	},
+	{
+		`tokenizes a path as "OPEN (ID SEP)* ID CLOSE"`,
+		`{{../foo/bar}}`,
+		[]Token{tokOpen, tokID(".."), tokSep("/"), tokID("foo"), tokSep("/"), tokID("bar"), tokClose, tokEOF},
+	},
+	{
+		`tokenizes a path with .. as a parent path`,
+		`{{../foo.bar}}`,
+		[]Token{tokOpen, tokID(".."), tokSep("/"), tokID("foo"), tokSep("."), tokID("bar"), tokClose, tokEOF},
+	},
 	{
 		`tokenizes a path with this/foo as OPEN ID SEP ID CLOSE`,
 		`{{this/foo}}`,

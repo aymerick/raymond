@@ -111,7 +111,8 @@ var (
 	rOpenComment  = regexp.MustCompile(`^{{~?!\s*`)
 	rCloseComment = regexp.MustCompile(`^\s*~?}}`)
 
-	rID = regexp.MustCompile(`^[^` + regexp.QuoteMeta(unallowedIDChars) + `]+`)
+	rID    = regexp.MustCompile(`^[^` + regexp.QuoteMeta(unallowedIDChars) + `]+`)
+	rDotID = regexp.MustCompile(`^\.[\s` + regexp.QuoteMeta("=~}/)|") + `]`)
 )
 
 // scans given input
@@ -367,22 +368,37 @@ func lexExpression(l *Lexer) lexFunc {
 	}
 
 	// search some patterns before advancing scanning position
+
+	// "as |"
 	if str := l.findRegexp(rOpenBlockParams); str != "" {
-		// "as |"
 		l.pos += len(str)
 		l.emit(TokenOpenBlockParams)
 		return lexExpression
 	}
 
+	// ..
+	if l.isString("..") {
+		l.pos += len("..")
+		l.emit(TokenID)
+		return lexExpression
+	}
+
+	// .
+	if str := l.findRegexp(rDotID); str != "" {
+		l.pos += len(".")
+		l.emit(TokenID)
+		return lexExpression
+	}
+
+	// true
 	if l.isString("true") {
-		// true
 		l.pos += len("true")
 		l.emit(TokenBoolean)
 		return lexExpression
 	}
 
+	// false
 	if l.isString("false") {
-		// false
 		l.pos += len("false")
 		l.emit(TokenBoolean)
 		return lexExpression
