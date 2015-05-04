@@ -111,6 +111,17 @@ var lexTests = []lexTest{
 	{"spaces", " \t\n", []Token{tokContent(" \t\n"), tokEOF}},
 	{"content", `now is the time`, []Token{tokContent(`now is the time`), tokEOF}},
 
+	{
+		`does not tokenizes identifier starting with true as boolean`,
+		`{{ foo truebar }}`,
+		[]Token{tokOpen, tokID("foo"), tokID("truebar"), tokClose, tokEOF},
+	},
+	{
+		`does not tokenizes identifier starting with false as boolean`,
+		`{{ foo falsebar }}`,
+		[]Token{tokOpen, tokID("foo"), tokID("falsebar"), tokClose, tokEOF},
+	},
+
 	//
 	// Tests borrowed from:
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/tokenizer.js

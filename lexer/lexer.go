@@ -83,10 +83,17 @@ type Lexer struct {
 }
 
 var (
+	lookheadChars        = `[\s` + regexp.QuoteMeta("=~}/)|") + `]`
+	literalLookheadChars = `[\s` + regexp.QuoteMeta("~})") + `]`
+
 	// characters not allowed in an identifier
 	unallowedIDChars = " \n\t!\"#%&'()*+,./;<=>@[\\]^`{|}~"
 
 	// regular expressions
+	rID             = regexp.MustCompile(`^[^` + regexp.QuoteMeta(unallowedIDChars) + `]+`)
+	rDotID          = regexp.MustCompile(`^\.` + lookheadChars)
+	rTrue           = regexp.MustCompile(`^true` + literalLookheadChars)
+	rFalse          = regexp.MustCompile(`^false` + literalLookheadChars)
 	rOpenRaw        = regexp.MustCompile(`^{{{{`)
 	rCloseRaw       = regexp.MustCompile(`^}}}}`)
 	rOpenUnescaped  = regexp.MustCompile(`^{{~?{`)
@@ -108,9 +115,6 @@ var (
 	// {{! ... }}
 	rOpenComment  = regexp.MustCompile(`^{{~?!\s*`)
 	rCloseComment = regexp.MustCompile(`^\s*~?}}`)
-
-	rID    = regexp.MustCompile(`^[^` + regexp.QuoteMeta(unallowedIDChars) + `]+`)
-	rDotID = regexp.MustCompile(`^\.[\s` + regexp.QuoteMeta("=~}/)|") + `]`)
 )
 
 // scans given input
@@ -389,14 +393,14 @@ func lexExpression(l *Lexer) lexFunc {
 	}
 
 	// true
-	if l.isString("true") {
+	if str := l.findRegexp(rTrue); str != "" {
 		l.pos += len("true")
 		l.emit(TokenBoolean)
 		return lexExpression
 	}
 
 	// false
-	if l.isString("false") {
+	if str := l.findRegexp(rFalse); str != "" {
 		l.pos += len("false")
 		l.emit(TokenBoolean)
 		return lexExpression
