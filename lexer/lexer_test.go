@@ -1,80 +1,18 @@
 package lexer
 
 import (
-	"fmt"
 	"log"
 	"testing"
 )
 
 const (
-	DUMP_ALL_TOKENS_VAL = true
-	DUMP_TOKEN_POS      = false
-	VERBOSE             = false
+	VERBOSE = false
 )
 
 type lexTest struct {
 	name   string
 	input  string
 	tokens []Token
-}
-
-var tokenName = map[TokenKind]string{
-	TokenError:            "Error",
-	TokenEOF:              "EOF",
-	TokenContent:          "Content",
-	TokenComment:          "Comment",
-	TokenOpen:             "Open",
-	TokenClose:            "Close",
-	TokenOpenUnescaped:    "OpenUnescaped",
-	TokenCloseUnescaped:   "CloseUnescaped",
-	TokenOpenBlock:        "OpenBlock",
-	TokenOpenEndBlock:     "OpenEndBlock",
-	TokenOpenRawBlock:     "OpenRawBlock",
-	TokenCloseRawBlock:    "CloseRawBlock",
-	TokenEndRawBlock:      "EndRawBlock",
-	TokenOpenBlockParams:  "OpenBlockParams",
-	TokenCloseBlockParams: "CloseBlockParams",
-	TokenInverse:          "Inverse",
-	TokenOpenInverse:      "OpenInverse",
-	TokenOpenInverseChain: "OpenInverseChain",
-	TokenOpenPartial:      "OpenPartial",
-	TokenOpenSexpr:        "OpenSexpr",
-	TokenCloseSexpr:       "CloseSexpr",
-	TokenID:               "ID",
-	TokenEquals:           "Equals",
-	TokenString:           "String",
-	TokenNumber:           "Number",
-	TokenBoolean:          "Boolean",
-	TokenData:             "Data",
-	TokenSep:              "Sep",
-}
-
-func (k TokenKind) String() string {
-	s := tokenName[k]
-	if s == "" {
-		return fmt.Sprintf("Token-%d", int(k))
-	}
-	return s
-}
-
-func (t Token) String() string {
-	result := ""
-
-	if DUMP_TOKEN_POS {
-		result += fmt.Sprintf("%d:", t.pos)
-	}
-
-	result += fmt.Sprintf("%s", t.kind)
-
-	if (DUMP_ALL_TOKENS_VAL || (t.kind >= TokenContent)) && len(t.val) > 0 {
-		if len(t.val) > 100 {
-			result += fmt.Sprintf("{%.20q...}", t.val)
-		} else {
-			result += fmt.Sprintf("{%q}", t.val)
-		}
-	}
-
-	return result
 }
 
 // helpers
@@ -486,12 +424,12 @@ var lexTests = []lexTest{
 func collect(t *lexTest) []Token {
 	var result []Token
 
-	l := Scan(t.input, t.name)
+	l := ScanWithName(t.input, t.name)
 	for {
 		token := l.NextToken()
 		result = append(result, token)
 
-		if token.kind == TokenEOF || token.kind == TokenError {
+		if token.Kind == TokenEOF || token.Kind == TokenError {
 			break
 		}
 	}
@@ -505,15 +443,15 @@ func equal(i1, i2 []Token, checkPos bool) bool {
 	}
 
 	for k := range i1 {
-		if i1[k].kind != i2[k].kind {
+		if i1[k].Kind != i2[k].Kind {
 			return false
 		}
 
-		if checkPos && i1[k].pos != i2[k].pos {
+		if checkPos && i1[k].Pos != i2[k].Pos {
 			return false
 		}
 
-		if i1[k].val != i2[k].val {
+		if i1[k].Val != i2[k].Val {
 			return false
 		}
 	}

@@ -8,44 +8,9 @@ import (
 	"unicode/utf8"
 )
 
-// Reference: https://github.com/wycats/handlebars.js/blob/master/src/handlebars.l
-
-const (
-	TokenError TokenKind = iota
-	TokenEOF
-
-	// mustache delimiters
-	TokenOpen             // OPEN: <mu>"{{"{LEFT_STRIP}?"&" - 22. OPEN: <mu>"{{"{LEFT_STRIP}?
-	TokenClose            // CLOSE: <mu>{RIGHT_STRIP}?"}}"
-	TokenOpenRawBlock     // OPEN_RAW_BLOCK: <mu>"{{{{"
-	TokenCloseRawBlock    // CLOSE_RAW_BLOCK: <mu>"}}}}"
-	TokenOpenUnescaped    // OPEN_UNESCAPED: <mu>"{{"{LEFT_STRIP}?"{"
-	TokenCloseUnescaped   // CLOSE_UNESCAPED: <mu>"}"{RIGHT_STRIP}?"}}"
-	TokenOpenBlock        // OPEN_BLOCK: <mu>"{{"{LEFT_STRIP}?"#"
-	TokenOpenEndBlock     // OPEN_ENDBLOCK: <mu>"{{"{LEFT_STRIP}?"/"
-	TokenInverse          // INVERSE: <mu>"{{"{LEFT_STRIP}?"^"\s*{RIGHT_STRIP}?"}}" - 15. INVERSE: <mu>"{{"{LEFT_STRIP}?\s*"else"\s*{RIGHT_STRIP}?"}}"
-	TokenOpenInverse      // OPEN_INVERSE: <mu>"{{"{LEFT_STRIP}?"^"
-	TokenOpenInverseChain // OPEN_INVERSE_CHAIN: <mu>"{{"{LEFT_STRIP}?\s*"else"
-	TokenOpenPartial      // OPEN_PARTIAL: <mu>"{{"{LEFT_STRIP}?">"
-	TokenEndRawBlock      // END_RAW_BLOCK: <raw>"{{{{/"[^\s!"#%-,\.\/;->@\[-\^`\{-~]+/[=}\s\/.]"}}}}"
-	TokenComment          // COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" - 20. begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" - 21. COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
-
-	// inside mustaches
-	TokenOpenSexpr        // OPEN_SEXPR: <mu>"("
-	TokenCloseSexpr       // CLOSE_SEXPR: <mu>")"
-	TokenEquals           // EQUALS: <mu>"="
-	TokenData             // DATA: <mu>"@"
-	TokenSep              // SEP: <mu>[\/.]
-	TokenOpenBlockParams  // OPEN_BLOCK_PARAMS: <mu>"as"\s+"|"
-	TokenCloseBlockParams // CLOSE_BLOCK_PARAMS <mu>"|"
-
-	// tokens with content
-	TokenContent // begin 'mu', begin 'emu', CONTENT: [^\x00]*?/("{{") - 02. CONTENT: [^\x00]+ - 03. CONTENT: <emu>[^\x00]{2,}?/("{{"|"\\{{"|"\\\\{{"|<<EOF>>) - 05: CONTENT: <raw>[^\x00]*?/("{{{{/")
-	TokenID      // ID: <mu>".." - 25. ID: <mu>"."/{LOOKAHEAD} - 39. ID: <mu>{ID} - 40. ID: <mu>'['[^\]]*']'
-	TokenString  // STRING: <mu>'"'("\\"["]|[^"])*'"' - 30. STRING: <mu>"'"("\\"[']|[^'])*"'"
-	TokenNumber  // NUMBER: <mu>\-?[0-9]+(?:\.[0-9]+)?/{LITERAL_LOOKAHEAD}
-	TokenBoolean // BOOLEAN: <mu>"true"/{LITERAL_LOOKAHEAD} - 33. BOOLEAN: <mu>"false"/{LITERAL_LOOKAHEAD}
-)
+// References:
+//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.l
+//   - https://github.com/golang/go/blob/master/src/text/template/parse/lex.go
 
 const (
 	// mustache detection
@@ -56,14 +21,6 @@ const (
 )
 
 const eof = -1
-
-type TokenKind int
-
-type Token struct {
-	kind TokenKind // Token kind
-	pos  int       // Position in input string
-	val  string    // Token value
-}
 
 // function that returns the next lexer function
 type lexFunc func(*Lexer) lexFunc
@@ -94,31 +51,36 @@ var (
 	rDotID          = regexp.MustCompile(`^\.` + lookheadChars)
 	rTrue           = regexp.MustCompile(`^true` + literalLookheadChars)
 	rFalse          = regexp.MustCompile(`^false` + literalLookheadChars)
-	rOpenRaw        = regexp.MustCompile(`^{{{{`)
-	rCloseRaw       = regexp.MustCompile(`^}}}}`)
-	rOpenUnescaped  = regexp.MustCompile(`^{{~?{`)
-	rCloseUnescaped = regexp.MustCompile(`^}~?}}`)
-	rOpenBlock      = regexp.MustCompile(`^{{~?#`)
-	rOpenEndBlock   = regexp.MustCompile(`^{{~?/`)
-	rOpenPartial    = regexp.MustCompile(`^{{~?>`)
+	rOpenRaw        = regexp.MustCompile(`^\{\{\{\{`)
+	rCloseRaw       = regexp.MustCompile(`^\}\}\}\}`)
+	rOpenUnescaped  = regexp.MustCompile(`^\{\{~?\{`)
+	rCloseUnescaped = regexp.MustCompile(`^\}~?\}\}`)
+	rOpenBlock      = regexp.MustCompile(`^\{\{~?#`)
+	rOpenEndBlock   = regexp.MustCompile(`^\{\{~?/`)
+	rOpenPartial    = regexp.MustCompile(`^\{\{~?>`)
 	// {{^}} or {{else}}
-	rInverse          = regexp.MustCompile(`^({{~?\^\s*~?}}|{{~?\s*else\s*~?}})`)
-	rOpenInverse      = regexp.MustCompile(`^{{~?\^`)
-	rOpenInverseChain = regexp.MustCompile(`^{{~?\s*else`)
+	rInverse          = regexp.MustCompile(`^(\{\{~?\^\s*~?\}\}|\{\{~?\s*else\s*~?\}\})`)
+	rOpenInverse      = regexp.MustCompile(`^\{\{~?\^`)
+	rOpenInverseChain = regexp.MustCompile(`^\{\{~?\s*else`)
 	// {{ or {{&
-	rOpen            = regexp.MustCompile(`^{{~?&?`)
-	rClose           = regexp.MustCompile(`^~?}}`)
+	rOpen            = regexp.MustCompile(`^\{\{~?&?`)
+	rClose           = regexp.MustCompile(`^~?\}\}`)
 	rOpenBlockParams = regexp.MustCompile(`^as\s+\|`)
 	// {{!--  ... --}}
-	rOpenCommentDash  = regexp.MustCompile(`^{{~?!--\s*`)
-	rCloseCommentDash = regexp.MustCompile(`^\s*--~?}}`)
+	rOpenCommentDash  = regexp.MustCompile(`^\{\{~?!--\s*`)
+	rCloseCommentDash = regexp.MustCompile(`^\s*--~?\}\}`)
 	// {{! ... }}
-	rOpenComment  = regexp.MustCompile(`^{{~?!\s*`)
-	rCloseComment = regexp.MustCompile(`^\s*~?}}`)
+	rOpenComment  = regexp.MustCompile(`^\{\{~?!\s*`)
+	rCloseComment = regexp.MustCompile(`^\s*~?\}\}`)
 )
 
 // scans given input
-func Scan(input string, name string) *Lexer {
+func Scan(input string) *Lexer {
+	return ScanWithName(input, "")
+}
+
+// scans given input, with a name used for testing
+func ScanWithName(input string, name string) *Lexer {
 	result := &Lexer{
 		input:  input,
 		name:   name,
@@ -135,6 +97,11 @@ func (l *Lexer) NextToken() Token {
 	result := <-l.tokens
 
 	return result
+}
+
+// returns the current position
+func (l *Lexer) Pos() int {
+	return l.pos
 }
 
 // starts lexical analysis
@@ -468,6 +435,7 @@ func lexIgnorable(l *Lexer) lexFunc {
 	return lexExpression
 }
 
+// scans a string
 func lexString(l *Lexer) lexFunc {
 	// get string delimiter
 	delim := l.next()
