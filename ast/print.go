@@ -1,12 +1,15 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Print AST
 type PrintVisitor struct {
 	buf string
 
-	indent int
+	depth int
 }
 
 func NewPrintVisitor() *PrintVisitor {
@@ -23,41 +26,103 @@ func (v *PrintVisitor) Output() string {
 	return v.buf
 }
 
-func (v *PrintVisitor) add(val string) {
-	for i := 0; i < v.indent; {
+func (v *PrintVisitor) indent() {
+	for i := 0; i < v.depth; {
 		v.buf += " "
 		i++
 	}
+}
 
+func (v *PrintVisitor) str(val string) {
 	v.buf += val
+}
 
-	v.buf += "\n"
+func (v *PrintVisitor) nl() {
+	v.str("\n")
+}
+
+func (v *PrintVisitor) line(val string) {
+	v.indent()
+	v.str(val)
+	v.nl()
 }
 
 //
 // Visitor interface
 //
 
-func (v *PrintVisitor) visitProgram(node *ProgramNode) {
-	// NOOP
+// Statements
+
+func (v *PrintVisitor) visitProgram(node *Program) {
+	for _, n := range node.Statements {
+		n.Accept(v)
+	}
 }
 
-func (v *PrintVisitor) visitContent(node *ContentNode) {
-	v.add("CONTENT[" + node.Value + "]")
+func (v *PrintVisitor) visitMustache(node *MustacheStatement) {
+	// @todo !!!
 }
 
-func (v *PrintVisitor) visitComment(node *CommentNode) {
-	v.add("{{! '" + node.Value + "' }}")
+func (v *PrintVisitor) visitBlock(node *BlockStatement) {
+	// @todo !!!
 }
 
-func (v *PrintVisitor) visitBoolean(node *BooleanNode) {
-	v.add(fmt.Sprintf("BOOLEAN{%s}", node.Value))
+func (v *PrintVisitor) visitPartial(node *PartialStatement) {
+	// @todo !!!
 }
 
-func (v *PrintVisitor) visitNumber(node *NumberNode) {
-	v.add(fmt.Sprintf("NUMBER{%d}", node.Value))
+func (v *PrintVisitor) visitContent(node *ContentStatement) {
+	v.line("CONTENT[" + node.Value + "]")
 }
 
-func (v *PrintVisitor) visitString(node *StringNode) {
-	v.add("\"" + node.Value + "\"")
+func (v *PrintVisitor) visitComment(node *CommentStatement) {
+	v.line("{{! '" + node.Value + "' }}")
+}
+
+// Expressions
+
+func (v *PrintVisitor) visitSubExpression(node *SubExpression) {
+	// @todo !!!
+}
+
+func (v *PrintVisitor) visitPath(node *PathExpression) {
+	path := strings.Join(node.Parts, "/")
+
+	result := ""
+	if node.Data {
+		result += "@"
+	}
+
+	v.str(result + "PATH:" + path)
+}
+
+// Literals
+
+func (v *PrintVisitor) visitString(node *StringLiteral) {
+	v.str("\"" + node.Value + "\"")
+}
+
+func (v *PrintVisitor) visitBoolean(node *BooleanLiteral) {
+	v.str(fmt.Sprintf("BOOLEAN{%s}", node.Value))
+}
+
+func (v *PrintVisitor) visitNumber(node *NumberLiteral) {
+	v.str(fmt.Sprintf("NUMBER{%d}", node.Value))
+}
+
+// Miscellaneous
+
+func (v *PrintVisitor) visitHash(node *HashNode) {
+	v.str("HASH{")
+
+	for _, p := range node.Pairs {
+		p.Accept(v)
+	}
+
+	v.str("}")
+}
+
+func (v *PrintVisitor) visitHashPair(node *HashPairNode) {
+	v.str(node.Key + "=")
+	node.Val.Accept(v)
 }

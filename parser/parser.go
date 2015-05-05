@@ -46,7 +46,7 @@ func Parse(input string) (ast.Node, error) {
 
 // program : statement*
 func (p *Parser) ParseProgram() (ast.Node, error) {
-	result := ast.NewProgramNode(p.lex.Pos())
+	result := ast.NewProgram(p.lex.Pos())
 
 	for !p.over() {
 		node, err := p.parseStatement()
@@ -88,7 +88,7 @@ func (p *Parser) parseStatement() (ast.Node, error) {
 func (p *Parser) parseContent() ast.Node {
 	tok := p.shift()
 
-	return ast.NewContentNode(tok.Pos, tok.Val)
+	return ast.NewContentStatement(tok.Pos, tok.Val)
 }
 
 // COMMENT
@@ -98,21 +98,30 @@ func (p *Parser) parseComment() ast.Node {
 	value := rOpenComment.ReplaceAllString(tok.Val, "")
 	value = rCloseComment.ReplaceAllString(value, "")
 
-	return ast.NewCommentNode(tok.Pos, strings.TrimSpace(value))
+	return ast.NewCommentStatement(tok.Pos, strings.TrimSpace(value))
 }
+
+// // path params* hash?
+// func (p *Parser) parseExpression() (ast.Node, error) {
+
+// }
 
 // rawBlock : openRawBlock content endRawBlock
 // openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK
 // endRawBlock : OPEN_EN_RAW_BLOCK helperName CLOSE_RAW_BLOCK
 func (p *Parser) parseRawBlock() (ast.Node, error) {
-	// OPEN_RAW_BLOCK
-	p.shift()
+	var err error
 
-	// // helperName
-	// helper, err := p.parseHelperName()
-	// if err != nil {
-	// 	return nil, err
-	// }
+	// OPEN_RAW_BLOCK
+	tok := p.shift()
+
+	result := ast.NewBlockStatement(tok.Pos)
+
+	// helperName
+	result.Path, err = p.parseHelperName()
+	if err != nil {
+		return nil, err
+	}
 
 	// param*
 
@@ -129,7 +138,7 @@ func (p *Parser) parseRawBlock() (ast.Node, error) {
 	// CLOSE_RAW_BLOCK
 
 	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+	return result, errors.New("NOT IMPLEMENTED")
 }
 
 // block : openBlock program inverseChain? closeBlock
@@ -203,13 +212,8 @@ func (p *Parser) parseSexpr() (ast.Node, error) {
 }
 
 // hash : hashSegment+
-func (p *Parser) parseHash() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
 // hashSegment : ID EQUALS param
-func (p *Parser) parseHashSegment() (ast.Node, error) {
+func (p *Parser) parseHash() (ast.Node, error) {
 	// @todo !!!
 	return nil, errors.New("NOT IMPLEMENTED")
 }
@@ -229,25 +233,30 @@ func (p *Parser) parseHelperName() (ast.Node, error) {
 
 	switch tok.Kind {
 	case lexer.TokenBoolean:
+		// BOOLEAN
 		p.shift()
-		result = ast.NewBooleanNode(tok.Pos, (tok.Val == "true"))
+		result = ast.NewBooleanLiteral(tok.Pos, (tok.Val == "true"))
 	case lexer.TokenNumber:
+		// NUMBER
 		p.shift()
 		val, err := strconv.Atoi(tok.Val)
 		if err != nil {
 			return nil, err
 		}
-		result = ast.NewNumberNode(tok.Pos, val)
+		result = ast.NewNumberLiteral(tok.Pos, val)
 	case lexer.TokenString:
+		// STRING
 		p.shift()
-		result = ast.NewStringNode(tok.Pos, tok.Val)
+		result = ast.NewStringLiteral(tok.Pos, tok.Val)
 	case lexer.TokenData:
+		// dataName
 		result, err = p.parseDataName()
 		if err != nil {
 			return nil, err
 		}
 	default:
-		result, err = p.parsePath()
+		// path
+		result, err = p.parsePath(false)
 		if err != nil {
 			return nil, err
 		}
@@ -264,21 +273,43 @@ func (p *Parser) parsePartialName() (ast.Node, error) {
 
 // dataName : DATA pathSegments
 func (p *Parser) parseDataName() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+	tok := p.shift()
+	if tok.Kind != lexer.TokenData {
+		return nil, errors.New(fmt.Sprintf("Failed to parse data: %s", tok))
+	}
+
+	return p.parsePath(true)
 }
 
 // path : pathSegments
-func (p *Parser) parsePath() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
 // pathSegments : pathSegments SEP ID
 //              | ID
-func (p *Parser) parsePathSegments() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+func (p *Parser) parsePath(data bool) (ast.Node, error) {
+	var tok *lexer.Token
+
+	// ID
+	tok = p.shift()
+	if tok.Kind != lexer.TokenID {
+		return nil, errors.New(fmt.Sprintf("Failed to parse path, expecting ID: %s", tok))
+	}
+
+	result := ast.NewPathExpression(tok.Pos)
+	result.Data = data
+	result.Add(tok.Val)
+
+	for tok = p.next(); tok.Kind == lexer.TokenSep; {
+		// SEP
+		p.shift()
+
+		// ID
+		tok := p.shift()
+		if tok.Kind != lexer.TokenID {
+			return nil, errors.New(fmt.Sprintf("Failed to parse path, expecting ID after separator: %s", tok))
+		}
+		result.Add(tok.Val)
+	}
+
+	return result, p.err()
 }
 
 // Ensure there is at least a token to parse
