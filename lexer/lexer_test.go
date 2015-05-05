@@ -43,6 +43,9 @@ var tokOpenSexpr = Token{TokenOpenSexpr, 0, "("}
 var tokCloseSexpr = Token{TokenCloseSexpr, 0, ")"}
 var tokOpenBlockParams = Token{TokenOpenBlockParams, 0, "as |"}
 var tokCloseBlockParams = Token{TokenCloseBlockParams, 0, "|"}
+var tokOpenRawBlock = Token{TokenOpenRawBlock, 0, "{{{{"}
+var tokCloseRawBlock = Token{TokenCloseRawBlock, 0, "}}}}"}
+var tokOpenEndRawBlock = Token{TokenOpenEndRawBlock, 0, "{{{{/"}
 
 var lexTests = []lexTest{
 	{"empty", "", []Token{tokEOF}},
@@ -58,6 +61,11 @@ var lexTests = []lexTest{
 		`does not tokenizes identifier starting with false as boolean`,
 		`{{ foo falsebar }}`,
 		[]Token{tokOpen, tokID("foo"), tokID("falsebar"), tokClose, tokEOF},
+	},
+	{
+		`tokenizes raw block`,
+		`{{{{foo}}}} {{{{/foo}}}}`,
+		[]Token{tokOpenRawBlock, tokID("foo"), tokCloseRawBlock, tokContent(" "), tokOpenEndRawBlock, tokID("foo"), tokCloseRawBlock, tokEOF},
 	},
 
 	//

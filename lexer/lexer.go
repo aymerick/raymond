@@ -53,6 +53,7 @@ var (
 	rFalse          = regexp.MustCompile(`^false` + literalLookheadChars)
 	rOpenRaw        = regexp.MustCompile(`^\{\{\{\{`)
 	rCloseRaw       = regexp.MustCompile(`^\}\}\}\}`)
+	rOpenEndRaw     = regexp.MustCompile(`^\{\{\{\{/`)
 	rOpenUnescaped  = regexp.MustCompile(`^\{\{~?\{`)
 	rCloseUnescaped = regexp.MustCompile(`^\}~?\}\}`)
 	rOpenBlock      = regexp.MustCompile(`^\{\{~?#`)
@@ -272,7 +273,9 @@ func lexOpenMustache(l *Lexer) lexFunc {
 
 	nextFunc := lexExpression
 
-	if str = l.findRegexp(rOpenRaw); str != "" {
+	if str = l.findRegexp(rOpenEndRaw); str != "" {
+		tok = TokenOpenEndRawBlock
+	} else if str = l.findRegexp(rOpenRaw); str != "" {
 		tok = TokenOpenRawBlock
 	} else if str = l.findRegexp(rOpenUnescaped); str != "" {
 		tok = TokenOpenUnescaped
@@ -308,10 +311,13 @@ func lexCloseMustache(l *Lexer) lexFunc {
 	var tok TokenKind
 
 	if str = l.findRegexp(rCloseRaw); str != "" {
+		// }}}}
 		tok = TokenCloseRawBlock
 	} else if str = l.findRegexp(rCloseUnescaped); str != "" {
+		// }}}
 		tok = TokenCloseUnescaped
 	} else if str = l.findRegexp(rClose); str != "" {
+		// }}
 		tok = TokenClose
 	} else {
 		// this is rotten

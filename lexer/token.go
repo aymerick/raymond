@@ -11,6 +11,7 @@ const (
 	TokenClose            // CLOSE: <mu>{RIGHT_STRIP}?"}}"
 	TokenOpenRawBlock     // OPEN_RAW_BLOCK: <mu>"{{{{"
 	TokenCloseRawBlock    // CLOSE_RAW_BLOCK: <mu>"}}}}"
+	TokenOpenEndRawBlock  // END_RAW_BLOCK: <raw>"{{{{/"[^\s!"#%-,\.\/;->@\[-\^`\{-~]+/[=}\s\/.]"}}}}"
 	TokenOpenUnescaped    // OPEN_UNESCAPED: <mu>"{{"{LEFT_STRIP}?"{"
 	TokenCloseUnescaped   // CLOSE_UNESCAPED: <mu>"}"{RIGHT_STRIP}?"}}"
 	TokenOpenBlock        // OPEN_BLOCK: <mu>"{{"{LEFT_STRIP}?"#"
@@ -19,7 +20,6 @@ const (
 	TokenOpenInverse      // OPEN_INVERSE: <mu>"{{"{LEFT_STRIP}?"^"
 	TokenOpenInverseChain // OPEN_INVERSE_CHAIN: <mu>"{{"{LEFT_STRIP}?\s*"else"
 	TokenOpenPartial      // OPEN_PARTIAL: <mu>"{{"{LEFT_STRIP}?">"
-	TokenEndRawBlock      // END_RAW_BLOCK: <raw>"{{{{/"[^\s!"#%-,\.\/;->@\[-\^`\{-~]+/[=}\s\/.]"}}}}"
 	TokenComment          // COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" - 20. begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" - 21. COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
 
 	// inside mustaches
@@ -65,7 +65,7 @@ var tokenName = map[TokenKind]string{
 	TokenOpenEndBlock:     "OpenEndBlock",
 	TokenOpenRawBlock:     "OpenRawBlock",
 	TokenCloseRawBlock:    "CloseRawBlock",
-	TokenEndRawBlock:      "EndRawBlock",
+	TokenOpenEndRawBlock:  "OpenEndRawBlock",
 	TokenOpenBlockParams:  "OpenBlockParams",
 	TokenCloseBlockParams: "CloseBlockParams",
 	TokenInverse:          "Inverse",
