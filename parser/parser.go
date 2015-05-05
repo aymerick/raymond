@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/aymerick/raymond/ast"
@@ -62,6 +63,7 @@ func (p *Parser) ParseProgram() (ast.Node, error) {
 // statement : mustache | block | rawBlock | partial | content | COMMENT
 func (p *Parser) parseStatement() (ast.Node, error) {
 	var result ast.Node
+	var err error
 
 	tok := p.next()
 
@@ -70,6 +72,11 @@ func (p *Parser) parseStatement() (ast.Node, error) {
 		result = p.parseContent()
 	case lexer.TokenComment:
 		result = p.parseComment()
+	case lexer.TokenOpenRawBlock:
+		result, err = p.parseRawBlock()
+		if err != nil {
+			return nil, err
+		}
 	default:
 		return nil, errors.New(fmt.Sprintf("Failed to parse statement: %s", tok))
 	}
@@ -94,14 +101,33 @@ func (p *Parser) parseComment() ast.Node {
 	return ast.NewCommentNode(tok.Pos, strings.TrimSpace(value))
 }
 
-// rawBlock : openRawBlock content END_RAW_BLOCK
-func (p *Parser) parseRawBlock() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
+// rawBlock : openRawBlock content endRawBlock
 // openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK
-func (p *Parser) parseOpenRawBlock() (ast.Node, error) {
+// endRawBlock : OPEN_EN_RAW_BLOCK helperName CLOSE_RAW_BLOCK
+func (p *Parser) parseRawBlock() (ast.Node, error) {
+	// OPEN_RAW_BLOCK
+	p.shift()
+
+	// // helperName
+	// helper, err := p.parseHelperName()
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// param*
+
+	// hash?
+
+	// CLOSE_RAW_BLOCK
+
+	// content
+
+	// OPEN_EN_RAW_BLOCK
+
+	// helperName
+
+	// CLOSE_RAW_BLOCK
+
 	// @todo !!!
 	return nil, errors.New("NOT IMPLEMENTED")
 }
@@ -190,14 +216,44 @@ func (p *Parser) parseHashSegment() (ast.Node, error) {
 
 // blockParams : OPEN_BLOCK_PARAMS ID+ CLOSE_BLOCK_PARAMS
 func (p *Parser) parseBlockParams() (ast.Node, error) {
-
+	// @todo !!!
 	return nil, errors.New("NOT IMPLEMENTED")
 }
 
 // helperName : path | dataName | STRING | NUMBER | BOOLEAN | UNDEFINED | NULL
 func (p *Parser) parseHelperName() (ast.Node, error) {
+	var result ast.Node
+	var err error
 
-	return nil, errors.New("NOT IMPLEMENTED")
+	tok := p.next()
+
+	switch tok.Kind {
+	case lexer.TokenBoolean:
+		p.shift()
+		result = ast.NewBooleanNode(tok.Pos, (tok.Val == "true"))
+	case lexer.TokenNumber:
+		p.shift()
+		val, err := strconv.Atoi(tok.Val)
+		if err != nil {
+			return nil, err
+		}
+		result = ast.NewNumberNode(tok.Pos, val)
+	case lexer.TokenString:
+		p.shift()
+		result = ast.NewStringNode(tok.Pos, tok.Val)
+	case lexer.TokenData:
+		result, err = p.parseDataName()
+		if err != nil {
+			return nil, err
+		}
+	default:
+		result, err = p.parsePath()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, p.err()
 }
 
 // partialName : helperName | sexpr
@@ -212,7 +268,7 @@ func (p *Parser) parseDataName() (ast.Node, error) {
 	return nil, errors.New("NOT IMPLEMENTED")
 }
 
-// x path : pathSegments
+// path : pathSegments
 func (p *Parser) parsePath() (ast.Node, error) {
 	// @todo !!!
 	return nil, errors.New("NOT IMPLEMENTED")

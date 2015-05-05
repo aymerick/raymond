@@ -23,10 +23,6 @@ var parserTests = []parserTest{
 	{"Comment dash", "{{!-- This is a comment --}}", "{{! 'This is a comment' }}\n"},
 }
 
-func equal(a, b ast.Node) bool {
-	return (a.String() == b.String())
-}
-
 func TestParser(t *testing.T) {
 	for _, test := range parserTests {
 		if VERBOSE {

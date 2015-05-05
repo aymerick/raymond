@@ -16,17 +16,19 @@ type Visitor interface {
 	visitProgram(node *ProgramNode)
 	visitContent(node *ContentNode)
 	visitComment(node *CommentNode)
+	visitBoolean(node *BooleanNode)
+	visitNumber(node *NumberNode)
+	visitString(node *StringNode)
 }
 
 // AST node interface
 type Node interface {
 	Type() NodeType
 
-	String() string
-
 	// byte position of start of node in full original input string
 	Position() Pos
 
+	// accepts visitor
 	Accept(Visitor)
 }
 
@@ -44,10 +46,10 @@ const (
 	NodeProgram NodeType = iota
 	NodeContent
 	NodeComment
+	NodeBoolean
+	NodeNumber
+	NodeString
 )
-
-// Changed to "%q" in tests for better error messages
-var textFormat = "%s" // "%q"
 
 //
 // Program
@@ -94,16 +96,12 @@ type ContentNode struct {
 	Value string
 }
 
-func NewContentNode(pos int, text string) *ContentNode {
+func NewContentNode(pos int, val string) *ContentNode {
 	return &ContentNode{
 		NodeType: NodeContent,
 		Pos:      Pos(pos),
-		Value:    text,
+		Value:    val,
 	}
-}
-
-func (node *ContentNode) String() string {
-	return fmt.Sprintf(textFormat, node.Value)
 }
 
 func (node *ContentNode) Accept(visitor Visitor) {
@@ -120,18 +118,80 @@ type CommentNode struct {
 	Value string
 }
 
-func NewCommentNode(pos int, text string) *CommentNode {
+func NewCommentNode(pos int, val string) *CommentNode {
 	return &CommentNode{
 		NodeType: NodeComment,
 		Pos:      Pos(pos),
-		Value:    text,
+		Value:    val,
 	}
-}
-
-func (node *CommentNode) String() string {
-	return fmt.Sprintf(textFormat, node.Value)
 }
 
 func (node *CommentNode) Accept(visitor Visitor) {
 	visitor.visitComment(node)
+}
+
+//
+// Boolean
+//
+
+type BooleanNode struct {
+	NodeType
+	Pos
+	Value bool
+}
+
+func NewBooleanNode(pos int, val bool) *BooleanNode {
+	return &BooleanNode{
+		NodeType: NodeBoolean,
+		Pos:      Pos(pos),
+		Value:    val,
+	}
+}
+
+func (node *BooleanNode) Accept(visitor Visitor) {
+	visitor.visitBoolean(node)
+}
+
+//
+// Number
+//
+
+type NumberNode struct {
+	NodeType
+	Pos
+	Value int
+}
+
+func NewNumberNode(pos int, val int) *NumberNode {
+	return &NumberNode{
+		NodeType: NodeNumber,
+		Pos:      Pos(pos),
+		Value:    val,
+	}
+}
+
+func (node *NumberNode) Accept(visitor Visitor) {
+	visitor.visitNumber(node)
+}
+
+//
+// String
+//
+
+type StringNode struct {
+	NodeType
+	Pos
+	Value string
+}
+
+func NewStringNode(pos int, val string) *StringNode {
+	return &StringNode{
+		NodeType: NodeString,
+		Pos:      Pos(pos),
+		Value:    val,
+	}
+}
+
+func (node *StringNode) Accept(visitor Visitor) {
+	visitor.visitString(node)
 }

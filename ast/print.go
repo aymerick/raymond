@@ -1,5 +1,7 @@
 package ast
 
+import "fmt"
+
 // Print AST
 type PrintVisitor struct {
 	buf string
@@ -46,4 +48,16 @@ func (v *PrintVisitor) visitContent(node *ContentNode) {
 
 func (v *PrintVisitor) visitComment(node *CommentNode) {
 	v.add("{{! '" + node.Value + "' }}")
+}
+
+func (v *PrintVisitor) visitBoolean(node *BooleanNode) {
+	v.add(fmt.Sprintf("BOOLEAN{%s}", node.Value))
+}
+
+func (v *PrintVisitor) visitNumber(node *NumberNode) {
+	v.add(fmt.Sprintf("NUMBER{%d}", node.Value))
+}
+
+func (v *PrintVisitor) visitString(node *StringNode) {
+	v.add("\"" + node.Value + "\"")
 }
