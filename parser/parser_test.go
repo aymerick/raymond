@@ -86,8 +86,24 @@ var parserTests = []parserTest{
 	{"parses chained inverse block with block params", `{{#foo}}{{else foo as |bar baz|}}content{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    BLOCK:\n      PATH:foo []\n      PROGRAM:\n        BLOCK PARAMS: [ bar baz ]\n        CONTENT[ 'content' ]\n"},
 }
 
-// @todo
-//	{"throws on old inverse section", `{{else foo}}bar{{/foo}}`, "ERROR"},
+// @todo Handle errors:
+// 	`{{else foo}}bar{{/foo}}`
+// 	`foo{{^}}bar`
+// 	`{{foo}`
+// 	`{{foo &}}`
+// 	`{{#goodbyes}}{{/hellos}}`
+//
+// Invalid paths:
+//	`{{foo/../bar}}`
+//	`{{foo/./bar}}`
+//	`{{foo/this/bar}}`
+//
+// Report correct line number in errors
+//  `hello\nmy\n{{foo}` => line 3
+//  `hello\n\nmy\n\n{{foo}` => line 5
+//
+// Report the correct line number in errors when the first character is a newline
+//  `\n\nhello\n\nmy\n\n{{foo}` => line 7
 
 func TestParser(t *testing.T) {
 	for _, test := range parserTests {
