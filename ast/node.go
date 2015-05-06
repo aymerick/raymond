@@ -114,6 +114,10 @@ func (node *Program) Accept(visitor Visitor) {
 	visitor.visitProgram(node)
 }
 
+func (node *Program) AddStatement(statement Node) {
+	node.Statements = append(node.Statements, statement)
+}
+
 //
 // Mustache Statement
 //
@@ -146,9 +150,10 @@ type BlockStatement struct {
 	NodeType
 	Pos
 
-	Path   Node   // PathExpression
-	Params []Node // [ Expression ... ]
-	Hash   Node   // HashNode
+	Path    Node   // PathExpression
+	Params  []Node // [ Expression ... ]
+	Hash    Node   // HashNode
+	Program Node   // Program
 }
 
 func NewBlockStatement(pos int) *BlockStatement {
@@ -264,15 +269,23 @@ type PathExpression struct {
 	NodeType
 	Pos
 
-	Parts []string
-	Data  bool
+	Original string
+	Parts    []string
+	Data     bool
 }
 
-func NewPathExpression(pos int) *PathExpression {
-	return &PathExpression{
+func NewPathExpression(pos int, data bool) *PathExpression {
+	result := &PathExpression{
 		NodeType: NodePath,
 		Pos:      Pos(pos),
+		Data:     data,
 	}
+
+	if data {
+		result.Original = "@"
+	}
+
+	return result
 }
 
 func (node *PathExpression) Accept(visitor Visitor) {
@@ -280,8 +293,15 @@ func (node *PathExpression) Accept(visitor Visitor) {
 }
 
 // Adds path part
-func (node *PathExpression) Add(part string) {
+func (node *PathExpression) Part(part string) {
+	node.Original += part
+
 	node.Parts = append(node.Parts, part)
+}
+
+// Adds path separator
+func (node *PathExpression) Sep(separator string) {
+	node.Original += separator
 }
 
 //
