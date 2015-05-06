@@ -63,6 +63,7 @@ func (v *PrintVisitor) printExpression(path Node, params []Node, hash Node) {
 
 	// hash
 	if hash != nil {
+		v.str(" ")
 		hash.Accept(v)
 	}
 }
@@ -141,7 +142,10 @@ func (v *PrintVisitor) visitNumber(node *NumberLiteral) {
 func (v *PrintVisitor) visitHash(node *Hash) {
 	v.str("HASH{")
 
-	for _, p := range node.Pairs {
+	for i, p := range node.Pairs {
+		if i > 0 {
+			v.str(", ")
+		}
 		p.Accept(v)
 	}
 

@@ -131,14 +131,18 @@ func (p *Parser) parseExpression() (helperName ast.Node, params []ast.Node, hash
 		return
 	}
 
-	// params*
-	params, err = p.parseParamsOpt()
-	if err != nil {
-		return
+	if p.isParam() {
+		// params*
+		params, err = p.parseParams()
+		if err != nil {
+			return
+		}
 	}
 
 	// hash?
-	hash, err = p.parseHashOpt()
+	if p.isHashSegment() {
+		hash, err = p.parseHash()
+	}
 
 	return
 }
@@ -307,11 +311,11 @@ func (p *Parser) parseParam() (ast.Node, error) {
 
 // Returns true if next tokens represent a `param`
 func (p *Parser) isParam() bool {
-	return p.isSexpr() || p.isHelperName()
+	return (p.isSexpr() || p.isHelperName()) && !p.isHashSegment()
 }
 
 // parses `param*`
-func (p *Parser) parseParamsOpt() ([]ast.Node, error) {
+func (p *Parser) parseParams() ([]ast.Node, error) {
 	var result []ast.Node
 
 	for p.isParam() {
@@ -385,14 +389,6 @@ func (p *Parser) parseHash() (ast.Node, error) {
 // returns true if next tokens represents a `hashSegment`
 func (p *Parser) isHashSegment() bool {
 	return p.have(2) && (p.next().Kind == lexer.TokenID) && (p.nextAt(1).Kind == lexer.TokenEquals)
-}
-
-// parses `hash?`
-func (p *Parser) parseHashOpt() (ast.Node, error) {
-	if p.isHashSegment() {
-		return p.parseHash()
-	}
-	return nil, nil
 }
 
 // hashSegment : ID EQUALS param
