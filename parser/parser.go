@@ -46,11 +46,15 @@ func Parse(input string) (ast.Node, error) {
 	return New(input).ParseProgram()
 }
 
+func errExpect(msg string, expect lexer.TokenKind, tok *lexer.Token) error {
+	return errors.New(fmt.Sprintf("%s Expected %s but got: %s", msg, expect, tok))
+}
+
 // program : statement*
-func (p *Parser) ParseProgram() (ast.Node, error) {
+func (p *Parser) ParseProgram() (*ast.Program, error) {
 	result := ast.NewProgram(p.lex.Pos())
 
-	for !p.over() {
+	for p.isStatement() {
 		node, err := p.parseStatement()
 		if err != nil {
 			return nil, err
@@ -99,11 +103,27 @@ func (p *Parser) parseStatement() (ast.Node, error) {
 	return result, p.err()
 }
 
+// Returns true if next token starts a statement
+func (p *Parser) isStatement() bool {
+	if !p.have(1) {
+		return false
+	}
+
+	switch p.next().Kind {
+	case lexer.TokenOpen, lexer.TokenOpenUnescaped, lexer.TokenOpenBlock,
+		lexer.TokenOpenInverse, lexer.TokenOpenRawBlock, lexer.TokenOpenPartial,
+		lexer.TokenContent, lexer.TokenComment:
+		return true
+	}
+
+	return false
+}
+
 // content : CONTENT
 func (p *Parser) parseContent() (ast.Node, error) {
 	tok := p.shift()
 	if tok.Kind != lexer.TokenContent {
-		return nil, errors.New(fmt.Sprintf("Failed to parse content: %s", tok))
+		return nil, errExpect("Failed to parse content.", lexer.TokenContent, tok)
 	}
 
 	return ast.NewContentStatement(tok.Pos, tok.Val), nil
@@ -113,7 +133,7 @@ func (p *Parser) parseContent() (ast.Node, error) {
 func (p *Parser) parseComment() (ast.Node, error) {
 	tok := p.shift()
 	if tok.Kind != lexer.TokenComment {
-		return nil, errors.New(fmt.Sprintf("Failed to parse comment: %s", tok))
+		return nil, errExpect("Failed to parse comment.", lexer.TokenComment, tok)
 	}
 
 	value := rOpenComment.ReplaceAllString(tok.Val, "")
@@ -174,13 +194,13 @@ func (p *Parser) parseRawBlock() (ast.Node, error) {
 
 	openName, ok := result.Path.(*ast.PathExpression)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("%s Expected helper name in open block: %s", errMsg, result.Path))
+		return nil, errors.New(fmt.Sprintf("%s Unexpected name in open block: %s", errMsg, result.Path))
 	}
 
 	// CLOSE_RAW_BLOCK
 	tok = p.shift()
 	if tok.Kind != lexer.TokenCloseRawBlock {
-		return nil, errors.New(fmt.Sprintf("%s Expected TokenCloseRawBlock: %s", errMsg, tok))
+		return nil, errExpect(errMsg, lexer.TokenCloseRawBlock, tok)
 	}
 
 	// content
@@ -197,7 +217,7 @@ func (p *Parser) parseRawBlock() (ast.Node, error) {
 	// OPEN_END_RAW_BLOCK
 	tok = p.shift()
 	if tok.Kind != lexer.TokenOpenEndRawBlock {
-		return nil, errors.New(fmt.Sprintf("%s Expected TokenOpenEndRawBlock: %s", errMsg, tok))
+		return nil, errExpect(errMsg, lexer.TokenOpenEndRawBlock, tok)
 	}
 
 	// helperName
@@ -208,64 +228,129 @@ func (p *Parser) parseRawBlock() (ast.Node, error) {
 
 	closeName, ok := endId.(*ast.PathExpression)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("%s Expected helper name in end block: %s", errMsg, endId))
+		return nil, errors.New(fmt.Sprintf("%s Unexpected name in end block: %s", errMsg, endId))
 	}
 
 	if openName.Original != closeName.Original {
-		return nil, errors.New(fmt.Sprintf("%s Open and end blocks helper names mismatch: %s != %s", openName.Original, closeName.Original))
+		return nil, errors.New(fmt.Sprintf("%s Open and end blocks names mismatch: %s != %s", openName.Original, closeName.Original))
 	}
 
 	// CLOSE_RAW_BLOCK
 	tok = p.shift()
 	if tok.Kind != lexer.TokenCloseRawBlock {
-		return nil, errors.New(fmt.Sprintf("%s Expected TokenCloseRawBlock: %s", errMsg, tok))
+		return nil, errExpect(errMsg, lexer.TokenCloseRawBlock, tok)
 	}
 
 	return result, nil
 }
 
+// openBlock : OPEN_BLOCK helperName param* hash? blockParams? CLOSE
+// openInverse : OPEN_INVERSE helperName param* hash? blockParams? CLOSE
+func (p *Parser) parseOpenBlock() (result *ast.BlockStatement, blockParams []string, inverse bool, err error) {
+	errMsg := "Failed to parse open block."
+
+	// OPEN_BLOCK | OPEN_INVERSE
+	tokOpen := p.shift()
+
+	result = ast.NewBlockStatement(tokOpen.Pos)
+
+	// helperName param* hash?
+	result.Path, result.Params, result.Hash, err = p.parseExpression()
+	if err != nil {
+		return
+	}
+
+	// blockParams?
+	if p.isBlockParams() {
+		blockParams, err = p.parseBlockParams()
+		if err != nil {
+			return
+		}
+	}
+
+	// CLOSE
+	tok := p.shift()
+	if tok.Kind != lexer.TokenClose {
+		err = errors.New(fmt.Sprintf("%s Unexpected name: %s", errMsg, result.Path))
+		return
+	}
+
+	return
+}
+
 // block : openBlock program inverseChain? closeBlock
 //       | openInverse program inverseAndProgram? closeBlock
-func (p *Parser) parseBlock() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
-// openBlock : OPEN_BLOCK helperName param* hash? blockParams? CLOSE
-func (p *Parser) parseOpenBlock() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
-// openInverse : OPEN_INVERSE helperName param* hash? blockParams? CLOSE
-func (p *Parser) parseOpenInverse() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
+//
 // openInverseChain : OPEN_INVERSE_CHAIN helperName param* hash? blockParams? CLOSE
-func (p *Parser) parseOpenInverseChain() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
 // inverseAndProgram : INVERSE program
-func (p *Parser) parseInverseAndProgram() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
 // inverseChain : openInverseChain program inverseChain?
 //              | inverseAndProgram
-func (p *Parser) parseInverseChain() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
-}
-
+//
 // closeBlock : OPEN_ENDBLOCK helperName CLOSE
-func (p *Parser) parseCloseBlock() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+func (p *Parser) parseBlock() (ast.Node, error) {
+	var err error
+	errMsg := "Failed to parse block."
+
+	// openBlock | openInverse
+	result, blockParams, inverse, err := p.parseOpenBlock()
+	if err != nil {
+		return nil, err
+	}
+
+	// program
+	program, err := p.ParseProgram()
+	if err != nil {
+		return nil, err
+	}
+	program.BlockParams = blockParams
+
+	result.Program = program
+
+	if inverse {
+		// inverseAndProgram?
+		if p.isInverse() {
+			// @todo
+		}
+	} else {
+		// inverseChain?
+		if p.isInverseChain() {
+			// @todo
+		}
+	}
+
+	// OPEN_ENDBLOCK
+	tok := p.shift()
+	if tok.Kind != lexer.TokenOpenEndBlock {
+		return nil, errExpect(errMsg, lexer.TokenOpenEndBlock, tok)
+	}
+
+	// helperName
+	endId, err := p.parseHelperName()
+	if err != nil {
+		return nil, err
+	}
+
+	closeName, ok := endId.(*ast.PathExpression)
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("%s Unexpected name in end block: %s", errMsg, endId))
+	}
+
+	openName, ok := result.Path.(*ast.PathExpression)
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("%s Unexpected name: %s", errMsg, result.Path))
+	}
+
+	if openName.Original != closeName.Original {
+		return nil, errors.New(fmt.Sprintf("%s Open and end blocks names mismatch: %s != %s", openName.Original, closeName.Original))
+	}
+
+	// CLOSE
+	tok = p.shift()
+	if tok.Kind != lexer.TokenCloseRawBlock {
+		return nil, errExpect(errMsg, lexer.TokenCloseRawBlock, tok)
+	}
+
+	return result, p.err()
 }
 
 // mustache : OPEN helperName param* hash? CLOSE
@@ -292,7 +377,7 @@ func (p *Parser) parseMustache() (ast.Node, error) {
 	// CLOSE | CLOSE_UNESCAPED
 	tok = p.shift()
 	if tok.Kind != closeToken {
-		return nil, errors.New(fmt.Sprintf("Failed to parse Mustache Statement. Expected %s, but got: %s", closeToken, tok))
+		return nil, errExpect("Failed to parse Mustache Statement.", closeToken, tok)
 	}
 
 	return result, p.err()
@@ -393,11 +478,6 @@ func (p *Parser) parseSexpr() (ast.Node, error) {
 	return result, p.err()
 }
 
-// returns true if next token is a sexpr
-func (p *Parser) isSexpr() bool {
-	return p.have(1) && (p.next().Kind == lexer.TokenOpenSexpr)
-}
-
 // hash : hashSegment+
 func (p *Parser) parseHash() (ast.Node, error) {
 	var pairs []ast.Node
@@ -456,9 +536,32 @@ func (p *Parser) parseHashSegment() (ast.Node, error) {
 }
 
 // blockParams : OPEN_BLOCK_PARAMS ID+ CLOSE_BLOCK_PARAMS
-func (p *Parser) parseBlockParams() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+func (p *Parser) parseBlockParams() ([]string, error) {
+	var result []string
+	errMsg := "Failed to parse Block Params."
+
+	// OPEN_BLOCK_PARAMS
+	tok := p.shift()
+	if tok.Kind != lexer.TokenOpenBlockParams {
+		return nil, errors.New(fmt.Sprintf("%s Expected a TokenOpenBlockParams: %s", errMsg, tok))
+	}
+
+	// ID+
+	for p.isID() {
+		result = append(result, p.shift().Val)
+	}
+
+	if len(result) == 0 {
+		return nil, errors.New(fmt.Sprintf("%s Missing ID: %s", errMsg, tok))
+	}
+
+	// CLOSE_BLOCK_PARAMS
+	tok = p.shift()
+	if tok.Kind != lexer.TokenCloseBlockParams {
+		return nil, errors.New(fmt.Sprintf("%s Expected a TokenCloseBlockParams: %s", errMsg, tok))
+	}
+
+	return result, p.err()
 }
 
 // helperName : path | dataName | STRING | NUMBER | BOOLEAN | UNDEFINED | NULL
@@ -558,11 +661,6 @@ func (p *Parser) parsePath(data bool) (ast.Node, error) {
 	return result, p.err()
 }
 
-// Returns true if next token is a path separator
-func (p *Parser) isPathSep() bool {
-	return p.have(1) && p.next().Kind == lexer.TokenSep
-}
-
 // Ensure there is token to parse at given index
 func (p *Parser) ensure(index int) {
 	if p.lexOver {
@@ -616,12 +714,6 @@ func (p *Parser) shift() *lexer.Token {
 	return result
 }
 
-// Returns true if parsing is over
-func (p *Parser) over() bool {
-	tok := p.next()
-	return (tok.Kind == lexer.TokenEOF) || (tok.Kind == lexer.TokenError)
-}
-
 // Returns lexer error, or nil if no error
 func (p *Parser) err() error {
 	if token := p.next(); token.Kind == lexer.TokenError {
@@ -629,4 +721,39 @@ func (p *Parser) err() error {
 	} else {
 		return nil
 	}
+}
+
+// Returns true if next token is of given type
+func (p *Parser) isToken(kind lexer.TokenKind) bool {
+	return p.have(1) && p.next().Kind == kind
+}
+
+// returns true if next token starts a sexpr
+func (p *Parser) isSexpr() bool {
+	return p.isToken(lexer.TokenOpenSexpr)
+}
+
+// Returns true if next token is a path separator
+func (p *Parser) isPathSep() bool {
+	return p.isToken(lexer.TokenSep)
+}
+
+// Returns true if next token is an ID
+func (p *Parser) isID() bool {
+	return p.isToken(lexer.TokenID)
+}
+
+// Returns true if next token starts a block params
+func (p *Parser) isBlockParams() bool {
+	return p.isToken(lexer.TokenOpenBlockParams)
+}
+
+// Returns true if next token starts an INVERSE sequence
+func (p *Parser) isInverse() bool {
+	return p.isToken(lexer.TokenOpenInverse)
+}
+
+// Returns true if next token starts an INVERSE_CHAIN v
+func (p *Parser) isInverseChain() bool {
+	return p.isToken(lexer.TokenOpenInverseChain)
 }

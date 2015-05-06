@@ -90,7 +90,8 @@ type Program struct {
 	NodeType
 	Pos
 
-	Statements []Node // [ Statement ... ]
+	Body        []Node // [ Statement ... ]
+	BlockParams []string
 }
 
 func NewProgram(pos int) *Program {
@@ -103,7 +104,7 @@ func NewProgram(pos int) *Program {
 func (node *Program) String() string {
 	b := new(bytes.Buffer)
 
-	for _, n := range node.Statements {
+	for _, n := range node.Body {
 		fmt.Fprint(b, n)
 	}
 
@@ -115,7 +116,7 @@ func (node *Program) Accept(visitor Visitor) {
 }
 
 func (node *Program) AddStatement(statement Node) {
-	node.Statements = append(node.Statements, statement)
+	node.Body = append(node.Body, statement)
 }
 
 //
@@ -154,6 +155,7 @@ type BlockStatement struct {
 	Params  []Node // [ Expression ... ]
 	Hash    Node   // Hash
 	Program Node   // Program
+	Inverse Node   // Program
 }
 
 func NewBlockStatement(pos int) *BlockStatement {

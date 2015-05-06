@@ -29,7 +29,7 @@ func (v *PrintVisitor) Output() string {
 
 func (v *PrintVisitor) indent() {
 	for i := 0; i < v.depth; {
-		v.buf += " "
+		v.buf += "  "
 		i++
 	}
 }
@@ -76,7 +76,7 @@ func (v *PrintVisitor) printExpression(path Node, params []Node, hash Node) {
 // Statements
 
 func (v *PrintVisitor) visitProgram(node *Program) {
-	for _, n := range node.Statements {
+	for _, n := range node.Body {
 		n.Accept(v)
 	}
 }
