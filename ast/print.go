@@ -84,6 +84,10 @@ func (v *PrintVisitor) printExpression(path Node, params []Node, hash Node, line
 // Statements
 
 func (v *PrintVisitor) visitProgram(node *Program) {
+	if len(node.BlockParams) > 0 {
+		v.line("BLOCK PARAMS: [ " + strings.Join(node.BlockParams, " ") + " ]")
+	}
+
 	for _, n := range node.Body {
 		n.Accept(v)
 	}
