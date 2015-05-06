@@ -33,8 +33,8 @@ type Visitor interface {
 	visitNumber(node *NumberLiteral)
 
 	// miscellaneous
-	visitHash(node *HashNode)
-	visitHashPair(node *HashPairNode)
+	visitHash(node *Hash)
+	visitHashPair(node *HashPair)
 }
 
 // AST node interface
@@ -128,7 +128,7 @@ type MustacheStatement struct {
 
 	Path   Node   // PathExpression
 	Params []Node // [ Expression ... ]
-	Hash   Node   // HashNode
+	Hash   Node   // Hash
 }
 
 func NewMustacheStatement(pos int) *MustacheStatement {
@@ -152,7 +152,7 @@ type BlockStatement struct {
 
 	Path    Node   // PathExpression
 	Params  []Node // [ Expression ... ]
-	Hash    Node   // HashNode
+	Hash    Node   // Hash
 	Program Node   // Program
 }
 
@@ -177,7 +177,7 @@ type PartialStatement struct {
 
 	Name   Node   // PathExpression | SubExpression
 	Params []Node // [ Expression ... ]
-	Hash   Node   // HashNode
+	Hash   Node   // Hash
 }
 
 func NewPartialStatement(pos int) *PartialStatement {
@@ -247,7 +247,7 @@ type SubExpression struct {
 
 	Path   Node   // PathExpression
 	Params []Node // [ Expression ... ]
-	Hash   Node   // HashNode
+	Hash   Node   // Hash
 }
 
 func NewSubExpression(pos int) *SubExpression {
@@ -350,6 +350,14 @@ func (node *BooleanLiteral) Accept(visitor Visitor) {
 	visitor.visitBoolean(node)
 }
 
+func (node *BooleanLiteral) String() string {
+	if node.Value {
+		return "true"
+	} else {
+		return "false"
+	}
+}
+
 //
 // Number Literal
 //
@@ -377,21 +385,21 @@ func (node *NumberLiteral) Accept(visitor Visitor) {
 // Hash
 //
 
-type HashNode struct {
+type Hash struct {
 	NodeType
 	Pos
 
-	Pairs []Node // [ HashPairNode ... ]
+	Pairs []Node // [ HashPair ... ]
 }
 
-func NewHashNode(pos int) *HashNode {
-	return &HashNode{
+func NewHash(pos int) *Hash {
+	return &Hash{
 		NodeType: NodeHash,
 		Pos:      Pos(pos),
 	}
 }
 
-func (node *HashNode) Accept(visitor Visitor) {
+func (node *Hash) Accept(visitor Visitor) {
 	visitor.visitHash(node)
 }
 
@@ -399,7 +407,7 @@ func (node *HashNode) Accept(visitor Visitor) {
 // HashPair
 //
 
-type HashPairNode struct {
+type HashPair struct {
 	NodeType
 	Pos
 
@@ -407,13 +415,13 @@ type HashPairNode struct {
 	Val Node // Expression
 }
 
-func NewHashPairNode(pos int) *HashPairNode {
-	return &HashPairNode{
+func NewHashPair(pos int) *HashPair {
+	return &HashPair{
 		NodeType: NodeHashPair,
 		Pos:      Pos(pos),
 	}
 }
 
-func (node *HashPairNode) Accept(visitor Visitor) {
+func (node *HashPair) Accept(visitor Visitor) {
 	visitor.visitHashPair(node)
 }

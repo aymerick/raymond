@@ -60,7 +60,28 @@ func (v *PrintVisitor) visitProgram(node *Program) {
 }
 
 func (v *PrintVisitor) visitMustache(node *MustacheStatement) {
-	// @todo !!!
+	v.indent()
+	v.str("{{ ")
+
+	// Expression
+	node.Path.Accept(v)
+
+	v.str(" [")
+	for i, n := range node.Params {
+		if i > 0 {
+			v.str(",")
+		}
+		v.str(" ")
+		n.Accept(v)
+	}
+	v.str("]")
+
+	if node.Hash != nil {
+		node.Hash.Accept(v)
+	}
+
+	v.str(" }}")
+	v.nl()
 }
 
 func (v *PrintVisitor) visitBlock(node *BlockStatement) {
@@ -82,7 +103,22 @@ func (v *PrintVisitor) visitComment(node *CommentStatement) {
 // Expressions
 
 func (v *PrintVisitor) visitSubExpression(node *SubExpression) {
-	// @todo !!!
+	// Expression
+	node.Path.Accept(v)
+
+	v.str(" [")
+	for i, n := range node.Params {
+		if i > 0 {
+			v.str(",")
+		}
+		v.str(" ")
+		n.Accept(v)
+	}
+	v.str("]")
+
+	if node.Hash != nil {
+		node.Hash.Accept(v)
+	}
 }
 
 func (v *PrintVisitor) visitPath(node *PathExpression) {
@@ -103,7 +139,7 @@ func (v *PrintVisitor) visitString(node *StringLiteral) {
 }
 
 func (v *PrintVisitor) visitBoolean(node *BooleanLiteral) {
-	v.str(fmt.Sprintf("BOOLEAN{%s}", node.Value))
+	v.str(fmt.Sprintf("BOOLEAN{%s}", node))
 }
 
 func (v *PrintVisitor) visitNumber(node *NumberLiteral) {
@@ -112,7 +148,7 @@ func (v *PrintVisitor) visitNumber(node *NumberLiteral) {
 
 // Miscellaneous
 
-func (v *PrintVisitor) visitHash(node *HashNode) {
+func (v *PrintVisitor) visitHash(node *Hash) {
 	v.str("HASH{")
 
 	for _, p := range node.Pairs {
@@ -122,7 +158,7 @@ func (v *PrintVisitor) visitHash(node *HashNode) {
 	v.str("}")
 }
 
-func (v *PrintVisitor) visitHashPair(node *HashPairNode) {
+func (v *PrintVisitor) visitHashPair(node *HashPair) {
 	v.str(node.Key + "=")
 	node.Val.Accept(v)
 }

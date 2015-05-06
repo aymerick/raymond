@@ -25,6 +25,9 @@ type Parser struct {
 
 	// Tokens parsed but not consumed yet
 	tokens []*lexer.Token
+
+	// All tokens have been retreieved from lexer
+	lexOver bool
 }
 
 var (
@@ -122,15 +125,22 @@ func (p *Parser) parseComment() (ast.Node, error) {
 
 // Parses an expression `helperName param* hash?`
 func (p *Parser) parseExpression() (helperName ast.Node, params []ast.Node, hash ast.Node, err error) {
-	// @todo !!!
-
 	// helperName
+	helperName, err = p.parseHelperName()
+	if err != nil {
+		return
+	}
 
 	// params*
+	params, err = p.parseParamsOpt()
+	if err != nil {
+		return
+	}
 
 	// hash?
+	hash, err = p.parseHashOpt()
 
-	return nil, nil, nil, nil
+	return
 }
 
 // rawBlock : openRawBlock content endRawBlock
@@ -250,8 +260,31 @@ func (p *Parser) parseCloseBlock() (ast.Node, error) {
 // mustache : OPEN helperName param* hash? CLOSE
 //          | OPEN_UNESCAPED helperName param* hash? CLOSE_UNESCAPED
 func (p *Parser) parseMustache() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+	var err error
+
+	// OPEN | OPEN_UNESCAPED
+	tok := p.shift()
+
+	closeToken := lexer.TokenClose
+	if tok.Kind == lexer.TokenOpenUnescaped {
+		closeToken = lexer.TokenCloseUnescaped
+	}
+
+	result := ast.NewMustacheStatement(tok.Pos)
+
+	// helperName param* hash?
+	result.Path, result.Params, result.Hash, err = p.parseExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// CLOSE | CLOSE_UNESCAPED
+	tok = p.shift()
+	if tok.Kind != closeToken {
+		return nil, errors.New(fmt.Sprintf("Failed to parse Mustache Statement. Expected %s, but got: %s", closeToken, tok))
+	}
+
+	return result, p.err()
 }
 
 // partial : OPEN_PARTIAL partialName param* hash? CLOSE
@@ -263,21 +296,136 @@ func (p *Parser) parsePartial() (ast.Node, error) {
 // param : helperName
 //       | sexpr
 func (p *Parser) parseParam() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+	if p.isSexpr() {
+		// sexpr
+		return p.parseSexpr()
+	} else {
+		// helperName
+		return p.parseHelperName()
+	}
+}
+
+// Returns true if next tokens represent a `param`
+func (p *Parser) isParam() bool {
+	return p.isSexpr() || p.isHelperName()
+}
+
+// parses `param*`
+func (p *Parser) parseParamsOpt() ([]ast.Node, error) {
+	var result []ast.Node
+
+	for {
+		if !p.isParam() {
+			break
+		}
+
+		param, err := p.parseParam()
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, param)
+	}
+
+	return result, p.err()
 }
 
 // sexpr : OPEN_SEXPR helperName param* hash? CLOSE_SEXPR
 func (p *Parser) parseSexpr() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+	var err error
+	errMsg := "Failed to parse SubExpression."
+
+	// OPEN_SEXPR
+	tok := p.shift()
+	if tok.Kind != lexer.TokenOpenSexpr {
+		return nil, errors.New(fmt.Sprintf("%s Expected TokenOpenSexpr: %s", errMsg, tok))
+	}
+
+	result := ast.NewSubExpression(tok.Pos)
+
+	// helperName param* hash?
+	result.Path, result.Params, result.Hash, err = p.parseExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// CLOSE_SEXPR
+	tok = p.shift()
+	if tok.Kind != lexer.TokenCloseSexpr {
+		return nil, errors.New(fmt.Sprintf("%s Expected TokenCloseSexpr: %s", errMsg, tok))
+	}
+
+	return result, p.err()
+}
+
+// returns true if next token is a sexpr
+func (p *Parser) isSexpr() bool {
+	return p.have(1) && (p.next().Kind == lexer.TokenOpenSexpr)
 }
 
 // hash : hashSegment+
-// hashSegment : ID EQUALS param
 func (p *Parser) parseHash() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+	var pairs []ast.Node
+
+	for p.isHashSegment() {
+		pair, err := p.parseHashSegment()
+		if err != nil {
+			return nil, err
+		}
+
+		pairs = append(pairs, pair)
+	}
+
+	if len(pairs) == 0 {
+		return nil, errors.New(fmt.Sprintf("Failed to parse Hash: %s", p.next()))
+	}
+
+	result := ast.NewHash(int(pairs[0].Position()))
+	result.Pairs = pairs
+
+	return result, p.err()
+}
+
+// returns true if next tokens represents a `hashSegment`
+func (p *Parser) isHashSegment() bool {
+	return p.have(2) && (p.next().Kind == lexer.TokenID) && (p.nextAt(1).Kind == lexer.TokenEquals)
+}
+
+// parses `hash?`
+func (p *Parser) parseHashOpt() (ast.Node, error) {
+	if p.isHashSegment() {
+		return p.parseHash()
+	}
+	return nil, nil
+}
+
+// hashSegment : ID EQUALS param
+func (p *Parser) parseHashSegment() (ast.Node, error) {
+	errMsg := "Failed to parse Hash Segment."
+
+	// ID
+	tokId := p.shift()
+	if tokId.Kind != lexer.TokenID {
+		return nil, errors.New(fmt.Sprintf("%s Expected an ID: %s", errMsg, tokId))
+	}
+
+	// EQUALS
+	tokEquals := p.shift()
+	if tokEquals.Kind != lexer.TokenEquals {
+		return nil, errors.New(fmt.Sprintf("%s Expected an EQUAL: %s", errMsg, tokEquals))
+	}
+
+	// param
+	param, err := p.parseParam()
+	if err != nil {
+		return nil, err
+	}
+
+	result := ast.NewHashPair(tokId.Pos)
+	result.Key = tokId.Val
+	result.Val = param
+
+	return result, p.err()
 }
 
 // blockParams : OPEN_BLOCK_PARAMS ID+ CLOSE_BLOCK_PARAMS
@@ -327,6 +475,16 @@ func (p *Parser) parseHelperName() (ast.Node, error) {
 	return result, p.err()
 }
 
+// Returns true if next tokens represent a `helperName`
+func (p *Parser) isHelperName() bool {
+	switch p.next().Kind {
+	case lexer.TokenBoolean, lexer.TokenNumber, lexer.TokenString, lexer.TokenData, lexer.TokenID:
+		return true
+	}
+
+	return false
+}
+
 // partialName : helperName | sexpr
 func (p *Parser) parsePartialName() (ast.Node, error) {
 	// @todo !!!
@@ -374,29 +532,53 @@ func (p *Parser) parsePath(data bool) (ast.Node, error) {
 	return result, p.err()
 }
 
-// Ensure there is at least a token to parse
-func (p *Parser) ensure() {
-	if len(p.tokens) == 0 {
+// Ensure there is token to parse at given index
+func (p *Parser) ensure(index int) {
+	if p.lexOver {
+		// nothing more to grab
+		return
+	}
+
+	nb := index + 1
+
+	for len(p.tokens) < nb {
 		// fetch next token
 		tok := p.lex.NextToken()
 
 		// queue it
 		p.tokens = append(p.tokens, &tok)
+
+		if (tok.Kind == lexer.TokenEOF) || (tok.Kind == lexer.TokenError) {
+			p.lexOver = true
+			break
+		}
 	}
 }
 
-// Returns next token without removing it from tokens buffer
-func (p *Parser) next() *lexer.Token {
-	p.ensure()
+// Returns true is there are a list given number of tokens to consume left
+func (p *Parser) have(nb int) bool {
+	p.ensure(nb - 1)
 
-	return p.tokens[0]
+	return len(p.tokens) >= nb
+}
+
+// Returns next token at given index, without consuming it
+func (p *Parser) nextAt(index int) *lexer.Token {
+	p.ensure(index)
+
+	return p.tokens[index]
+}
+
+// Returns next token without consuming it
+func (p *Parser) next() *lexer.Token {
+	return p.nextAt(0)
 }
 
 // Returns next token and remove it from the tokens buffer
 func (p *Parser) shift() *lexer.Token {
 	var result *lexer.Token
 
-	p.ensure()
+	p.ensure(0)
 
 	result, p.tokens = p.tokens[0], p.tokens[1:]
 
