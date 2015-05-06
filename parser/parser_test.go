@@ -18,7 +18,6 @@ type parserTest struct {
 }
 
 var parserTests = []parserTest{
-	{"Content", "Hello", "CONTENT[Hello]\n"},
 	{"Comment", "{{! This is a comment }}", "{{! 'This is a comment' }}\n"},
 	{"Comment dash", "{{!-- This is a comment --}}", "{{! 'This is a comment' }}\n"},
 
@@ -60,6 +59,12 @@ var parserTests = []parserTest{
 	{"parses mustaches with hash arguments (10)", `{{foo omg bar=baz bat="bam" baz=1}}`, "{{ PATH:foo [PATH:omg] HASH{bar=PATH:baz, bat=\"bam\", baz=NUMBER{1}} }}\n"},
 	{"parses mustaches with hash arguments (11)", `{{foo omg bar=baz bat="bam" baz=true}}`, "{{ PATH:foo [PATH:omg] HASH{bar=PATH:baz, bat=\"bam\", baz=BOOLEAN{true}} }}\n"},
 	{"parses mustaches with hash arguments (12)", `{{foo omg bar=baz bat="bam" baz=false}}`, "{{ PATH:foo [PATH:omg] HASH{bar=PATH:baz, bat=\"bam\", baz=BOOLEAN{false}} }}\n"},
+
+	{"parses contents followed by a mustache", `foo bar {{baz}}`, "CONTENT[ 'foo bar ' ]\n{{ PATH:baz [] }}\n"},
+
+	{"parses a partial (1)", `{{> foo }}`, "{{> PARTIAL:foo }}\n"},
+	{"parses a partial (2)", `{{> "foo" }}`, "{{> PARTIAL:foo }}\n"},
+	{"parses a partial (3)", `{{> 1 }}`, "{{> PARTIAL:1 }}\n"},
 }
 
 func TestParser(t *testing.T) {

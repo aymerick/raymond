@@ -123,16 +123,10 @@ func (p *Parser) parseComment() (ast.Node, error) {
 	return ast.NewCommentStatement(tok.Pos, strings.TrimSpace(value)), nil
 }
 
-// Parses an expression `helperName param* hash?`
-func (p *Parser) parseExpression() (helperName ast.Node, params []ast.Node, hash ast.Node, err error) {
-	// helperName
-	helperName, err = p.parseHelperName()
-	if err != nil {
-		return
-	}
-
+// Parses `param* hash?`
+func (p *Parser) parseExpressionParamsHash() (params []ast.Node, hash ast.Node, err error) {
+	// params*
 	if p.isParam() {
-		// params*
 		params, err = p.parseParams()
 		if err != nil {
 			return
@@ -143,6 +137,20 @@ func (p *Parser) parseExpression() (helperName ast.Node, params []ast.Node, hash
 	if p.isHashSegment() {
 		hash, err = p.parseHash()
 	}
+
+	return
+}
+
+// Parses an expression `helperName param* hash?`
+func (p *Parser) parseExpression() (helperName ast.Node, params []ast.Node, hash ast.Node, err error) {
+	// helperName
+	helperName, err = p.parseHelperName()
+	if err != nil {
+		return
+	}
+
+	// param* hash?
+	params, hash, err = p.parseExpressionParamsHash()
 
 	return
 }
@@ -293,13 +301,36 @@ func (p *Parser) parseMustache() (ast.Node, error) {
 
 // partial : OPEN_PARTIAL partialName param* hash? CLOSE
 func (p *Parser) parsePartial() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+	var err error
+
+	// OPEN_PARTIAL
+	tok := p.shift()
+
+	result := ast.NewPartialStatement(tok.Pos)
+
+	// partialName
+	result.Name, err = p.parsePartialName()
+	if err != nil {
+		return nil, err
+	}
+
+	// param* hash?
+	result.Params, result.Hash, err = p.parseExpressionParamsHash()
+	if err != nil {
+		return nil, err
+	}
+
+	// CLOSE
+	tok = p.shift()
+	if tok.Kind != lexer.TokenClose {
+		return nil, errors.New(fmt.Sprintf("Failed to parse Partial Statement. Expected TokenClose, but got: %s", tok))
+	}
+
+	return result, p.err()
 }
 
-// param : helperName
-//       | sexpr
-func (p *Parser) parseParam() (ast.Node, error) {
+// Parses `helperName | sexpr`
+func (p *Parser) parseHelperNameOrSexpr() (ast.Node, error) {
 	if p.isSexpr() {
 		// sexpr
 		return p.parseSexpr()
@@ -307,6 +338,11 @@ func (p *Parser) parseParam() (ast.Node, error) {
 		// helperName
 		return p.parseHelperName()
 	}
+}
+
+// param : helperName | sexpr
+func (p *Parser) parseParam() (ast.Node, error) {
+	return p.parseHelperNameOrSexpr()
 }
 
 // Returns true if next tokens represent a `param`
@@ -437,7 +473,7 @@ func (p *Parser) parseHelperName() (ast.Node, error) {
 	case lexer.TokenBoolean:
 		// BOOLEAN
 		p.shift()
-		result = ast.NewBooleanLiteral(tok.Pos, (tok.Val == "true"))
+		result = ast.NewBooleanLiteral(tok.Pos, (tok.Val == "true"), tok.Val)
 	case lexer.TokenNumber:
 		// NUMBER
 		p.shift()
@@ -445,7 +481,7 @@ func (p *Parser) parseHelperName() (ast.Node, error) {
 		if err != nil {
 			return nil, err
 		}
-		result = ast.NewNumberLiteral(tok.Pos, val)
+		result = ast.NewNumberLiteral(tok.Pos, val, tok.Val)
 	case lexer.TokenString:
 		// STRING
 		p.shift()
@@ -479,8 +515,7 @@ func (p *Parser) isHelperName() bool {
 
 // partialName : helperName | sexpr
 func (p *Parser) parsePartialName() (ast.Node, error) {
-	// @todo !!!
-	return nil, errors.New("NOT IMPLEMENTED")
+	return p.parseHelperNameOrSexpr()
 }
 
 // dataName : DATA pathSegments

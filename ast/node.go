@@ -343,14 +343,16 @@ type BooleanLiteral struct {
 	NodeType
 	Pos
 
-	Value bool
+	Value    bool
+	Original string
 }
 
-func NewBooleanLiteral(pos int, val bool) *BooleanLiteral {
+func NewBooleanLiteral(pos int, val bool, original string) *BooleanLiteral {
 	return &BooleanLiteral{
 		NodeType: NodeBoolean,
 		Pos:      Pos(pos),
 		Value:    val,
+		Original: original,
 	}
 }
 
@@ -374,14 +376,16 @@ type NumberLiteral struct {
 	NodeType
 	Pos
 
-	Value int
+	Value    int
+	Original string
 }
 
-func NewNumberLiteral(pos int, val int) *NumberLiteral {
+func NewNumberLiteral(pos int, val int, original string) *NumberLiteral {
 	return &NumberLiteral{
 		NodeType: NodeNumber,
 		Pos:      Pos(pos),
 		Value:    val,
+		Original: original,
 	}
 }
 

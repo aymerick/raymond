@@ -7,9 +7,10 @@ import (
 
 // Print AST
 type PrintVisitor struct {
-	buf string
-
+	buf   string
 	depth int
+
+	original bool
 }
 
 func NewPrintVisitor() *PrintVisitor {
@@ -95,11 +96,30 @@ func (v *PrintVisitor) visitBlock(node *BlockStatement) {
 }
 
 func (v *PrintVisitor) visitPartial(node *PartialStatement) {
-	// @todo !!!
+	v.indent()
+	v.str("{{> PARTIAL:")
+
+	v.original = true
+	node.Name.Accept(v)
+	v.original = false
+
+	if len(node.Params) > 0 {
+		v.str(" ")
+		node.Params[0].Accept(v)
+	}
+
+	// hash
+	if node.Hash != nil {
+		v.str(" ")
+		node.Hash.Accept(v)
+	}
+
+	v.str(" }}")
+	v.nl()
 }
 
 func (v *PrintVisitor) visitContent(node *ContentStatement) {
-	v.line("CONTENT[" + node.Value + "]")
+	v.line("CONTENT[ '" + node.Value + "' ]")
 }
 
 func (v *PrintVisitor) visitComment(node *CommentStatement) {
@@ -113,28 +133,44 @@ func (v *PrintVisitor) visitSubExpression(node *SubExpression) {
 }
 
 func (v *PrintVisitor) visitPath(node *PathExpression) {
-	path := strings.Join(node.Parts, "/")
+	if v.original {
+		v.str(node.Original)
+	} else {
+		path := strings.Join(node.Parts, "/")
 
-	result := ""
-	if node.Data {
-		result += "@"
+		result := ""
+		if node.Data {
+			result += "@"
+		}
+
+		v.str(result + "PATH:" + path)
 	}
-
-	v.str(result + "PATH:" + path)
 }
 
 // Literals
 
 func (v *PrintVisitor) visitString(node *StringLiteral) {
-	v.str("\"" + node.Value + "\"")
+	if v.original {
+		v.str(node.Value)
+	} else {
+		v.str("\"" + node.Value + "\"")
+	}
 }
 
 func (v *PrintVisitor) visitBoolean(node *BooleanLiteral) {
-	v.str(fmt.Sprintf("BOOLEAN{%s}", node))
+	if v.original {
+		v.str(node.Original)
+	} else {
+		v.str(fmt.Sprintf("BOOLEAN{%s}", node))
+	}
 }
 
 func (v *PrintVisitor) visitNumber(node *NumberLiteral) {
-	v.str(fmt.Sprintf("NUMBER{%d}", node.Value))
+	if v.original {
+		v.str(node.Original)
+	} else {
+		v.str(fmt.Sprintf("NUMBER{%d}", node.Value))
+	}
 }
 
 // Miscellaneous
