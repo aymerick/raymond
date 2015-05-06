@@ -7,7 +7,7 @@ const (
 	TokenEOF
 
 	// mustache delimiters
-	TokenOpen             // OPEN: <mu>"{{"{LEFT_STRIP}?"&" - 22. OPEN: <mu>"{{"{LEFT_STRIP}?
+	TokenOpen             // OPEN: <mu>"{{"{LEFT_STRIP}?"&" | <mu>"{{"{LEFT_STRIP}?
 	TokenClose            // CLOSE: <mu>{RIGHT_STRIP}?"}}"
 	TokenOpenRawBlock     // OPEN_RAW_BLOCK: <mu>"{{{{"
 	TokenCloseRawBlock    // CLOSE_RAW_BLOCK: <mu>"}}}}"
@@ -16,11 +16,11 @@ const (
 	TokenCloseUnescaped   // CLOSE_UNESCAPED: <mu>"}"{RIGHT_STRIP}?"}}"
 	TokenOpenBlock        // OPEN_BLOCK: <mu>"{{"{LEFT_STRIP}?"#"
 	TokenOpenEndBlock     // OPEN_ENDBLOCK: <mu>"{{"{LEFT_STRIP}?"/"
-	TokenInverse          // INVERSE: <mu>"{{"{LEFT_STRIP}?"^"\s*{RIGHT_STRIP}?"}}" - 15. INVERSE: <mu>"{{"{LEFT_STRIP}?\s*"else"\s*{RIGHT_STRIP}?"}}"
+	TokenInverse          // INVERSE: <mu>"{{"{LEFT_STRIP}?"^"\s*{RIGHT_STRIP}?"}}" | <mu>"{{"{LEFT_STRIP}?\s*"else"\s*{RIGHT_STRIP}?"}}"
 	TokenOpenInverse      // OPEN_INVERSE: <mu>"{{"{LEFT_STRIP}?"^"
 	TokenOpenInverseChain // OPEN_INVERSE_CHAIN: <mu>"{{"{LEFT_STRIP}?\s*"else"
 	TokenOpenPartial      // OPEN_PARTIAL: <mu>"{{"{LEFT_STRIP}?">"
-	TokenComment          // COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" - 20. begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" - 21. COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
+	TokenComment          // COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" | begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" | COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
 
 	// inside mustaches
 	TokenOpenSexpr        // OPEN_SEXPR: <mu>"("
@@ -32,11 +32,11 @@ const (
 	TokenCloseBlockParams // CLOSE_BLOCK_PARAMS <mu>"|"
 
 	// tokens with content
-	TokenContent // begin 'mu', begin 'emu', CONTENT: [^\x00]*?/("{{") - 02. CONTENT: [^\x00]+ - 03. CONTENT: <emu>[^\x00]{2,}?/("{{"|"\\{{"|"\\\\{{"|<<EOF>>) - 05: CONTENT: <raw>[^\x00]*?/("{{{{/")
-	TokenID      // ID: <mu>".." - 25. ID: <mu>"."/{LOOKAHEAD} - 39. ID: <mu>{ID} - 40. ID: <mu>'['[^\]]*']'
-	TokenString  // STRING: <mu>'"'("\\"["]|[^"])*'"' - 30. STRING: <mu>"'"("\\"[']|[^'])*"'"
+	TokenContent
+	TokenID      // ID: <mu>".." - 25. ID: <mu>"."/{LOOKAHEAD} | <mu>{ID} | <mu>'['[^\]]*']'
+	TokenString  // STRING: <mu>'"'("\\"["]|[^"])*'"' | <mu>"'"("\\"[']|[^'])*"'"
 	TokenNumber  // NUMBER: <mu>\-?[0-9]+(?:\.[0-9]+)?/{LITERAL_LOOKAHEAD}
-	TokenBoolean // BOOLEAN: <mu>"true"/{LITERAL_LOOKAHEAD} - 33. BOOLEAN: <mu>"false"/{LITERAL_LOOKAHEAD}
+	TokenBoolean // BOOLEAN: <mu>"true"/{LITERAL_LOOKAHEAD} | BOOLEAN: <mu>"false"/{LITERAL_LOOKAHEAD}
 )
 
 const (
