@@ -80,7 +80,7 @@ var parserTests = []parserTest{
 	{"parses non-empty blocks with empty inverse (else-style) section", `{{#foo}} bar {{else}}{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n"},
 	{"parses empty blocks with non-empty inverse section", `{{#foo}}{{^}} bar {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    CONTENT[ ' bar ' ]\n"},
 	{"parses empty blocks with non-empty inverse (else-style) section", `{{#foo}}{{else}} bar {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    CONTENT[ ' bar ' ]\n"},
-	// {"parses a standalone inverse section", `{{^foo}}bar{{/foo}}`, "BLOCK:\n  PATH:foo []\n  {{^}}\n    CONTENT[ 'bar' ]\n"},
+	{"parses a standalone inverse section", `{{^foo}}bar{{/foo}}`, "BLOCK:\n  PATH:foo []\n  {{^}}\n    CONTENT[ 'bar' ]\n"},
 }
 
 func TestParser(t *testing.T) {

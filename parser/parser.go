@@ -258,9 +258,13 @@ func (p *Parser) parseBlock() (ast.Node, error) {
 	}
 
 	// program
-	if err := p.parseBlockProgram(result, blockParams); err != nil {
+	program, err := p.ParseProgram()
+	if err != nil {
 		return nil, err
 	}
+
+	program.BlockParams = blockParams
+	result.Program = program
 
 	// inverseChain?
 	if p.isInverseChain() {
@@ -289,13 +293,17 @@ func (p *Parser) parseInverse() (ast.Node, error) {
 	}
 
 	// program
-	if err := p.parseBlockProgram(result, blockParams); err != nil {
+	program, err := p.ParseProgram()
+	if err != nil {
 		return nil, err
 	}
 
+	program.BlockParams = blockParams
+	result.Inverse = program
+
 	// inverseAndProgram?
 	if p.isInverse() {
-		result.Inverse, err = p.parseInverseAndProgram()
+		result.Program, err = p.parseInverseAndProgram()
 		if err != nil {
 			return nil, err
 		}
@@ -331,18 +339,6 @@ func (p *Parser) parseOpenBlockExpression(pos int) (block *ast.BlockStatement, b
 	return
 }
 
-func (p *Parser) parseBlockProgram(block *ast.BlockStatement, blockParams []string) error {
-	program, err := p.ParseProgram()
-	if err != nil {
-		return err
-	}
-
-	program.BlockParams = blockParams
-	block.Program = program
-
-	return nil
-}
-
 // inverseChain : openInverseChain program inverseChain?
 //              | inverseAndProgram
 func (p *Parser) parseInverseChain() (ast.Node, error) {
@@ -357,9 +353,13 @@ func (p *Parser) parseInverseChain() (ast.Node, error) {
 		}
 
 		// program
-		if err := p.parseBlockProgram(result, blockParams); err != nil {
+		program, err := p.ParseProgram()
+		if err != nil {
 			return nil, err
 		}
+
+		program.BlockParams = blockParams
+		result.Program = program
 
 		// inverseChain?
 		if p.isInverseChain() {
