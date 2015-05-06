@@ -77,9 +77,12 @@ func (p *Parser) parseStatement() (ast.Node, error) {
 	case lexer.TokenOpen, lexer.TokenOpenUnescaped:
 		// mustache
 		result, err = p.parseMustache()
-	case lexer.TokenOpenBlock, lexer.TokenOpenInverse:
+	case lexer.TokenOpenBlock:
 		// block
 		result, err = p.parseBlock()
+	case lexer.TokenOpenInverse:
+		// block
+		result, err = p.parseInverse()
 	case lexer.TokenOpenRawBlock:
 		// rawBlock
 		result, err = p.parseRawBlock()
@@ -157,6 +160,7 @@ func (p *Parser) parseExpressionParamsHash() (params []ast.Node, hash ast.Node, 
 		hash, err = p.parseHash()
 	}
 
+	// named returned values
 	return
 }
 
@@ -171,6 +175,7 @@ func (p *Parser) parseExpression() (helperName ast.Node, params []ast.Node, hash
 	// param* hash?
 	params, hash, err = p.parseExpressionParamsHash()
 
+	// named returned values
 	return
 }
 
@@ -241,21 +246,75 @@ func (p *Parser) parseRawBlock() (ast.Node, error) {
 		return nil, errExpect(errMsg, lexer.TokenCloseRawBlock, tok)
 	}
 
-	return result, nil
+	return result, p.err()
 }
 
-// openBlock : OPEN_BLOCK helperName param* hash? blockParams? CLOSE
-// openInverse : OPEN_INVERSE helperName param* hash? blockParams? CLOSE
-func (p *Parser) parseOpenBlock() (result *ast.BlockStatement, blockParams []string, inverse bool, err error) {
-	errMsg := "Failed to parse open block."
+// block : openBlock program inverseChain? closeBlock
+func (p *Parser) parseBlock() (ast.Node, error) {
+	// openBlock
+	result, blockParams, err := p.parseOpenBlock()
+	if err != nil {
+		return nil, err
+	}
 
-	// OPEN_BLOCK | OPEN_INVERSE
-	tokOpen := p.shift()
+	// program
+	if err := p.parseBlockProgram(result, blockParams); err != nil {
+		return nil, err
+	}
 
-	result = ast.NewBlockStatement(tokOpen.Pos)
+	// inverseChain?
+	if p.isInverseChain() {
+		result.Inverse, err = p.parseInverseChain()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// closeBlock
+	if err := p.parseCloseBlock(result); err != nil {
+		return nil, err
+	}
+
+	return result, p.err()
+}
+
+// block : openInverse program inverseAndProgram? closeBlock
+func (p *Parser) parseInverse() (ast.Node, error) {
+	var err error
+
+	// openInverse
+	result, blockParams, err := p.parseOpenBlock()
+	if err != nil {
+		return nil, err
+	}
+
+	// program
+	if err := p.parseBlockProgram(result, blockParams); err != nil {
+		return nil, err
+	}
+
+	// inverseAndProgram?
+	if p.isInverse() {
+		result.Inverse, err = p.parseInverseAndProgram()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// closeBlock
+	if err := p.parseCloseBlock(result); err != nil {
+		return nil, err
+	}
+
+	return result, p.err()
+}
+
+// Parses `helperName param* hash? blockParams?`
+func (p *Parser) parseOpenBlockExpression(pos int) (block *ast.BlockStatement, blockParams []string, err error) {
+	block = ast.NewBlockStatement(pos)
 
 	// helperName param* hash?
-	result.Path, result.Params, result.Hash, err = p.parseExpression()
+	block.Path, block.Params, block.Hash, err = p.parseExpression()
 	if err != nil {
 		return
 	}
@@ -268,89 +327,128 @@ func (p *Parser) parseOpenBlock() (result *ast.BlockStatement, blockParams []str
 		}
 	}
 
-	// CLOSE
-	tok := p.shift()
-	if tok.Kind != lexer.TokenClose {
-		err = errors.New(fmt.Sprintf("%s Unexpected name: %s", errMsg, result.Path))
-		return
-	}
-
+	// named returned values
 	return
 }
 
-// block : openBlock program inverseChain? closeBlock
-//       | openInverse program inverseAndProgram? closeBlock
-//
-// openInverseChain : OPEN_INVERSE_CHAIN helperName param* hash? blockParams? CLOSE
-// inverseAndProgram : INVERSE program
-// inverseChain : openInverseChain program inverseChain?
-//              | inverseAndProgram
-//
-// closeBlock : OPEN_ENDBLOCK helperName CLOSE
-func (p *Parser) parseBlock() (ast.Node, error) {
-	var err error
-	errMsg := "Failed to parse block."
-
-	// openBlock | openInverse
-	result, blockParams, inverse, err := p.parseOpenBlock()
-	if err != nil {
-		return nil, err
-	}
-
-	// program
+func (p *Parser) parseBlockProgram(block *ast.BlockStatement, blockParams []string) error {
 	program, err := p.ParseProgram()
 	if err != nil {
-		return nil, err
+		return err
 	}
+
 	program.BlockParams = blockParams
+	block.Program = program
 
-	result.Program = program
+	return nil
+}
 
-	if inverse {
-		// inverseAndProgram?
-		if p.isInverse() {
-			// @todo
-		}
+// inverseChain : openInverseChain program inverseChain?
+//              | inverseAndProgram
+func (p *Parser) parseInverseChain() (ast.Node, error) {
+	if p.isInverse() {
+		// inverseAndProgram
+		return p.parseInverseAndProgram()
 	} else {
+		// openInverseChain
+		result, blockParams, err := p.parseOpenBlock()
+		if err != nil {
+			return nil, err
+		}
+
+		// program
+		if err := p.parseBlockProgram(result, blockParams); err != nil {
+			return nil, err
+		}
+
 		// inverseChain?
 		if p.isInverseChain() {
-			// @todo
+			result.Inverse, err = p.parseInverseChain()
+			if err != nil {
+				return nil, err
+			}
 		}
+
+		return result, p.err()
 	}
+}
+
+// Returns true if current token starts an inverse chain
+func (p *Parser) isInverseChain() bool {
+	return p.isOpenInverseChain() || p.isInverse()
+}
+
+// inverseAndProgram : INVERSE program
+func (p *Parser) parseInverseAndProgram() (ast.Node, error) {
+	// INVERSE
+	p.shift()
+
+	// program
+	return p.ParseProgram()
+}
+
+// openBlock : OPEN_BLOCK helperName param* hash? blockParams? CLOSE
+// openInverse : OPEN_INVERSE helperName param* hash? blockParams? CLOSE
+// openInverseChain: OPEN_INVERSE_CHAIN helperName param* hash? blockParams? CLOSE
+func (p *Parser) parseOpenBlock() (block *ast.BlockStatement, blockParams []string, err error) {
+	errMsg := "Failed to parse Open Block."
+
+	// OPEN_BLOCK | OPEN_INVERSE | OPEN_INVERSE_CHAIN
+	tok := p.shift()
+	// @todo Check token kind ?
+
+	// helperName param* hash? blockParams?
+	block, blockParams, err = p.parseOpenBlockExpression(tok.Pos)
+
+	// CLOSE
+	tok = p.shift()
+	if tok.Kind != lexer.TokenClose {
+		err = errExpect(errMsg, lexer.TokenClose, tok)
+		return
+	}
+
+	// named returned values
+	return
+}
+
+// closeBlock : OPEN_ENDBLOCK helperName CLOSE
+func (p *Parser) parseCloseBlock(block *ast.BlockStatement) error {
+	var err error
+	errMsg := "Failed to parse Close Block."
 
 	// OPEN_ENDBLOCK
 	tok := p.shift()
 	if tok.Kind != lexer.TokenOpenEndBlock {
-		return nil, errExpect(errMsg, lexer.TokenOpenEndBlock, tok)
+		return errExpect(errMsg, lexer.TokenOpenEndBlock, tok)
 	}
 
 	// helperName
 	endId, err := p.parseHelperName()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	closeName, ok := endId.(*ast.PathExpression)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("%s Unexpected name in end block: %s", errMsg, endId))
+		return errors.New(fmt.Sprintf("%s Unexpected name: %s", errMsg, endId))
 	}
 
-	openName, ok := result.Path.(*ast.PathExpression)
+	openName, ok := block.Path.(*ast.PathExpression)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("%s Unexpected name: %s", errMsg, result.Path))
+		return errors.New(fmt.Sprintf("%s Unexpected name: %s", errMsg, block.Path))
 	}
 
 	if openName.Original != closeName.Original {
-		return nil, errors.New(fmt.Sprintf("%s Open and end blocks names mismatch: %s != %s", openName.Original, closeName.Original))
+		return errors.New(fmt.Sprintf("%s Open and end blocks names mismatch: %s != %s", openName.Original, closeName.Original))
 	}
 
 	// CLOSE
 	tok = p.shift()
-	if tok.Kind != lexer.TokenCloseRawBlock {
-		return nil, errExpect(errMsg, lexer.TokenCloseRawBlock, tok)
+	if tok.Kind != lexer.TokenClose {
+		return errExpect(errMsg, lexer.TokenClose, tok)
 	}
 
-	return result, p.err()
+	return nil
 }
 
 // mustache : OPEN helperName param* hash? CLOSE
@@ -750,10 +848,10 @@ func (p *Parser) isBlockParams() bool {
 
 // Returns true if next token starts an INVERSE sequence
 func (p *Parser) isInverse() bool {
-	return p.isToken(lexer.TokenOpenInverse)
+	return p.isToken(lexer.TokenInverse)
 }
 
-// Returns true if next token starts an INVERSE_CHAIN v
-func (p *Parser) isInverseChain() bool {
+// Returns true if next token is OPEN_INVERSE_CHAIN
+func (p *Parser) isOpenInverseChain() bool {
 	return p.isToken(lexer.TokenOpenInverseChain)
 }

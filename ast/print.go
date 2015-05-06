@@ -48,7 +48,11 @@ func (v *PrintVisitor) line(val string) {
 	v.nl()
 }
 
-func (v *PrintVisitor) printExpression(path Node, params []Node, hash Node) {
+func (v *PrintVisitor) printExpression(path Node, params []Node, hash Node, line bool) {
+	if line {
+		v.indent()
+	}
+
 	// path
 	path.Accept(v)
 
@@ -66,6 +70,10 @@ func (v *PrintVisitor) printExpression(path Node, params []Node, hash Node) {
 	if hash != nil {
 		v.str(" ")
 		hash.Accept(v)
+	}
+
+	if line {
+		v.nl()
 	}
 }
 
@@ -85,14 +93,39 @@ func (v *PrintVisitor) visitMustache(node *MustacheStatement) {
 	v.indent()
 	v.str("{{ ")
 
-	v.printExpression(node.Path, node.Params, node.Hash)
+	v.printExpression(node.Path, node.Params, node.Hash, false)
 
 	v.str(" }}")
 	v.nl()
 }
 
 func (v *PrintVisitor) visitBlock(node *BlockStatement) {
-	// @todo !!!
+	v.line("BLOCK:")
+	v.depth++
+
+	v.printExpression(node.Path, node.Params, node.Hash, true)
+
+	if node.Program != nil {
+		v.line("PROGRAM:")
+		v.depth++
+		node.Program.Accept(v)
+		v.depth--
+	}
+
+	if node.Inverse != nil {
+		// if node.Program != nil {
+		// 	v.depth++
+		// }
+
+		v.line("{{^}}")
+		v.depth++
+		node.Inverse.Accept(v)
+		v.depth--
+
+		// if node.Program != nil {
+		// 	v.depth--
+		// }
+	}
 }
 
 func (v *PrintVisitor) visitPartial(node *PartialStatement) {
@@ -129,7 +162,7 @@ func (v *PrintVisitor) visitComment(node *CommentStatement) {
 // Expressions
 
 func (v *PrintVisitor) visitSubExpression(node *SubExpression) {
-	v.printExpression(node.Path, node.Params, node.Hash)
+	v.printExpression(node.Path, node.Params, node.Hash, false)
 }
 
 func (v *PrintVisitor) visitPath(node *PathExpression) {
