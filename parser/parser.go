@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/aymerick/raymond/ast"
 	"github.com/aymerick/raymond/lexer"
@@ -120,7 +119,7 @@ func (p *Parser) parseComment() (ast.Node, error) {
 	value := rOpenComment.ReplaceAllString(tok.Val, "")
 	value = rCloseComment.ReplaceAllString(value, "")
 
-	return ast.NewCommentStatement(tok.Pos, strings.TrimSpace(value)), nil
+	return ast.NewCommentStatement(tok.Pos, value), nil
 }
 
 // Parses `param* hash?`

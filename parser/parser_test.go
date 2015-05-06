@@ -18,9 +18,6 @@ type parserTest struct {
 }
 
 var parserTests = []parserTest{
-	{"Comment", "{{! This is a comment }}", "{{! 'This is a comment' }}\n"},
-	{"Comment dash", "{{!-- This is a comment --}}", "{{! 'This is a comment' }}\n"},
-
 	//
 	// Next tests come from:
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/parser.js
@@ -65,6 +62,13 @@ var parserTests = []parserTest{
 	{"parses a partial (1)", `{{> foo }}`, "{{> PARTIAL:foo }}\n"},
 	{"parses a partial (2)", `{{> "foo" }}`, "{{> PARTIAL:foo }}\n"},
 	{"parses a partial (3)", `{{> 1 }}`, "{{> PARTIAL:1 }}\n"},
+	{"parses a partial with context", `{{> foo bar}}`, "{{> PARTIAL:foo PATH:bar }}\n"},
+	{"parses a partial with hash", `{{> foo bar=bat}}`, "{{> PARTIAL:foo HASH{bar=PATH:bat} }}\n"},
+	{"parses a partial with context and hash", `{{> foo bar bat=baz}}`, "{{> PARTIAL:foo PATH:bar HASH{bat=PATH:baz} }}\n"},
+	{"parses a partial with a complex name", `{{> shared/partial?.bar}}`, "{{> PARTIAL:shared/partial?.bar }}\n"},
+
+	{"parses a comment", `{{! this is a comment }}`, "{{! ' this is a comment ' }}\n"},
+	{"parses a multi-line comment", "{{!\nthis is a multi-line comment\n}}", "{{! '\nthis is a multi-line comment\n' }}\n"},
 }
 
 func TestParser(t *testing.T) {
