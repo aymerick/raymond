@@ -36,17 +36,17 @@ var parserTests = []parserTest{
 	{"parses simple mustaches (8)", `{{foo-}}`, "{{ PATH:foo- [] }}\n"},
 	{"parses simple mustaches (9)", `{{foo:}}`, "{{ PATH:foo: [] }}\n"},
 
-	// {"parses simple mustaches with data", `{{@foo}}`, "{{ @PATH:foo [] }}\n"},
-	// {"parses simple mustaches with data paths", `{{@../foo}}`, "{{ @PATH:foo [] }}\n"},
-	// {"parses mustaches with paths", `{{foo/bar}}`, "{{ PATH:foo/bar [] }}\n"},
-	// {"parses mustaches with this/foo", `{{this/foo}}`, "{{ PATH:foo [] }}\n"},
-	// {"parses mustaches with - in a path", `{{foo-bar}}`, "{{ PATH:foo-bar [] }}\n"},
-	// {"parses mustaches with parameters", `{{foo bar}}`, "{{ PATH:foo [PATH:bar] }}\n"},
-	// {"parses mustaches with string parameters", `{{foo bar \"baz\" }}`, "{{ PATH:foo [PATH:bar, \"baz\"] }}\n"},
-	// {"parses mustaches with NUMBER parameters", `{{foo 1}}`, "{{ PATH:foo [NUMBER{1}] }}\n"},
-	// {"parses mustaches with BOOLEAN parameters (1)", `{{foo true}}`, "{{ PATH:foo [BOOLEAN{true}] }}\n"},
-	// {"parses mustaches with BOOLEAN parameters (2)", `{{foo false}}`, "{{ PATH:foo [BOOLEAN{false}] }}\n"},
-	// {"parses mutaches with DATA parameters", `{{foo @bar}}`, "{{ PATH:foo [@PATH:bar] }}\n"},
+	{"parses simple mustaches with data", `{{@foo}}`, "{{ @PATH:foo [] }}\n"},
+	{"parses simple mustaches with data paths", `{{@../foo}}`, "{{ @PATH:foo [] }}\n"},
+	{"parses mustaches with paths", `{{foo/bar}}`, "{{ PATH:foo/bar [] }}\n"},
+	{"parses mustaches with this/foo", `{{this/foo}}`, "{{ PATH:foo [] }}\n"},
+	{"parses mustaches with - in a path", `{{foo-bar}}`, "{{ PATH:foo-bar [] }}\n"},
+	{"parses mustaches with parameters", `{{foo bar}}`, "{{ PATH:foo [PATH:bar] }}\n"},
+	{"parses mustaches with string parameters", `{{foo bar "baz" }}`, "{{ PATH:foo [PATH:bar, \"baz\"] }}\n"},
+	{"parses mustaches with NUMBER parameters", `{{foo 1}}`, "{{ PATH:foo [NUMBER{1}] }}\n"},
+	{"parses mustaches with BOOLEAN parameters (1)", `{{foo true}}`, "{{ PATH:foo [BOOLEAN{true}] }}\n"},
+	{"parses mustaches with BOOLEAN parameters (2)", `{{foo false}}`, "{{ PATH:foo [BOOLEAN{false}] }}\n"},
+	{"parses mutaches with DATA parameters", `{{foo @bar}}`, "{{ PATH:foo [@PATH:bar] }}\n"},
 }
 
 func TestParser(t *testing.T) {

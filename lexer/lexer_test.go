@@ -67,6 +67,11 @@ var lexTests = []lexTest{
 		`{{{{foo}}}} {{{{/foo}}}}`,
 		[]Token{tokOpenRawBlock, tokID("foo"), tokCloseRawBlock, tokContent(" "), tokOpenEndRawBlock, tokID("foo"), tokCloseRawBlock, tokEOF},
 	},
+	{
+		`tokenizes @../foo`,
+		`{{@../foo}}`,
+		[]Token{tokOpen, tokData, tokID(".."), tokSep("/"), tokID("foo"), tokClose, tokEOF},
+	},
 
 	//
 	// Next tests come from:

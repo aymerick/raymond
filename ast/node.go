@@ -270,6 +270,7 @@ type PathExpression struct {
 	Pos
 
 	Original string
+	Depth    int
 	Parts    []string
 	Data     bool
 }
@@ -296,7 +297,14 @@ func (node *PathExpression) Accept(visitor Visitor) {
 func (node *PathExpression) Part(part string) {
 	node.Original += part
 
-	node.Parts = append(node.Parts, part)
+	switch part {
+	case "..":
+		node.Depth += 1
+	case ".", "this":
+		// NOOP
+	default:
+		node.Parts = append(node.Parts, part)
+	}
 }
 
 // Adds path separator

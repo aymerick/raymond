@@ -47,6 +47,26 @@ func (v *PrintVisitor) line(val string) {
 	v.nl()
 }
 
+func (v *PrintVisitor) printExpression(path Node, params []Node, hash Node) {
+	// path
+	path.Accept(v)
+
+	// params
+	v.str(" [")
+	for i, n := range params {
+		if i > 0 {
+			v.str(", ")
+		}
+		n.Accept(v)
+	}
+	v.str("]")
+
+	// hash
+	if hash != nil {
+		hash.Accept(v)
+	}
+}
+
 //
 // Visitor interface
 //
@@ -63,22 +83,7 @@ func (v *PrintVisitor) visitMustache(node *MustacheStatement) {
 	v.indent()
 	v.str("{{ ")
 
-	// Expression
-	node.Path.Accept(v)
-
-	v.str(" [")
-	for i, n := range node.Params {
-		if i > 0 {
-			v.str(",")
-		}
-		v.str(" ")
-		n.Accept(v)
-	}
-	v.str("]")
-
-	if node.Hash != nil {
-		node.Hash.Accept(v)
-	}
+	v.printExpression(node.Path, node.Params, node.Hash)
 
 	v.str(" }}")
 	v.nl()
@@ -103,22 +108,7 @@ func (v *PrintVisitor) visitComment(node *CommentStatement) {
 // Expressions
 
 func (v *PrintVisitor) visitSubExpression(node *SubExpression) {
-	// Expression
-	node.Path.Accept(v)
-
-	v.str(" [")
-	for i, n := range node.Params {
-		if i > 0 {
-			v.str(",")
-		}
-		v.str(" ")
-		n.Accept(v)
-	}
-	v.str("]")
-
-	if node.Hash != nil {
-		node.Hash.Accept(v)
-	}
+	v.printExpression(node.Path, node.Params, node.Hash)
 }
 
 func (v *PrintVisitor) visitPath(node *PathExpression) {

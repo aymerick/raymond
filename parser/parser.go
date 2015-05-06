@@ -314,11 +314,7 @@ func (p *Parser) isParam() bool {
 func (p *Parser) parseParamsOpt() ([]ast.Node, error) {
 	var result []ast.Node
 
-	for {
-		if !p.isParam() {
-			break
-		}
-
+	for p.isParam() {
 		param, err := p.parseParam()
 		if err != nil {
 			return nil, err
@@ -516,9 +512,9 @@ func (p *Parser) parsePath(data bool) (ast.Node, error) {
 	result := ast.NewPathExpression(tok.Pos, data)
 	result.Part(tok.Val)
 
-	for tok = p.next(); tok.Kind == lexer.TokenSep; {
+	for p.isPathSep() {
 		// SEP
-		tok := p.shift()
+		tok = p.shift()
 		result.Sep(tok.Val)
 
 		// ID
@@ -530,6 +526,11 @@ func (p *Parser) parsePath(data bool) (ast.Node, error) {
 	}
 
 	return result, p.err()
+}
+
+// Returns true if next token is a path separator
+func (p *Parser) isPathSep() bool {
+	return p.have(1) && p.next().Kind == lexer.TokenSep
 }
 
 // Ensure there is token to parse at given index
