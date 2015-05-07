@@ -48,8 +48,10 @@ type TokenKind int
 
 type Token struct {
 	Kind TokenKind // Token kind
-	Pos  int       // Position in input string
 	Val  string    // Token value
+
+	Pos  int // Byte position in input string
+	Line int // Line number in input string
 }
 
 var tokenName = map[TokenKind]string{

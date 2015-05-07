@@ -32,7 +32,8 @@ type Lexer struct {
 	tokens   chan Token // channel of scanned tokens
 	nextFunc lexFunc    // the next function to execute
 
-	pos   int // current scan position in input string
+	pos   int // current byte position in input string
+	line  int // current line position in input string
 	width int // size of last rune scanned from input string
 	start int // start position of the token we are scanning
 
@@ -90,6 +91,7 @@ func ScanWithName(input string, name string) *Lexer {
 		input:  input,
 		name:   name,
 		tokens: make(chan Token),
+		line:   1,
 	}
 
 	go result.run()
@@ -123,9 +125,14 @@ func (l *Lexer) NextToken() Token {
 	return result
 }
 
-// returns the current position
+// returns the current byte position
 func (l *Lexer) Pos() int {
 	return l.pos
+}
+
+// returns the current line number
+func (l *Lexer) Line() int {
+	return l.line
 }
 
 // starts lexical analysis
@@ -149,12 +156,19 @@ func (l *Lexer) next() rune {
 	return r
 }
 
-// emits a new scanned token
-func (l *Lexer) emit(kind TokenKind) {
-	l.tokens <- Token{kind, l.start, l.input[l.start:l.pos]}
+// helper
+func (l *Lexer) produce(kind TokenKind, val string) {
+	l.tokens <- Token{kind, val, l.start, l.line}
 
 	// scanning a new token
 	l.start = l.pos
+
+	l.line += strings.Count(val, "\n")
+}
+
+// emits a new scanned token
+func (l *Lexer) emit(kind TokenKind) {
+	l.produce(kind, l.input[l.start:l.pos])
 }
 
 // emits a scanned string
@@ -164,10 +178,7 @@ func (l *Lexer) emitString(delimiter rune) {
 	// replace escaped delimiters
 	str = strings.Replace(str, "\\"+string(delimiter), string(delimiter), -1)
 
-	l.tokens <- Token{TokenString, l.start, str}
-
-	// scanning a new token
-	l.start = l.pos
+	l.produce(TokenString, str)
 }
 
 // returns but does not consume the next character in the input
@@ -208,7 +219,7 @@ func (l *Lexer) acceptRun(valid string) {
 }
 
 func (l *Lexer) errorf(format string, args ...interface{}) lexFunc {
-	l.tokens <- Token{TokenError, l.start, fmt.Sprintf(format, args...)}
+	l.tokens <- Token{TokenError, fmt.Sprintf(format, args...), l.start, l.line}
 	return nil
 }
 

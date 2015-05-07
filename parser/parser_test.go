@@ -1,10 +1,13 @@
 package parser
 
 import (
+	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aymerick/raymond/ast"
+	"github.com/aymerick/raymond/lexer"
 )
 
 const (
@@ -86,25 +89,6 @@ var parserTests = []parserTest{
 	{"parses chained inverse block with block params", `{{#foo}}{{else foo as |bar baz|}}content{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    BLOCK:\n      PATH:foo []\n      PROGRAM:\n        BLOCK PARAMS: [ bar baz ]\n        CONTENT[ 'content' ]\n"},
 }
 
-// @todo Handle errors:
-// 	`{{else foo}}bar{{/foo}}`
-// 	`foo{{^}}bar`
-// 	`{{foo}`
-// 	`{{foo &}}`
-// 	`{{#goodbyes}}{{/hellos}}`
-//
-// Invalid paths:
-//	`{{foo/../bar}}`
-//	`{{foo/./bar}}`
-//	`{{foo/this/bar}}`
-//
-// Report correct line number in errors
-//  `hello\nmy\n{{foo}` => line 3
-//  `hello\n\nmy\n\n{{foo}` => line 5
-//
-// Report the correct line number in errors when the first character is a newline
-//  `\n\nhello\n\nmy\n\n{{foo}` => line 7
-
 func TestParser(t *testing.T) {
 	for _, test := range parserTests {
 		if VERBOSE {
@@ -121,6 +105,57 @@ func TestParser(t *testing.T) {
 
 		if (err != nil) || (test.output != output) {
 			t.Errorf("Test '%s' failed\ninput:\n\t'%s'\nexpected\n\t%q\ngot\n\t%q\nerror:\n\t%s", test.name, test.input, test.output, output, err)
+		}
+	}
+}
+
+var parserErrorTests = []parserTest{
+	// @todo Check all possible errors
+
+	//
+	// Next tests come from:
+	//   https://github.com/wycats/handlebars.js/blob/master/spec/parser.js
+	//
+	{"throws on old inverse section", `{{else foo}}bar{{/foo}}`, ""},
+
+	{"raises if there's a parser error (1)", `foo{{^}}bar`, "Parse error on line 1"},
+	{"raises if there's a parser error (2)", `{{foo}`, "Parse error on line 1"},
+	{"raises if there's a parser error (3)", `{{foo &}}`, "Parse error on line 1"},
+	{"raises if there's a parser error (4)", `{{#goodbyes}}{{/hellos}}`, "Parse error on line 1"},
+	{"raises if there's a parser error (5)", `{{#goodbyes}}{{/hellos}}`, "goodbyes doesn't match hellos"},
+
+	// {"should handle invalid paths (1)", `{{foo/../bar}}`, `Invalid path: foo/.. - 1:2`},
+	// {"should handle invalid paths (2)", `{{foo/./bar}}`, `Invalid path: foo/. - 1:2`},
+	// {"should handle invalid paths (3)", `{{foo/this/bar}}`, `Invalid path: foo/this - 1:2`},
+
+	// {"knows how to report the correct line number in errors (1)", `hello\nmy\n{{foo}`, "Parse error on line 3"},
+	// {"knows how to report the correct line number in errors (2)", `hello\n\nmy\n\n{{foo}`, "Parse error on line 5"},
+
+	// {"knows how to report the correct line number in errors when the first character is a newline", `\n\nhello\n\nmy\n\n{{foo}`, "Parse error on line 7"},
+}
+
+func TestParserErrors(t *testing.T) {
+	for _, test := range parserErrorTests {
+		if VERBOSE {
+			log.Printf("\n\n**********************************")
+			log.Printf("Testing: %s", test.name)
+		}
+
+		node, err := Parse(test.input)
+		if err == nil {
+			output := ast.PrintNode(node)
+			tokens := lexer.Collect(test.input)
+
+			t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\ntokens:\n\t%q", test.name, test.input, output, tokens)
+		} else if test.output != "" {
+			matched, errMatch := regexp.MatchString(regexp.QuoteMeta(test.output), fmt.Sprint(err))
+			if errMatch != nil {
+				panic("Failed to match regexp")
+			}
+
+			if !matched {
+				t.Errorf("Test '%s' failed - Incorrect error returned\ninput:\n\t'%s'\nexpected\n\t%q\ngot\n\t%q", test.name, test.input, test.output, err)
+			}
 		}
 	}
 }

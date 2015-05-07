@@ -16,36 +16,36 @@ type lexTest struct {
 }
 
 // helpers
-func tokContent(val string) Token { return Token{TokenContent, 0, val} }
-func tokID(val string) Token      { return Token{TokenID, 0, val} }
-func tokSep(val string) Token     { return Token{TokenSep, 0, val} }
-func tokString(val string) Token  { return Token{TokenString, 0, val} }
-func tokNumber(val string) Token  { return Token{TokenNumber, 0, val} }
-func tokInverse(val string) Token { return Token{TokenInverse, 0, val} }
-func tokBool(val string) Token    { return Token{TokenBoolean, 0, val} }
-func tokError(val string) Token   { return Token{TokenError, 0, val} }
-func tokComment(val string) Token { return Token{TokenComment, 0, val} }
+func tokContent(val string) Token { return Token{TokenContent, val, 0, 1} }
+func tokID(val string) Token      { return Token{TokenID, val, 0, 1} }
+func tokSep(val string) Token     { return Token{TokenSep, val, 0, 1} }
+func tokString(val string) Token  { return Token{TokenString, val, 0, 1} }
+func tokNumber(val string) Token  { return Token{TokenNumber, val, 0, 1} }
+func tokInverse(val string) Token { return Token{TokenInverse, val, 0, 1} }
+func tokBool(val string) Token    { return Token{TokenBoolean, val, 0, 1} }
+func tokError(val string) Token   { return Token{TokenError, val, 0, 1} }
+func tokComment(val string) Token { return Token{TokenComment, val, 0, 1} }
 
-var tokEOF = Token{TokenEOF, 0, ""}
-var tokEquals = Token{TokenEquals, 0, "="}
-var tokData = Token{TokenData, 0, "@"}
-var tokOpen = Token{TokenOpen, 0, "{{"}
-var tokOpenAmp = Token{TokenOpen, 0, "{{&"}
-var tokOpenPartial = Token{TokenOpenPartial, 0, "{{>"}
-var tokClose = Token{TokenClose, 0, "}}"}
-var tokOpenUnescaped = Token{TokenOpenUnescaped, 0, "{{{"}
-var tokCloseUnescaped = Token{TokenCloseUnescaped, 0, "}}}"}
-var tokOpenBlock = Token{TokenOpenBlock, 0, "{{#"}
-var tokOpenEndBlock = Token{TokenOpenEndBlock, 0, "{{/"}
-var tokOpenInverse = Token{TokenOpenInverse, 0, "{{^"}
-var tokOpenInverseChain = Token{TokenOpenInverseChain, 0, "{{else"}
-var tokOpenSexpr = Token{TokenOpenSexpr, 0, "("}
-var tokCloseSexpr = Token{TokenCloseSexpr, 0, ")"}
-var tokOpenBlockParams = Token{TokenOpenBlockParams, 0, "as |"}
-var tokCloseBlockParams = Token{TokenCloseBlockParams, 0, "|"}
-var tokOpenRawBlock = Token{TokenOpenRawBlock, 0, "{{{{"}
-var tokCloseRawBlock = Token{TokenCloseRawBlock, 0, "}}}}"}
-var tokOpenEndRawBlock = Token{TokenOpenEndRawBlock, 0, "{{{{/"}
+var tokEOF = Token{TokenEOF, "", 0, 1}
+var tokEquals = Token{TokenEquals, "=", 0, 1}
+var tokData = Token{TokenData, "@", 0, 1}
+var tokOpen = Token{TokenOpen, "{{", 0, 1}
+var tokOpenAmp = Token{TokenOpen, "{{&", 0, 1}
+var tokOpenPartial = Token{TokenOpenPartial, "{{>", 0, 1}
+var tokClose = Token{TokenClose, "}}", 0, 1}
+var tokOpenUnescaped = Token{TokenOpenUnescaped, "{{{", 0, 1}
+var tokCloseUnescaped = Token{TokenCloseUnescaped, "}}}", 0, 1}
+var tokOpenBlock = Token{TokenOpenBlock, "{{#", 0, 1}
+var tokOpenEndBlock = Token{TokenOpenEndBlock, "{{/", 0, 1}
+var tokOpenInverse = Token{TokenOpenInverse, "{{^", 0, 1}
+var tokOpenInverseChain = Token{TokenOpenInverseChain, "{{else", 0, 1}
+var tokOpenSexpr = Token{TokenOpenSexpr, "(", 0, 1}
+var tokCloseSexpr = Token{TokenCloseSexpr, ")", 0, 1}
+var tokOpenBlockParams = Token{TokenOpenBlockParams, "as |", 0, 1}
+var tokCloseBlockParams = Token{TokenCloseBlockParams, "|", 0, 1}
+var tokOpenRawBlock = Token{TokenOpenRawBlock, "{{{{", 0, 1}
+var tokCloseRawBlock = Token{TokenCloseRawBlock, "}}}}", 0, 1}
+var tokOpenEndRawBlock = Token{TokenOpenEndRawBlock, "{{{{/", 0, 1}
 
 var lexTests = []lexTest{
 	{"empty", "", []Token{tokEOF}},

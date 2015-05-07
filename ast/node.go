@@ -10,7 +10,17 @@ import (
 //   - https://github.com/wycats/handlebars.js/blob/master/docs/compiler-api.md
 //   - https://github.com/golang/go/blob/master/src/text/template/parse/node.go
 
-type NodeType int
+// AST node interface
+type Node interface {
+	// node type
+	Type() NodeType
+
+	// location of node in original input string
+	Location() Loc
+
+	// accepts visitor
+	Accept(Visitor)
+}
 
 // AST visitor interface
 type Visitor interface {
@@ -37,22 +47,8 @@ type Visitor interface {
 	visitHashPair(node *HashPair)
 }
 
-// AST node interface
-type Node interface {
-	Type() NodeType
-
-	// byte position of start of node in full original input string
-	Position() Pos
-
-	// accepts visitor
-	Accept(Visitor)
-}
-
-type Pos int
-
-func (p Pos) Position() Pos {
-	return p
-}
+// NodeType
+type NodeType int
 
 func (t NodeType) Type() NodeType {
 	return t
@@ -82,22 +78,32 @@ const (
 	NodeHashPair
 )
 
+// Location
+type Loc struct {
+	Pos  int // Byte position
+	Line int // Line number
+}
+
+func (l Loc) Location() Loc {
+	return l
+}
+
 //
 // Program
 //
 
 type Program struct {
 	NodeType
-	Pos
+	Loc
 
 	Body        []Node // [ Statement ... ]
 	BlockParams []string
 }
 
-func NewProgram(pos int) *Program {
+func NewProgram(pos int, line int) *Program {
 	return &Program{
 		NodeType: NodeProgram,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
 	}
 }
 
@@ -125,17 +131,17 @@ func (node *Program) AddStatement(statement Node) {
 
 type MustacheStatement struct {
 	NodeType
-	Pos
+	Loc
 
 	Path   Node   // PathExpression
 	Params []Node // [ Expression ... ]
 	Hash   Node   // Hash
 }
 
-func NewMustacheStatement(pos int) *MustacheStatement {
+func NewMustacheStatement(pos int, line int) *MustacheStatement {
 	return &MustacheStatement{
 		NodeType: NodeMustache,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
 	}
 }
 
@@ -149,7 +155,7 @@ func (node *MustacheStatement) Accept(visitor Visitor) {
 
 type BlockStatement struct {
 	NodeType
-	Pos
+	Loc
 
 	Path    Node   // PathExpression
 	Params  []Node // [ Expression ... ]
@@ -158,10 +164,10 @@ type BlockStatement struct {
 	Inverse Node   // Program
 }
 
-func NewBlockStatement(pos int) *BlockStatement {
+func NewBlockStatement(pos int, line int) *BlockStatement {
 	return &BlockStatement{
 		NodeType: NodeBlock,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
 	}
 }
 
@@ -175,17 +181,17 @@ func (node *BlockStatement) Accept(visitor Visitor) {
 
 type PartialStatement struct {
 	NodeType
-	Pos
+	Loc
 
 	Name   Node   // PathExpression | SubExpression
 	Params []Node // [ Expression ... ]
 	Hash   Node   // Hash
 }
 
-func NewPartialStatement(pos int) *PartialStatement {
+func NewPartialStatement(pos int, line int) *PartialStatement {
 	return &PartialStatement{
 		NodeType: NodePartial,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
 	}
 }
 
@@ -199,16 +205,17 @@ func (node *PartialStatement) Accept(visitor Visitor) {
 
 type ContentStatement struct {
 	NodeType
-	Pos
+	Loc
 
 	Value string
 }
 
-func NewContentStatement(pos int, val string) *ContentStatement {
+func NewContentStatement(pos int, line int, val string) *ContentStatement {
 	return &ContentStatement{
 		NodeType: NodeContent,
-		Pos:      Pos(pos),
-		Value:    val,
+		Loc:      Loc{pos, line},
+
+		Value: val,
 	}
 }
 
@@ -222,16 +229,17 @@ func (node *ContentStatement) Accept(visitor Visitor) {
 
 type CommentStatement struct {
 	NodeType
-	Pos
+	Loc
 
 	Value string
 }
 
-func NewCommentStatement(pos int, val string) *CommentStatement {
+func NewCommentStatement(pos int, line int, val string) *CommentStatement {
 	return &CommentStatement{
 		NodeType: NodeComment,
-		Pos:      Pos(pos),
-		Value:    val,
+		Loc:      Loc{pos, line},
+
+		Value: val,
 	}
 }
 
@@ -245,17 +253,17 @@ func (node *CommentStatement) Accept(visitor Visitor) {
 
 type SubExpression struct {
 	NodeType
-	Pos
+	Loc
 
 	Path   Node   // PathExpression
 	Params []Node // [ Expression ... ]
 	Hash   Node   // Hash
 }
 
-func NewSubExpression(pos int) *SubExpression {
+func NewSubExpression(pos int, line int) *SubExpression {
 	return &SubExpression{
 		NodeType: NodeSubExpression,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
 	}
 }
 
@@ -269,7 +277,7 @@ func (node *SubExpression) Accept(visitor Visitor) {
 
 type PathExpression struct {
 	NodeType
-	Pos
+	Loc
 
 	Original string
 	Depth    int
@@ -277,11 +285,12 @@ type PathExpression struct {
 	Data     bool
 }
 
-func NewPathExpression(pos int, data bool) *PathExpression {
+func NewPathExpression(pos int, line int, data bool) *PathExpression {
 	result := &PathExpression{
 		NodeType: NodePath,
-		Pos:      Pos(pos),
-		Data:     data,
+		Loc:      Loc{pos, line},
+
+		Data: data,
 	}
 
 	if data {
@@ -320,16 +329,17 @@ func (node *PathExpression) Sep(separator string) {
 
 type StringLiteral struct {
 	NodeType
-	Pos
+	Loc
 
 	Value string
 }
 
-func NewStringLiteral(pos int, val string) *StringLiteral {
+func NewStringLiteral(pos int, line int, val string) *StringLiteral {
 	return &StringLiteral{
 		NodeType: NodeString,
-		Pos:      Pos(pos),
-		Value:    val,
+		Loc:      Loc{pos, line},
+
+		Value: val,
 	}
 }
 
@@ -343,16 +353,17 @@ func (node *StringLiteral) Accept(visitor Visitor) {
 
 type BooleanLiteral struct {
 	NodeType
-	Pos
+	Loc
 
 	Value    bool
 	Original string
 }
 
-func NewBooleanLiteral(pos int, val bool, original string) *BooleanLiteral {
+func NewBooleanLiteral(pos int, line int, val bool, original string) *BooleanLiteral {
 	return &BooleanLiteral{
 		NodeType: NodeBoolean,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
+
 		Value:    val,
 		Original: original,
 	}
@@ -376,16 +387,17 @@ func (node *BooleanLiteral) String() string {
 
 type NumberLiteral struct {
 	NodeType
-	Pos
+	Loc
 
 	Value    int
 	Original string
 }
 
-func NewNumberLiteral(pos int, val int, original string) *NumberLiteral {
+func NewNumberLiteral(pos int, line int, val int, original string) *NumberLiteral {
 	return &NumberLiteral{
 		NodeType: NodeNumber,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
+
 		Value:    val,
 		Original: original,
 	}
@@ -401,15 +413,15 @@ func (node *NumberLiteral) Accept(visitor Visitor) {
 
 type Hash struct {
 	NodeType
-	Pos
+	Loc
 
 	Pairs []Node // [ HashPair ... ]
 }
 
-func NewHash(pos int) *Hash {
+func NewHash(pos int, line int) *Hash {
 	return &Hash{
 		NodeType: NodeHash,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
 	}
 }
 
@@ -423,16 +435,16 @@ func (node *Hash) Accept(visitor Visitor) {
 
 type HashPair struct {
 	NodeType
-	Pos
+	Loc
 
 	Key string
 	Val Node // Expression
 }
 
-func NewHashPair(pos int) *HashPair {
+func NewHashPair(pos int, line int) *HashPair {
 	return &HashPair{
 		NodeType: NodeHashPair,
-		Pos:      Pos(pos),
+		Loc:      Loc{pos, line},
 	}
 }
 
