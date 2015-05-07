@@ -76,11 +76,15 @@ var (
 )
 
 // scans given input
+//
+// Tokens can then be fetched sequentially thanks to `NextToken()` function on returned lexer
 func Scan(input string) *Lexer {
 	return ScanWithName(input, "")
 }
 
 // scans given input, with a name used for testing
+//
+// Tokens can then be fetched sequentially thanks to `NextToken()` function on returned lexer
 func ScanWithName(input string, name string) *Lexer {
 	result := &Lexer{
 		input:  input,
@@ -89,6 +93,25 @@ func ScanWithName(input string, name string) *Lexer {
 	}
 
 	go result.run()
+
+	return result
+}
+
+// scans and collect all tokens
+//
+// This should be used for debugging purpose only.
+func Collect(input string) []Token {
+	var result []Token
+
+	l := Scan(input)
+	for {
+		token := l.NextToken()
+		result = append(result, token)
+
+		if token.Kind == TokenEOF || token.Kind == TokenError {
+			break
+		}
+	}
 
 	return result
 }
