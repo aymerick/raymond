@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"regexp"
+	"runtime"
 	"strconv"
 
 	"github.com/aymerick/raymond/ast"
@@ -41,68 +42,98 @@ func New(input string) *Parser {
 }
 
 // parse given input and returns the ast root node
-func Parse(input string) (*ast.Program, error) {
-	return New(input).ParseProgram()
+func Parse(input string) (result *ast.Program, err error) {
+	// recover error
+	defer errRecover(&err)
+
+	parser := New(input)
+
+	// parse
+	result = parser.ParseProgram()
+
+	// check parsing error
+	if errP := parser.err(); errP != nil {
+		errPanic(errP)
+	}
+
+	// check if everything has been parsed
+	if tok := parser.next(); tok.Kind != lexer.TokenEOF {
+		errPanic(fmt.Errorf("Syntax error. Parsing stopped at: %s", tok))
+	}
+
+	// named returned values
+	return
 }
 
-func errExpect(msg string, expect lexer.TokenKind, tok *lexer.Token) error {
-	return fmt.Errorf("%s Expected %s but got: %s", msg, expect, tok)
+// recovers parsing panic
+func errRecover(errp *error) {
+	e := recover()
+	if e != nil {
+		switch err := e.(type) {
+		case runtime.Error:
+			panic(e)
+		case error:
+			*errp = err
+		default:
+			panic(e)
+		}
+	}
+}
+
+// fatal parsing error
+func errPanic(err error) {
+	panic(err)
+}
+
+// fatal parsing error: unexpected token kind error
+func errToken(msg string, expect lexer.TokenKind, tok *lexer.Token) {
+	errPanic(fmt.Errorf("%s Expected %s but got: %s", msg, expect, tok))
 }
 
 // program : statement*
-func (p *Parser) ParseProgram() (*ast.Program, error) {
+func (p *Parser) ParseProgram() *ast.Program {
 	result := ast.NewProgram(p.lex.Pos())
 
 	for p.isStatement() {
-		node, err := p.parseStatement()
-		if err != nil {
-			return nil, err
-		}
-
-		result.AddStatement(node)
+		result.AddStatement(p.parseStatement())
 	}
 
-	return result, p.err()
+	return result
 }
 
 // statement : mustache | block | rawBlock | partial | content | COMMENT
-func (p *Parser) parseStatement() (ast.Node, error) {
+func (p *Parser) parseStatement() ast.Node {
 	var result ast.Node
-	var err error
 
 	tok := p.next()
 
 	switch tok.Kind {
 	case lexer.TokenOpen, lexer.TokenOpenUnescaped:
 		// mustache
-		result, err = p.parseMustache()
+		result = p.parseMustache()
 	case lexer.TokenOpenBlock:
 		// block
-		result, err = p.parseBlock()
+		result = p.parseBlock()
 	case lexer.TokenOpenInverse:
 		// block
-		result, err = p.parseInverse()
+		result = p.parseInverse()
 	case lexer.TokenOpenRawBlock:
 		// rawBlock
-		result, err = p.parseRawBlock()
+		result = p.parseRawBlock()
 	case lexer.TokenOpenPartial:
 		// partial
-		result, err = p.parsePartial()
+		result = p.parsePartial()
 	case lexer.TokenContent:
 		// content
-		result, err = p.parseContent()
+		result = p.parseContent()
 	case lexer.TokenComment:
 		// COMMENT
-		result, err = p.parseComment()
+		result = p.parseComment()
 	default:
-		return nil, fmt.Errorf("Failed to parse statement: %s", tok)
+		errPanic(fmt.Errorf("Failed to parse statement: %s", tok))
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return result, p.err()
+	return result
 }
 
 // Returns true if next token starts a statement
@@ -122,67 +153,65 @@ func (p *Parser) isStatement() bool {
 }
 
 // content : CONTENT
-func (p *Parser) parseContent() (*ast.ContentStatement, error) {
+func (p *Parser) parseContent() *ast.ContentStatement {
 	tok := p.shift()
 	if tok.Kind != lexer.TokenContent {
-		return nil, errExpect("Failed to parse content.", lexer.TokenContent, tok)
+		errToken("Failed to parse content.", lexer.TokenContent, tok)
 	}
 
-	return ast.NewContentStatement(tok.Pos, tok.Val), nil
+	return ast.NewContentStatement(tok.Pos, tok.Val)
 }
 
 // COMMENT
-func (p *Parser) parseComment() (*ast.CommentStatement, error) {
+func (p *Parser) parseComment() *ast.CommentStatement {
 	tok := p.shift()
 	if tok.Kind != lexer.TokenComment {
-		return nil, errExpect("Failed to parse comment.", lexer.TokenComment, tok)
+		errToken("Failed to parse comment.", lexer.TokenComment, tok)
 	}
 
 	value := rOpenComment.ReplaceAllString(tok.Val, "")
 	value = rCloseComment.ReplaceAllString(value, "")
 
-	return ast.NewCommentStatement(tok.Pos, value), nil
+	return ast.NewCommentStatement(tok.Pos, value)
 }
 
 // Parses `param* hash?`
-func (p *Parser) parseExpressionParamsHash() (params []ast.Node, hash ast.Node, err error) {
+func (p *Parser) parseExpressionParamsHash() ([]ast.Node, ast.Node) {
+	var params []ast.Node
+	var hash ast.Node
+
 	// params*
 	if p.isParam() {
-		params, err = p.parseParams()
-		if err != nil {
-			return
-		}
+		params = p.parseParams()
 	}
 
 	// hash?
 	if p.isHashSegment() {
-		hash, err = p.parseHash()
+		hash = p.parseHash()
 	}
 
-	// named returned values
-	return
+	return params, hash
 }
 
 // Parses an expression `helperName param* hash?`
-func (p *Parser) parseExpression() (helperName ast.Node, params []ast.Node, hash ast.Node, err error) {
+func (p *Parser) parseExpression() (ast.Node, []ast.Node, ast.Node) {
+	var helperName ast.Node
+	var params []ast.Node
+	var hash ast.Node
+
 	// helperName
-	helperName, err = p.parseHelperName()
-	if err != nil {
-		return
-	}
+	helperName = p.parseHelperName()
 
 	// param* hash?
-	params, hash, err = p.parseExpressionParamsHash()
+	params, hash = p.parseExpressionParamsHash()
 
-	// named returned values
-	return
+	return helperName, params, hash
 }
 
 // rawBlock : openRawBlock content endRawBlock
 // openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK
 // endRawBlock : OPEN_END_RAW_BLOCK helperName CLOSE_RAW_BLOCK
-func (p *Parser) parseRawBlock() (*ast.BlockStatement, error) {
-	var err error
+func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	errMsg := "Failed to parse raw block."
 
 	// OPEN_RAW_BLOCK
@@ -191,27 +220,21 @@ func (p *Parser) parseRawBlock() (*ast.BlockStatement, error) {
 	result := ast.NewBlockStatement(tok.Pos)
 
 	// helperName param* hash?
-	result.Path, result.Params, result.Hash, err = p.parseExpression()
-	if err != nil {
-		return nil, err
-	}
+	result.Path, result.Params, result.Hash = p.parseExpression()
 
 	openName, ok := result.Path.(*ast.PathExpression)
 	if !ok {
-		return nil, fmt.Errorf("%s Unexpected name in open block: %s", errMsg, result.Path)
+		errPanic(fmt.Errorf("%s Unexpected name in open block: %s", errMsg, result.Path))
 	}
 
 	// CLOSE_RAW_BLOCK
 	tok = p.shift()
 	if tok.Kind != lexer.TokenCloseRawBlock {
-		return nil, errExpect(errMsg, lexer.TokenCloseRawBlock, tok)
+		errToken(errMsg, lexer.TokenCloseRawBlock, tok)
 	}
 
 	// content
-	content, err := p.parseContent()
-	if err != nil {
-		return nil, err
-	}
+	content := p.parseContent()
 
 	program := ast.NewProgram(tok.Pos)
 	program.AddStatement(content)
@@ -221,154 +244,113 @@ func (p *Parser) parseRawBlock() (*ast.BlockStatement, error) {
 	// OPEN_END_RAW_BLOCK
 	tok = p.shift()
 	if tok.Kind != lexer.TokenOpenEndRawBlock {
-		return nil, errExpect(errMsg, lexer.TokenOpenEndRawBlock, tok)
+		errToken(errMsg, lexer.TokenOpenEndRawBlock, tok)
 	}
 
 	// helperName
-	endId, err := p.parseHelperName()
-	if err != nil {
-		return nil, err
-	}
+	endId := p.parseHelperName()
 
 	closeName, ok := endId.(*ast.PathExpression)
 	if !ok {
-		return nil, fmt.Errorf("%s Unexpected name in end block: %s", errMsg, endId)
+		errPanic(fmt.Errorf("%s Unexpected name in end block: %s", errMsg, endId))
 	}
 
 	if openName.Original != closeName.Original {
-		return nil, fmt.Errorf("%s Open and end blocks names mismatch: %s != %s", openName.Original, closeName.Original)
+		errPanic(fmt.Errorf("%s Open and end blocks names mismatch: %s != %s", errMsg, openName.Original, closeName.Original))
 	}
 
 	// CLOSE_RAW_BLOCK
 	tok = p.shift()
 	if tok.Kind != lexer.TokenCloseRawBlock {
-		return nil, errExpect(errMsg, lexer.TokenCloseRawBlock, tok)
+		errToken(errMsg, lexer.TokenCloseRawBlock, tok)
 	}
 
-	return result, p.err()
+	return result
 }
 
 // block : openBlock program inverseChain? closeBlock
-func (p *Parser) parseBlock() (*ast.BlockStatement, error) {
+func (p *Parser) parseBlock() *ast.BlockStatement {
 	// openBlock
-	result, blockParams, err := p.parseOpenBlock()
-	if err != nil {
-		return nil, err
-	}
+	result, blockParams := p.parseOpenBlock()
 
 	// program
-	program, err := p.ParseProgram()
-	if err != nil {
-		return nil, err
-	}
-
+	program := p.ParseProgram()
 	program.BlockParams = blockParams
 	result.Program = program
 
 	// inverseChain?
 	if p.isInverseChain() {
-		result.Inverse, err = p.parseInverseChain()
-		if err != nil {
-			return nil, err
-		}
+		result.Inverse = p.parseInverseChain()
 	}
 
 	// closeBlock
-	if err := p.parseCloseBlock(result); err != nil {
-		return nil, err
-	}
+	p.parseCloseBlock(result)
 
-	return result, p.err()
+	return result
 }
 
 // block : openInverse program inverseAndProgram? closeBlock
-func (p *Parser) parseInverse() (*ast.BlockStatement, error) {
-	var err error
-
+func (p *Parser) parseInverse() *ast.BlockStatement {
 	// openInverse
-	result, blockParams, err := p.parseOpenBlock()
-	if err != nil {
-		return nil, err
-	}
+	result, blockParams := p.parseOpenBlock()
 
 	// program
-	program, err := p.ParseProgram()
-	if err != nil {
-		return nil, err
-	}
+	program := p.ParseProgram()
 
 	program.BlockParams = blockParams
 	result.Inverse = program
 
 	// inverseAndProgram?
 	if p.isInverse() {
-		result.Program, err = p.parseInverseAndProgram()
-		if err != nil {
-			return nil, err
-		}
+		result.Program = p.parseInverseAndProgram()
 	}
 
 	// closeBlock
-	if err := p.parseCloseBlock(result); err != nil {
-		return nil, err
-	}
+	p.parseCloseBlock(result)
 
-	return result, p.err()
+	return result
 }
 
 // Parses `helperName param* hash? blockParams?`
-func (p *Parser) parseOpenBlockExpression(pos int) (block *ast.BlockStatement, blockParams []string, err error) {
-	block = ast.NewBlockStatement(pos)
+func (p *Parser) parseOpenBlockExpression(pos int) (*ast.BlockStatement, []string) {
+	var blockParams []string
+
+	result := ast.NewBlockStatement(pos)
 
 	// helperName param* hash?
-	block.Path, block.Params, block.Hash, err = p.parseExpression()
-	if err != nil {
-		return
-	}
+	result.Path, result.Params, result.Hash = p.parseExpression()
 
 	// blockParams?
 	if p.isBlockParams() {
-		blockParams, err = p.parseBlockParams()
-		if err != nil {
-			return
-		}
+		blockParams = p.parseBlockParams()
 	}
 
 	// named returned values
-	return
+	return result, blockParams
 }
 
 // inverseChain : openInverseChain program inverseChain?
 //              | inverseAndProgram
-func (p *Parser) parseInverseChain() (ast.Node, error) {
+func (p *Parser) parseInverseChain() ast.Node {
 	if p.isInverse() {
 		// inverseAndProgram
 		return p.parseInverseAndProgram()
 	} else {
 		// openInverseChain
-		result, blockParams, err := p.parseOpenBlock()
-		if err != nil {
-			return nil, err
-		}
+		result, blockParams := p.parseOpenBlock()
 
 		// program
-		program, err := p.ParseProgram()
-		if err != nil {
-			return nil, err
-		}
+		program := p.ParseProgram()
 
 		program.BlockParams = blockParams
 		result.Program = program
 
 		// inverseChain?
 		if p.isInverseChain() {
-			result.Inverse, err = p.parseInverseChain()
-			if err != nil {
-				return nil, err
-			}
+			result.Inverse = p.parseInverseChain()
 		}
 
-		return result, p.err()
+		return result
 	}
 }
 
@@ -378,7 +360,7 @@ func (p *Parser) isInverseChain() bool {
 }
 
 // inverseAndProgram : INVERSE program
-func (p *Parser) parseInverseAndProgram() (*ast.Program, error) {
+func (p *Parser) parseInverseAndProgram() *ast.Program {
 	// INVERSE
 	p.shift()
 
@@ -389,72 +371,61 @@ func (p *Parser) parseInverseAndProgram() (*ast.Program, error) {
 // openBlock : OPEN_BLOCK helperName param* hash? blockParams? CLOSE
 // openInverse : OPEN_INVERSE helperName param* hash? blockParams? CLOSE
 // openInverseChain: OPEN_INVERSE_CHAIN helperName param* hash? blockParams? CLOSE
-func (p *Parser) parseOpenBlock() (block *ast.BlockStatement, blockParams []string, err error) {
-	errMsg := "Failed to parse Open Block."
-
+func (p *Parser) parseOpenBlock() (*ast.BlockStatement, []string) {
 	// OPEN_BLOCK | OPEN_INVERSE | OPEN_INVERSE_CHAIN
 	tok := p.shift()
 	// @todo Check token kind ?
 
 	// helperName param* hash? blockParams?
-	block, blockParams, err = p.parseOpenBlockExpression(tok.Pos)
+	result, blockParams := p.parseOpenBlockExpression(tok.Pos)
 
 	// CLOSE
 	tok = p.shift()
 	if tok.Kind != lexer.TokenClose {
-		err = errExpect(errMsg, lexer.TokenClose, tok)
-		return
+		errToken("Failed to parse Open Block.", lexer.TokenClose, tok)
 	}
 
 	// named returned values
-	return
+	return result, blockParams
 }
 
 // closeBlock : OPEN_ENDBLOCK helperName CLOSE
-func (p *Parser) parseCloseBlock(block *ast.BlockStatement) error {
-	var err error
+func (p *Parser) parseCloseBlock(block *ast.BlockStatement) {
 	errMsg := "Failed to parse Close Block."
 
 	// OPEN_ENDBLOCK
 	tok := p.shift()
 	if tok.Kind != lexer.TokenOpenEndBlock {
-		return errExpect(errMsg, lexer.TokenOpenEndBlock, tok)
+		errToken(errMsg, lexer.TokenOpenEndBlock, tok)
 	}
 
 	// helperName
-	endId, err := p.parseHelperName()
-	if err != nil {
-		return err
-	}
+	endId := p.parseHelperName()
 
 	closeName, ok := endId.(*ast.PathExpression)
 	if !ok {
-		return fmt.Errorf("%s Unexpected name: %s", errMsg, endId)
+		errPanic(fmt.Errorf("%s Unexpected name: %s", errMsg, endId))
 	}
 
 	openName, ok := block.Path.(*ast.PathExpression)
 	if !ok {
-		return fmt.Errorf("%s Unexpected name: %s", errMsg, block.Path)
+		errPanic(fmt.Errorf("%s Unexpected name: %s", errMsg, block.Path))
 	}
 
 	if openName.Original != closeName.Original {
-		return fmt.Errorf("%s Open and end blocks names mismatch: %s != %s", openName.Original, closeName.Original)
+		errPanic(fmt.Errorf("%s Open and end blocks names mismatch: %s != %s", openName.Original, closeName.Original))
 	}
 
 	// CLOSE
 	tok = p.shift()
 	if tok.Kind != lexer.TokenClose {
-		return errExpect(errMsg, lexer.TokenClose, tok)
+		errToken(errMsg, lexer.TokenClose, tok)
 	}
-
-	return nil
 }
 
 // mustache : OPEN helperName param* hash? CLOSE
 //          | OPEN_UNESCAPED helperName param* hash? CLOSE_UNESCAPED
-func (p *Parser) parseMustache() (*ast.MustacheStatement, error) {
-	var err error
-
+func (p *Parser) parseMustache() *ast.MustacheStatement {
 	// OPEN | OPEN_UNESCAPED
 	tok := p.shift()
 
@@ -466,52 +437,41 @@ func (p *Parser) parseMustache() (*ast.MustacheStatement, error) {
 	result := ast.NewMustacheStatement(tok.Pos)
 
 	// helperName param* hash?
-	result.Path, result.Params, result.Hash, err = p.parseExpression()
-	if err != nil {
-		return nil, err
-	}
+	result.Path, result.Params, result.Hash = p.parseExpression()
 
 	// CLOSE | CLOSE_UNESCAPED
 	tok = p.shift()
 	if tok.Kind != closeToken {
-		return nil, errExpect("Failed to parse Mustache Statement.", closeToken, tok)
+		errToken("Failed to parse Mustache Statement.", closeToken, tok)
 	}
 
-	return result, p.err()
+	return result
 }
 
 // partial : OPEN_PARTIAL partialName param* hash? CLOSE
-func (p *Parser) parsePartial() (*ast.PartialStatement, error) {
-	var err error
-
+func (p *Parser) parsePartial() *ast.PartialStatement {
 	// OPEN_PARTIAL
 	tok := p.shift()
 
 	result := ast.NewPartialStatement(tok.Pos)
 
 	// partialName
-	result.Name, err = p.parsePartialName()
-	if err != nil {
-		return nil, err
-	}
+	result.Name = p.parsePartialName()
 
 	// param* hash?
-	result.Params, result.Hash, err = p.parseExpressionParamsHash()
-	if err != nil {
-		return nil, err
-	}
+	result.Params, result.Hash = p.parseExpressionParamsHash()
 
 	// CLOSE
 	tok = p.shift()
 	if tok.Kind != lexer.TokenClose {
-		return nil, fmt.Errorf("Failed to parse Partial Statement. Expected TokenClose, but got: %s", tok)
+		errPanic(fmt.Errorf("Failed to parse Partial Statement. Expected TokenClose, but got: %s", tok))
 	}
 
-	return result, p.err()
+	return result
 }
 
 // Parses `helperName | sexpr`
-func (p *Parser) parseHelperNameOrSexpr() (ast.Node, error) {
+func (p *Parser) parseHelperNameOrSexpr() ast.Node {
 	if p.isSexpr() {
 		// sexpr
 		return p.parseSexpr()
@@ -522,7 +482,7 @@ func (p *Parser) parseHelperNameOrSexpr() (ast.Node, error) {
 }
 
 // param : helperName | sexpr
-func (p *Parser) parseParam() (ast.Node, error) {
+func (p *Parser) parseParam() ast.Node {
 	return p.parseHelperNameOrSexpr()
 }
 
@@ -532,70 +492,56 @@ func (p *Parser) isParam() bool {
 }
 
 // parses `param*`
-func (p *Parser) parseParams() ([]ast.Node, error) {
+func (p *Parser) parseParams() []ast.Node {
 	var result []ast.Node
 
 	for p.isParam() {
-		param, err := p.parseParam()
-		if err != nil {
-			return nil, err
-		}
-
-		result = append(result, param)
+		result = append(result, p.parseParam())
 	}
 
-	return result, p.err()
+	return result
 }
 
 // sexpr : OPEN_SEXPR helperName param* hash? CLOSE_SEXPR
-func (p *Parser) parseSexpr() (*ast.SubExpression, error) {
-	var err error
+func (p *Parser) parseSexpr() *ast.SubExpression {
 	errMsg := "Failed to parse SubExpression."
 
 	// OPEN_SEXPR
 	tok := p.shift()
 	if tok.Kind != lexer.TokenOpenSexpr {
-		return nil, fmt.Errorf("%s Expected TokenOpenSexpr: %s", errMsg, tok)
+		errPanic(fmt.Errorf("%s Expected TokenOpenSexpr: %s", errMsg, tok))
 	}
 
 	result := ast.NewSubExpression(tok.Pos)
 
 	// helperName param* hash?
-	result.Path, result.Params, result.Hash, err = p.parseExpression()
-	if err != nil {
-		return nil, err
-	}
+	result.Path, result.Params, result.Hash = p.parseExpression()
 
 	// CLOSE_SEXPR
 	tok = p.shift()
 	if tok.Kind != lexer.TokenCloseSexpr {
-		return nil, fmt.Errorf("%s Expected TokenCloseSexpr: %s", errMsg, tok)
+		errPanic(fmt.Errorf("%s Expected TokenCloseSexpr: %s", errMsg, tok))
 	}
 
-	return result, p.err()
+	return result
 }
 
 // hash : hashSegment+
-func (p *Parser) parseHash() (*ast.Hash, error) {
+func (p *Parser) parseHash() *ast.Hash {
 	var pairs []ast.Node
 
 	for p.isHashSegment() {
-		pair, err := p.parseHashSegment()
-		if err != nil {
-			return nil, err
-		}
-
-		pairs = append(pairs, pair)
+		pairs = append(pairs, p.parseHashSegment())
 	}
 
 	if len(pairs) == 0 {
-		return nil, fmt.Errorf("Failed to parse Hash: %s", p.next())
+		errPanic(fmt.Errorf("Failed to parse Hash: %s", p.next()))
 	}
 
 	result := ast.NewHash(int(pairs[0].Position()))
 	result.Pairs = pairs
 
-	return result, p.err()
+	return result
 }
 
 // returns true if next tokens represents a `hashSegment`
@@ -604,43 +550,40 @@ func (p *Parser) isHashSegment() bool {
 }
 
 // hashSegment : ID EQUALS param
-func (p *Parser) parseHashSegment() (*ast.HashPair, error) {
+func (p *Parser) parseHashSegment() *ast.HashPair {
 	errMsg := "Failed to parse Hash Segment."
 
 	// ID
 	tokId := p.shift()
 	if tokId.Kind != lexer.TokenID {
-		return nil, fmt.Errorf("%s Expected an ID: %s", errMsg, tokId)
+		errPanic(fmt.Errorf("%s Expected an ID: %s", errMsg, tokId))
 	}
 
 	// EQUALS
 	tokEquals := p.shift()
 	if tokEquals.Kind != lexer.TokenEquals {
-		return nil, fmt.Errorf("%s Expected an EQUAL: %s", errMsg, tokEquals)
+		errPanic(fmt.Errorf("%s Expected an EQUAL: %s", errMsg, tokEquals))
 	}
 
 	// param
-	param, err := p.parseParam()
-	if err != nil {
-		return nil, err
-	}
+	param := p.parseParam()
 
 	result := ast.NewHashPair(tokId.Pos)
 	result.Key = tokId.Val
 	result.Val = param
 
-	return result, p.err()
+	return result
 }
 
 // blockParams : OPEN_BLOCK_PARAMS ID+ CLOSE_BLOCK_PARAMS
-func (p *Parser) parseBlockParams() ([]string, error) {
+func (p *Parser) parseBlockParams() []string {
 	var result []string
 	errMsg := "Failed to parse Block Params."
 
 	// OPEN_BLOCK_PARAMS
 	tok := p.shift()
 	if tok.Kind != lexer.TokenOpenBlockParams {
-		return nil, fmt.Errorf("%s Expected a TokenOpenBlockParams: %s", errMsg, tok)
+		errPanic(fmt.Errorf("%s Expected a TokenOpenBlockParams: %s", errMsg, tok))
 	}
 
 	// ID+
@@ -649,22 +592,21 @@ func (p *Parser) parseBlockParams() ([]string, error) {
 	}
 
 	if len(result) == 0 {
-		return nil, fmt.Errorf("%s Missing ID: %s", errMsg, tok)
+		errPanic(fmt.Errorf("%s Missing ID: %s", errMsg, tok))
 	}
 
 	// CLOSE_BLOCK_PARAMS
 	tok = p.shift()
 	if tok.Kind != lexer.TokenCloseBlockParams {
-		return nil, fmt.Errorf("%s Expected a TokenCloseBlockParams: %s", errMsg, tok)
+		errPanic(fmt.Errorf("%s Expected a TokenCloseBlockParams: %s", errMsg, tok))
 	}
 
-	return result, p.err()
+	return result
 }
 
 // helperName : path | dataName | STRING | NUMBER | BOOLEAN | UNDEFINED | NULL
-func (p *Parser) parseHelperName() (ast.Node, error) {
+func (p *Parser) parseHelperName() ast.Node {
 	var result ast.Node
-	var err error
 
 	tok := p.next()
 
@@ -678,7 +620,7 @@ func (p *Parser) parseHelperName() (ast.Node, error) {
 		p.shift()
 		val, err := strconv.Atoi(tok.Val)
 		if err != nil {
-			return nil, err
+			errPanic(err)
 		}
 		result = ast.NewNumberLiteral(tok.Pos, val, tok.Val)
 	case lexer.TokenString:
@@ -687,19 +629,13 @@ func (p *Parser) parseHelperName() (ast.Node, error) {
 		result = ast.NewStringLiteral(tok.Pos, tok.Val)
 	case lexer.TokenData:
 		// dataName
-		result, err = p.parseDataName()
-		if err != nil {
-			return nil, err
-		}
+		result = p.parseDataName()
 	default:
 		// path
-		result, err = p.parsePath(false)
-		if err != nil {
-			return nil, err
-		}
+		result = p.parsePath(false)
 	}
 
-	return result, p.err()
+	return result
 }
 
 // Returns true if next tokens represent a `helperName`
@@ -713,15 +649,15 @@ func (p *Parser) isHelperName() bool {
 }
 
 // partialName : helperName | sexpr
-func (p *Parser) parsePartialName() (ast.Node, error) {
+func (p *Parser) parsePartialName() ast.Node {
 	return p.parseHelperNameOrSexpr()
 }
 
 // dataName : DATA pathSegments
-func (p *Parser) parseDataName() (*ast.PathExpression, error) {
+func (p *Parser) parseDataName() *ast.PathExpression {
 	tok := p.shift()
 	if tok.Kind != lexer.TokenData {
-		return nil, fmt.Errorf("Failed to parse data: %s", tok)
+		errPanic(fmt.Errorf("Failed to parse data: %s", tok))
 	}
 
 	return p.parsePath(true)
@@ -730,13 +666,13 @@ func (p *Parser) parseDataName() (*ast.PathExpression, error) {
 // path : pathSegments
 // pathSegments : pathSegments SEP ID
 //              | ID
-func (p *Parser) parsePath(data bool) (*ast.PathExpression, error) {
+func (p *Parser) parsePath(data bool) *ast.PathExpression {
 	var tok *lexer.Token
 
 	// ID
 	tok = p.shift()
 	if tok.Kind != lexer.TokenID {
-		return nil, fmt.Errorf("Failed to parse path, expecting ID: %s", tok)
+		errPanic(fmt.Errorf("Failed to parse path, expecting ID: %s", tok))
 	}
 
 	result := ast.NewPathExpression(tok.Pos, data)
@@ -750,12 +686,12 @@ func (p *Parser) parsePath(data bool) (*ast.PathExpression, error) {
 		// ID
 		tok = p.shift()
 		if tok.Kind != lexer.TokenID {
-			return nil, fmt.Errorf("Failed to parse path, expecting ID after separator: %s", tok)
+			errPanic(fmt.Errorf("Failed to parse path, expecting ID after separator: %s", tok))
 		}
 		result.Part(tok.Val)
 	}
 
-	return result, p.err()
+	return result
 }
 
 // Ensure there is token to parse at given index
@@ -813,6 +749,10 @@ func (p *Parser) shift() *lexer.Token {
 
 // Returns lexer error, or nil if no error
 func (p *Parser) err() error {
+	if !p.have(1) {
+		return nil
+	}
+
 	if token := p.next(); token.Kind == lexer.TokenError {
 		return fmt.Errorf("Lexer error: %s", token.String())
 	} else {
