@@ -165,6 +165,7 @@ func (p *Parser) isStatement() bool {
 
 // content : CONTENT
 func (p *Parser) parseContent() *ast.ContentStatement {
+	// CONTENT
 	tok := p.shift()
 	if tok.Kind != lexer.TokenContent {
 		errExpected(lexer.TokenContent, tok)
@@ -175,10 +176,8 @@ func (p *Parser) parseContent() *ast.ContentStatement {
 
 // COMMENT
 func (p *Parser) parseComment() *ast.CommentStatement {
+	// COMMENT
 	tok := p.shift()
-	if tok.Kind != lexer.TokenComment {
-		errExpected(lexer.TokenComment, tok)
-	}
 
 	value := rOpenComment.ReplaceAllString(tok.Val, "")
 	value = rCloseComment.ReplaceAllString(value, "")
@@ -243,6 +242,7 @@ func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	}
 
 	// content
+	// @todo Is content mandatory in a raw block ?
 	content := p.parseContent()
 
 	program := ast.NewProgram(tok.Pos, tok.Line)
@@ -383,7 +383,6 @@ func (p *Parser) parseInverseAndProgram() *ast.Program {
 func (p *Parser) parseOpenBlock() (*ast.BlockStatement, []string) {
 	// OPEN_BLOCK | OPEN_INVERSE | OPEN_INVERSE_CHAIN
 	tok := p.shift()
-	// @todo Check token kind ?
 
 	// helperName param* hash? blockParams?
 	result, blockParams := p.parseOpenBlockExpression(tok)
