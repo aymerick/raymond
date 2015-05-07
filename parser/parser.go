@@ -42,7 +42,7 @@ func New(input string) *Parser {
 }
 
 // parse given input and returns the ast root node
-func Parse(input string) (ast.Node, error) {
+func Parse(input string) (*ast.Program, error) {
 	return New(input).ParseProgram()
 }
 
@@ -123,7 +123,7 @@ func (p *Parser) isStatement() bool {
 }
 
 // content : CONTENT
-func (p *Parser) parseContent() (ast.Node, error) {
+func (p *Parser) parseContent() (*ast.ContentStatement, error) {
 	tok := p.shift()
 	if tok.Kind != lexer.TokenContent {
 		return nil, errExpect("Failed to parse content.", lexer.TokenContent, tok)
@@ -133,7 +133,7 @@ func (p *Parser) parseContent() (ast.Node, error) {
 }
 
 // COMMENT
-func (p *Parser) parseComment() (ast.Node, error) {
+func (p *Parser) parseComment() (*ast.CommentStatement, error) {
 	tok := p.shift()
 	if tok.Kind != lexer.TokenComment {
 		return nil, errExpect("Failed to parse comment.", lexer.TokenComment, tok)
@@ -182,7 +182,7 @@ func (p *Parser) parseExpression() (helperName ast.Node, params []ast.Node, hash
 // rawBlock : openRawBlock content endRawBlock
 // openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK
 // endRawBlock : OPEN_END_RAW_BLOCK helperName CLOSE_RAW_BLOCK
-func (p *Parser) parseRawBlock() (ast.Node, error) {
+func (p *Parser) parseRawBlock() (*ast.BlockStatement, error) {
 	var err error
 	errMsg := "Failed to parse raw block."
 
@@ -250,7 +250,7 @@ func (p *Parser) parseRawBlock() (ast.Node, error) {
 }
 
 // block : openBlock program inverseChain? closeBlock
-func (p *Parser) parseBlock() (ast.Node, error) {
+func (p *Parser) parseBlock() (*ast.BlockStatement, error) {
 	// openBlock
 	result, blockParams, err := p.parseOpenBlock()
 	if err != nil {
@@ -283,7 +283,7 @@ func (p *Parser) parseBlock() (ast.Node, error) {
 }
 
 // block : openInverse program inverseAndProgram? closeBlock
-func (p *Parser) parseInverse() (ast.Node, error) {
+func (p *Parser) parseInverse() (*ast.BlockStatement, error) {
 	var err error
 
 	// openInverse
@@ -379,7 +379,7 @@ func (p *Parser) isInverseChain() bool {
 }
 
 // inverseAndProgram : INVERSE program
-func (p *Parser) parseInverseAndProgram() (ast.Node, error) {
+func (p *Parser) parseInverseAndProgram() (*ast.Program, error) {
 	// INVERSE
 	p.shift()
 
@@ -453,7 +453,7 @@ func (p *Parser) parseCloseBlock(block *ast.BlockStatement) error {
 
 // mustache : OPEN helperName param* hash? CLOSE
 //          | OPEN_UNESCAPED helperName param* hash? CLOSE_UNESCAPED
-func (p *Parser) parseMustache() (ast.Node, error) {
+func (p *Parser) parseMustache() (*ast.MustacheStatement, error) {
 	var err error
 
 	// OPEN | OPEN_UNESCAPED
@@ -482,7 +482,7 @@ func (p *Parser) parseMustache() (ast.Node, error) {
 }
 
 // partial : OPEN_PARTIAL partialName param* hash? CLOSE
-func (p *Parser) parsePartial() (ast.Node, error) {
+func (p *Parser) parsePartial() (*ast.PartialStatement, error) {
 	var err error
 
 	// OPEN_PARTIAL
@@ -549,7 +549,7 @@ func (p *Parser) parseParams() ([]ast.Node, error) {
 }
 
 // sexpr : OPEN_SEXPR helperName param* hash? CLOSE_SEXPR
-func (p *Parser) parseSexpr() (ast.Node, error) {
+func (p *Parser) parseSexpr() (*ast.SubExpression, error) {
 	var err error
 	errMsg := "Failed to parse SubExpression."
 
@@ -577,7 +577,7 @@ func (p *Parser) parseSexpr() (ast.Node, error) {
 }
 
 // hash : hashSegment+
-func (p *Parser) parseHash() (ast.Node, error) {
+func (p *Parser) parseHash() (*ast.Hash, error) {
 	var pairs []ast.Node
 
 	for p.isHashSegment() {
@@ -605,7 +605,7 @@ func (p *Parser) isHashSegment() bool {
 }
 
 // hashSegment : ID EQUALS param
-func (p *Parser) parseHashSegment() (ast.Node, error) {
+func (p *Parser) parseHashSegment() (*ast.HashPair, error) {
 	errMsg := "Failed to parse Hash Segment."
 
 	// ID
@@ -719,7 +719,7 @@ func (p *Parser) parsePartialName() (ast.Node, error) {
 }
 
 // dataName : DATA pathSegments
-func (p *Parser) parseDataName() (ast.Node, error) {
+func (p *Parser) parseDataName() (*ast.PathExpression, error) {
 	tok := p.shift()
 	if tok.Kind != lexer.TokenData {
 		return nil, errors.New(fmt.Sprintf("Failed to parse data: %s", tok))
@@ -731,7 +731,7 @@ func (p *Parser) parseDataName() (ast.Node, error) {
 // path : pathSegments
 // pathSegments : pathSegments SEP ID
 //              | ID
-func (p *Parser) parsePath(data bool) (ast.Node, error) {
+func (p *Parser) parsePath(data bool) (*ast.PathExpression, error) {
 	var tok *lexer.Token
 
 	// ID
