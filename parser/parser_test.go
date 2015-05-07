@@ -110,7 +110,10 @@ func TestParser(t *testing.T) {
 }
 
 var parserErrorTests = []parserTest{
-	// @todo Check all possible errors
+	{"lexer error", `{{! unclosed comment`, "Lexer error"},
+	{"syntax error", `foo{{^}}`, "Syntax error"},
+	{"helperName in open raw block must be a path", `{{{{1}}}}{{foo}}{{{{/raw}}}}`, "Path expression expected"},
+	{"helperName in close raw block must be a path", `{{{{raw}}}}{{foo}}{{{{/1}}}}`, "Path expression expected"},
 
 	//
 	// Next tests come from:

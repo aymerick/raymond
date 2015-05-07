@@ -37,7 +37,9 @@ type Lexer struct {
 	width int // size of last rune scanned from input string
 	start int // start position of the token we are scanning
 
+	// the shameful contextual properties needed because `nextFunc` is not enough
 	closeComment *regexp.Regexp // regexp to scan close of current comment
+	rawBlock     bool           // are we parsing a raw block content ?
 }
 
 var (
@@ -48,18 +50,19 @@ var (
 	unallowedIDChars = " \n\t!\"#%&'()*+,./;<=>@[\\]^`{|}~"
 
 	// regular expressions
-	rID             = regexp.MustCompile(`^[^` + regexp.QuoteMeta(unallowedIDChars) + `]+`)
-	rDotID          = regexp.MustCompile(`^\.` + lookheadChars)
-	rTrue           = regexp.MustCompile(`^true` + literalLookheadChars)
-	rFalse          = regexp.MustCompile(`^false` + literalLookheadChars)
-	rOpenRaw        = regexp.MustCompile(`^\{\{\{\{`)
-	rCloseRaw       = regexp.MustCompile(`^\}\}\}\}`)
-	rOpenEndRaw     = regexp.MustCompile(`^\{\{\{\{/`)
-	rOpenUnescaped  = regexp.MustCompile(`^\{\{~?\{`)
-	rCloseUnescaped = regexp.MustCompile(`^\}~?\}\}`)
-	rOpenBlock      = regexp.MustCompile(`^\{\{~?#`)
-	rOpenEndBlock   = regexp.MustCompile(`^\{\{~?/`)
-	rOpenPartial    = regexp.MustCompile(`^\{\{~?>`)
+	rID                  = regexp.MustCompile(`^[^` + regexp.QuoteMeta(unallowedIDChars) + `]+`)
+	rDotID               = regexp.MustCompile(`^\.` + lookheadChars)
+	rTrue                = regexp.MustCompile(`^true` + literalLookheadChars)
+	rFalse               = regexp.MustCompile(`^false` + literalLookheadChars)
+	rOpenRaw             = regexp.MustCompile(`^\{\{\{\{`)
+	rCloseRaw            = regexp.MustCompile(`^\}\}\}\}`)
+	rOpenEndRaw          = regexp.MustCompile(`^\{\{\{\{/`)
+	rOpenEndRawLookAhead = regexp.MustCompile(`\{\{\{\{/`)
+	rOpenUnescaped       = regexp.MustCompile(`^\{\{~?\{`)
+	rCloseUnescaped      = regexp.MustCompile(`^\}~?\}\}`)
+	rOpenBlock           = regexp.MustCompile(`^\{\{~?#`)
+	rOpenEndBlock        = regexp.MustCompile(`^\{\{~?/`)
+	rOpenPartial         = regexp.MustCompile(`^\{\{~?>`)
 	// {{^}} or {{else}}
 	rInverse          = regexp.MustCompile(`^(\{\{~?\^\s*~?\}\}|\{\{~?\s*else\s*~?\}\})`)
 	rOpenInverse      = regexp.MustCompile(`^\{\{~?\^`)
@@ -234,12 +237,32 @@ func (l *Lexer) findRegexp(r *regexp.Regexp) string {
 	return r.FindString(l.input[l.pos:])
 }
 
+// returns the index of the first string from current scanning position that matches given regular expression
+// returns -1 if not found
+func (l *Lexer) indexRegexp(r *regexp.Regexp) int {
+	loc := r.FindStringIndex(l.input[l.pos:])
+	if loc == nil {
+		return -1
+	} else {
+		return loc[0]
+	}
+}
+
 // scanning content (ie: not between mustaches)
 func lexContent(l *Lexer) lexFunc {
 	var next lexFunc
 
-	// find opening mustaches
-	if l.isString(ESCAPED_OPEN_MUSTACHE) {
+	if l.rawBlock {
+		if i := l.indexRegexp(rOpenEndRawLookAhead); i != -1 {
+			// {{{{/
+			l.rawBlock = false
+			l.pos += i
+
+			next = lexOpenMustache
+		} else {
+			return l.errorf("Unclosed raw block")
+		}
+	} else if l.isString(ESCAPED_OPEN_MUSTACHE) {
 		// check \\{{
 		l.backup()
 		if r := l.next(); r != '\\' {
@@ -312,6 +335,7 @@ func lexOpenMustache(l *Lexer) lexFunc {
 		tok = TokenOpenEndRawBlock
 	} else if str = l.findRegexp(rOpenRaw); str != "" {
 		tok = TokenOpenRawBlock
+		l.rawBlock = true
 	} else if str = l.findRegexp(rOpenUnescaped); str != "" {
 		tok = TokenOpenUnescaped
 	} else if str = l.findRegexp(rOpenBlock); str != "" {
