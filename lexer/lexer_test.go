@@ -380,12 +380,12 @@ var lexTests = []lexTest{
 	{
 		`does not time out in a mustache with a single } followed by EOF`,
 		`{{foo}`,
-		[]Token{tokOpen, tokID("foo"), tokError("Unexpected character in expression: U+007D '}'")},
+		[]Token{tokOpen, tokID("foo"), tokError("Unexpected character in expression: '}'")},
 	},
 	{
 		`does not time out in a mustache when invalid ID characters are used`,
 		`{{foo & }}`,
-		[]Token{tokOpen, tokID("foo"), tokError("Unexpected character in expression: U+0026 '&'")},
+		[]Token{tokOpen, tokID("foo"), tokError("Unexpected character in expression: '&'")},
 	},
 	{
 		`tokenizes subexpressions (1)`,
