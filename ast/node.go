@@ -1,9 +1,6 @@
 package ast
 
-import (
-	"bytes"
-	"fmt"
-)
+import "fmt"
 
 // References:
 //   - https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/ast.js
@@ -17,6 +14,9 @@ type Node interface {
 
 	// location of node in original input string
 	Location() Loc
+
+	// string representation, used for debugging
+	String() string
 
 	// accepts visitor
 	Accept(Visitor)
@@ -108,13 +108,7 @@ func NewProgram(pos int, line int) *Program {
 }
 
 func (node *Program) String() string {
-	b := new(bytes.Buffer)
-
-	for _, n := range node.Body {
-		fmt.Fprint(b, n)
-	}
-
-	return b.String()
+	return fmt.Sprintf("Program{Pos: %d}", node.Loc.Pos)
 }
 
 func (node *Program) Accept(visitor Visitor) {
@@ -145,6 +139,10 @@ func NewMustacheStatement(pos int, line int) *MustacheStatement {
 	}
 }
 
+func (node *MustacheStatement) String() string {
+	return fmt.Sprintf("Mustache{Pos: %d}", node.Loc.Pos)
+}
+
 func (node *MustacheStatement) Accept(visitor Visitor) {
 	visitor.visitMustache(node)
 }
@@ -171,6 +169,10 @@ func NewBlockStatement(pos int, line int) *BlockStatement {
 	}
 }
 
+func (node *BlockStatement) String() string {
+	return fmt.Sprintf("Block{Pos: %d}", node.Loc.Pos)
+}
+
 func (node *BlockStatement) Accept(visitor Visitor) {
 	visitor.visitBlock(node)
 }
@@ -193,6 +195,10 @@ func NewPartialStatement(pos int, line int) *PartialStatement {
 		NodeType: NodePartial,
 		Loc:      Loc{pos, line},
 	}
+}
+
+func (node *PartialStatement) String() string {
+	return fmt.Sprintf("Partial{Name:%s, Pos:%d}", node.Name, node.Loc.Pos)
 }
 
 func (node *PartialStatement) Accept(visitor Visitor) {
@@ -219,6 +225,10 @@ func NewContentStatement(pos int, line int, val string) *ContentStatement {
 	}
 }
 
+func (node *ContentStatement) String() string {
+	return fmt.Sprintf("Content{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
+}
+
 func (node *ContentStatement) Accept(visitor Visitor) {
 	visitor.visitContent(node)
 }
@@ -243,6 +253,10 @@ func NewCommentStatement(pos int, line int, val string) *CommentStatement {
 	}
 }
 
+func (node *CommentStatement) String() string {
+	return fmt.Sprintf("Comment{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
+}
+
 func (node *CommentStatement) Accept(visitor Visitor) {
 	visitor.visitComment(node)
 }
@@ -265,6 +279,10 @@ func NewSubExpression(pos int, line int) *SubExpression {
 		NodeType: NodeSubExpression,
 		Loc:      Loc{pos, line},
 	}
+}
+
+func (node *SubExpression) String() string {
+	return fmt.Sprintf("Sexp{Path:%s, Pos:%d}", node.Path, node.Loc.Pos)
 }
 
 func (node *SubExpression) Accept(visitor Visitor) {
@@ -298,6 +316,10 @@ func NewPathExpression(pos int, line int, data bool) *PathExpression {
 	}
 
 	return result
+}
+
+func (node *PathExpression) String() string {
+	return fmt.Sprintf("Path{Original:'%s', Pos:%d}", node.Original, node.Loc.Pos)
 }
 
 func (node *PathExpression) Accept(visitor Visitor) {
@@ -343,6 +365,10 @@ func NewStringLiteral(pos int, line int, val string) *StringLiteral {
 	}
 }
 
+func (node *StringLiteral) String() string {
+	return fmt.Sprintf("String{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
+}
+
 func (node *StringLiteral) Accept(visitor Visitor) {
 	visitor.visitString(node)
 }
@@ -369,16 +395,20 @@ func NewBooleanLiteral(pos int, line int, val bool, original string) *BooleanLit
 	}
 }
 
-func (node *BooleanLiteral) Accept(visitor Visitor) {
-	visitor.visitBoolean(node)
-}
-
-func (node *BooleanLiteral) String() string {
+func (node *BooleanLiteral) Canonical() string {
 	if node.Value {
 		return "true"
 	} else {
 		return "false"
 	}
+}
+
+func (node *BooleanLiteral) String() string {
+	return fmt.Sprintf("Boolean{Value:%s, Pos:%d}", node.Canonical(), node.Loc.Pos)
+}
+
+func (node *BooleanLiteral) Accept(visitor Visitor) {
+	visitor.visitBoolean(node)
 }
 
 //
@@ -403,6 +433,10 @@ func NewNumberLiteral(pos int, line int, val int, original string) *NumberLitera
 	}
 }
 
+func (node *NumberLiteral) String() string {
+	return fmt.Sprintf("Number{Value:%d, Pos:%d}", node.Value, node.Loc.Pos)
+}
+
 func (node *NumberLiteral) Accept(visitor Visitor) {
 	visitor.visitNumber(node)
 }
@@ -423,6 +457,19 @@ func NewHash(pos int, line int) *Hash {
 		NodeType: NodeHash,
 		Loc:      Loc{pos, line},
 	}
+}
+
+func (node *Hash) String() string {
+	result := fmt.Sprintf("Hash{[", node.Loc.Pos)
+
+	for i, p := range node.Pairs {
+		if i > 0 {
+			result += ", "
+		}
+		result += p.String()
+	}
+
+	return result + fmt.Sprintf("], Pos:%d}", node.Loc.Pos)
 }
 
 func (node *Hash) Accept(visitor Visitor) {
@@ -446,6 +493,10 @@ func NewHashPair(pos int, line int) *HashPair {
 		NodeType: NodeHashPair,
 		Loc:      Loc{pos, line},
 	}
+}
+
+func (node *HashPair) String() string {
+	return node.Key + "=" + node.Val.String()
 }
 
 func (node *HashPair) Accept(visitor Visitor) {

@@ -198,7 +198,7 @@ func (v *PrintVisitor) visitBoolean(node *BooleanLiteral) {
 	if v.original {
 		v.str(node.Original)
 	} else {
-		v.str(fmt.Sprintf("BOOLEAN{%s}", node))
+		v.str(fmt.Sprintf("BOOLEAN{%s}", node.Canonical()))
 	}
 }
 
