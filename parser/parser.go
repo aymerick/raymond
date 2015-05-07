@@ -90,12 +90,12 @@ func errPanic(err error, line int) {
 
 // fatal parsing error on given node
 func errNode(node ast.Node, msg string) {
-	errPanic(fmt.Errorf("%s: %s", msg, node), node.Location().Line)
+	errPanic(fmt.Errorf("%s\nNode: %s", msg, node), node.Location().Line)
 }
 
 // fatal parsing error on given token
 func errToken(tok *lexer.Token, msg string) {
-	errPanic(fmt.Errorf("%s: %s", msg, tok), tok.Line)
+	errPanic(fmt.Errorf("%s\nToken: %s", msg, tok), tok.Line)
 }
 
 // fatal parsing error: unexpected token kind error
@@ -692,7 +692,13 @@ func (p *Parser) parsePath(data bool) *ast.PathExpression {
 		if tok.Kind != lexer.TokenID {
 			errExpected(lexer.TokenID, tok)
 		}
+
 		result.Part(tok.Val)
+
+		switch tok.Val {
+		case "..", ".", "this":
+			errToken(tok, "Invalid path: "+result.Original)
+		}
 	}
 
 	return result

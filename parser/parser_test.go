@@ -124,14 +124,14 @@ var parserErrorTests = []parserTest{
 	{"raises if there's a parser error (4)", `{{#goodbyes}}{{/hellos}}`, "Parse error on line 1"},
 	{"raises if there's a parser error (5)", `{{#goodbyes}}{{/hellos}}`, "goodbyes doesn't match hellos"},
 
-	// {"should handle invalid paths (1)", `{{foo/../bar}}`, `Invalid path: foo/.. - 1:2`},
-	// {"should handle invalid paths (2)", `{{foo/./bar}}`, `Invalid path: foo/. - 1:2`},
-	// {"should handle invalid paths (3)", `{{foo/this/bar}}`, `Invalid path: foo/this - 1:2`},
+	{"should handle invalid paths (1)", `{{foo/../bar}}`, `Invalid path: foo/..`},
+	{"should handle invalid paths (2)", `{{foo/./bar}}`, `Invalid path: foo/.`},
+	{"should handle invalid paths (3)", `{{foo/this/bar}}`, `Invalid path: foo/this`},
 
-	// {"knows how to report the correct line number in errors (1)", `hello\nmy\n{{foo}`, "Parse error on line 3"},
-	// {"knows how to report the correct line number in errors (2)", `hello\n\nmy\n\n{{foo}`, "Parse error on line 5"},
+	{"knows how to report the correct line number in errors (1)", "hello\nmy\n{{foo}", "Parse error on line 3"},
+	{"knows how to report the correct line number in errors (2)", "hello\n\nmy\n\n{{foo}", "Parse error on line 5"},
 
-	// {"knows how to report the correct line number in errors when the first character is a newline", `\n\nhello\n\nmy\n\n{{foo}`, "Parse error on line 7"},
+	{"knows how to report the correct line number in errors when the first character is a newline", "\n\nhello\n\nmy\n\n{{foo}", "Parse error on line 7"},
 }
 
 func TestParserErrors(t *testing.T) {

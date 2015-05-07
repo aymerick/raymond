@@ -163,6 +163,7 @@ func (l *Lexer) produce(kind TokenKind, val string) {
 	// scanning a new token
 	l.start = l.pos
 
+	// update line number
 	l.line += strings.Count(val, "\n")
 }
 
@@ -443,7 +444,7 @@ func lexExpression(l *Lexer) lexFunc {
 		l.backup()
 		return lexIdentifier
 	default:
-		return l.errorf("Unexpected character in expression: %#U", r)
+		return l.errorf("Unexpected character in expression: '%c'", r)
 	}
 
 	return lexExpression
