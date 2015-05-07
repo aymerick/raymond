@@ -52,14 +52,8 @@ func Parse(input string) (result *ast.Program, err error) {
 	result = parser.ParseProgram()
 
 	// check last token
-	token := parser.next()
-	switch token.Kind {
-	case lexer.TokenError:
-		// Lexer failed
-		errToken(token, "Lexer error")
-	case lexer.TokenEOF:
-		// OK
-	default:
+	token := parser.shift()
+	if token.Kind != lexer.TokenEOF {
 		// Parsing ended before EOF
 		errToken(token, "Syntax error")
 	}
@@ -168,6 +162,7 @@ func (p *Parser) parseContent() *ast.ContentStatement {
 	// CONTENT
 	tok := p.shift()
 	if tok.Kind != lexer.TokenContent {
+		// @todo This check can be removed if content is optional in a raw block
 		errExpected(lexer.TokenContent, tok)
 	}
 
@@ -253,6 +248,7 @@ func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	// OPEN_END_RAW_BLOCK
 	tok = p.shift()
 	if tok.Kind != lexer.TokenOpenEndRawBlock {
+		// should never happen as it is caught by lexer
 		errExpected(lexer.TokenOpenEndRawBlock, tok)
 	}
 
@@ -512,9 +508,6 @@ func (p *Parser) parseParams() []ast.Node {
 func (p *Parser) parseSexpr() *ast.SubExpression {
 	// OPEN_SEXPR
 	tok := p.shift()
-	if tok.Kind != lexer.TokenOpenSexpr {
-		errExpected(lexer.TokenOpenSexpr, tok)
-	}
 
 	result := ast.NewSubExpression(tok.Pos, tok.Line)
 
@@ -538,10 +531,6 @@ func (p *Parser) parseHash() *ast.Hash {
 		pairs = append(pairs, p.parseHashSegment())
 	}
 
-	if len(pairs) == 0 {
-		errToken(p.next(), "Expected a Hash")
-	}
-
 	firstLoc := pairs[0].Location()
 
 	result := ast.NewHash(firstLoc.Pos, firstLoc.Line)
@@ -558,22 +547,16 @@ func (p *Parser) isHashSegment() bool {
 // hashSegment : ID EQUALS param
 func (p *Parser) parseHashSegment() *ast.HashPair {
 	// ID
-	tokId := p.shift()
-	if tokId.Kind != lexer.TokenID {
-		errExpected(lexer.TokenID, tokId)
-	}
+	tok := p.shift()
 
 	// EQUALS
-	tokEquals := p.shift()
-	if tokEquals.Kind != lexer.TokenEquals {
-		errExpected(lexer.TokenEquals, tokEquals)
-	}
+	p.shift()
 
 	// param
 	param := p.parseParam()
 
-	result := ast.NewHashPair(tokId.Pos, tokId.Line)
-	result.Key = tokId.Val
+	result := ast.NewHashPair(tok.Pos, tok.Line)
+	result.Key = tok.Val
 	result.Val = param
 
 	return result
@@ -585,9 +568,6 @@ func (p *Parser) parseBlockParams() []string {
 
 	// OPEN_BLOCK_PARAMS
 	tok := p.shift()
-	if tok.Kind != lexer.TokenOpenBlockParams {
-		errExpected(lexer.TokenOpenBlockParams, tok)
-	}
 
 	// ID+
 	for p.isID() {
@@ -623,6 +603,7 @@ func (p *Parser) parseHelperName() ast.Node {
 		p.shift()
 		val, err := strconv.Atoi(tok.Val)
 		if err != nil {
+			// @todo Is that really possible ?
 			errToken(tok, "Integer convertion failed")
 		}
 		result = ast.NewNumberLiteral(tok.Pos, tok.Line, val, tok.Val)
@@ -658,11 +639,10 @@ func (p *Parser) parsePartialName() ast.Node {
 
 // dataName : DATA pathSegments
 func (p *Parser) parseDataName() *ast.PathExpression {
-	tok := p.shift()
-	if tok.Kind != lexer.TokenData {
-		errExpected(lexer.TokenData, tok)
-	}
+	// DATA
+	p.shift()
 
+	// pathSegments
 	return p.parsePath(true)
 }
 
@@ -746,12 +726,18 @@ func (p *Parser) next() *lexer.Token {
 }
 
 // Returns next token and remove it from the tokens buffer
+// Panics if next token is `TokenError`
 func (p *Parser) shift() *lexer.Token {
 	var result *lexer.Token
 
 	p.ensure(0)
 
 	result, p.tokens = p.tokens[0], p.tokens[1:]
+
+	// check error token
+	if result.Kind == lexer.TokenError {
+		errToken(result, "Lexer error")
+	}
 
 	return result
 }

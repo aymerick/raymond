@@ -112,8 +112,38 @@ func TestParser(t *testing.T) {
 var parserErrorTests = []parserTest{
 	{"lexer error", `{{! unclosed comment`, "Lexer error"},
 	{"syntax error", `foo{{^}}`, "Syntax error"},
-	{"helperName in open raw block must be a path", `{{{{1}}}}{{foo}}{{{{/raw}}}}`, "Path expression expected"},
-	{"helperName in close raw block must be a path", `{{{{raw}}}}{{foo}}{{{{/1}}}}`, "Path expression expected"},
+
+	{"open raw block must be closed", `{{{{raw foo}} bar {{{{/raw}}}}`, "Expecting CloseRawBlock"},
+	{"end raw block must be closed", `{{{{raw foo}}}} bar {{{{/raw}}`, "Expecting CloseRawBlock"},
+	{"name in open raw block must be a path", `{{{{1}}}}{{foo}}{{{{/raw}}}}`, "Path expression expected"},
+	{"name in close raw block must be a path", `{{{{raw}}}}{{foo}}{{{{/1}}}}`, "Path expression expected"},
+	{"raw block names must match", `{{{{goodbyes}}}}test{{{{/hellos}}}}`, "goodbyes doesn't match hellos"},
+
+	{"open block must be closed", `{{#foo bar}}}{{/foo}}`, "Expecting Close"},
+	{"end block must be closed", `{{#foo bar}}{{/foo}}}`, "Expecting Close"},
+	{"name in open raw block must be a path", `{{#1 bar}}{{/foo}}`, "Path expression expected"},
+	{"name in close raw block must be a path", `{{#foo bar}}{{/1}}`, "Path expression expected"},
+	{"block names must match", `{{#foo}}test{{/bar}}`, "foo doesn't match bar"},
+	{"an open block must have a end block", `{{#foo}}test`, "Expecting OpenEndBlock"},
+
+	{"an mustache must terminate with a close mustache", `{{foo}}}`, "Expecting Close"},
+	{"an unescaped mustache must terminate with a close unescaped mustache", `{{{foo}}`, "Expecting CloseUnescaped"},
+
+	{"an partial must terminate with a close mustache", `{{> foo}}}`, "Expecting Close"},
+	{"a subexpression must terminate with a close subexpression", `{{foo (false}}`, "Expecting CloseSexpr"},
+
+	{"raises on missing hash value (1)", `{{foo bar=}}`, "Parse error on line 1"},
+	{"raises on missing hash value (2)", `{{foo bar=baz bim=}}`, "Parse error on line 1"},
+
+	{"block param must have at least one param", `{{#foo as ||}}content{{/foo}}`, "Expecting ID"},
+	{"open block params must be closed", `{{#foo as |}}content{{/foo}}`, "Expecting ID"},
+
+	{"a path must start with an ID", `{{#/}}content{{/foo}}`, "Expecting ID"},
+	{"a path must end with an ID", `{{foo/bar/}}`, "Expecting ID"},
+	{"raises on invalid path depth (1)", `{{foo/./bar}}`, "Invalid path: foo/."},
+	{"raises on invalid path depth (2)", `{{foo/../bar}}`, "Invalid path: foo/.."},
+	{"raises on invalid path depth (3)", `{{foo/this/bar}}`, "Invalid path: foo/this"},
+	{"raises on invalid path depth (4)", `{{../../bar}}`, "Invalid path: ../.."},
 
 	//
 	// Next tests come from:
