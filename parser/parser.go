@@ -88,12 +88,12 @@ func errPanic(err error, line int) {
 	panic(fmt.Errorf("Parse error on line %d:\n%s", line, err))
 }
 
-// fatal parsing error: error on given node
+// fatal parsing error on given node
 func errNode(node ast.Node, msg string) {
 	errPanic(fmt.Errorf("%s: %s", msg, node), node.Location().Line)
 }
 
-// fatal parsing error: error on given token
+// fatal parsing error on given token
 func errToken(tok *lexer.Token, msg string) {
 	errPanic(fmt.Errorf("%s: %s", msg, tok), tok.Line)
 }
