@@ -199,18 +199,16 @@ func (p *Parser) parseExpressionParamsHash() ([]ast.Node, ast.Node) {
 }
 
 // Parses an expression `helperName param* hash?`
-func (p *Parser) parseExpression() (ast.Node, []ast.Node, ast.Node) {
-	var helperName ast.Node
-	var params []ast.Node
-	var hash ast.Node
+func (p *Parser) parseExpression(tok *lexer.Token) *ast.Expression {
+	result := ast.NewExpression(tok.Pos, tok.Line)
 
 	// helperName
-	helperName = p.parseHelperName()
+	result.Path = p.parseHelperName()
 
 	// param* hash?
-	params, hash = p.parseExpressionParamsHash()
+	result.Params, result.Hash = p.parseExpressionParamsHash()
 
-	return helperName, params, hash
+	return result
 }
 
 // rawBlock : openRawBlock content endRawBlock
@@ -223,11 +221,11 @@ func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	result := ast.NewBlockStatement(tok.Pos, tok.Line)
 
 	// helperName param* hash?
-	result.Path, result.Params, result.Hash = p.parseExpression()
+	result.Expression = p.parseExpression(tok)
 
-	openName, ok := result.Path.(*ast.PathExpression)
+	openName, ok := result.Expression.Path.(*ast.PathExpression)
 	if !ok {
-		errNode(result.Path, "Path expression expected")
+		errNode(result.Expression.Path, "Path expression expected")
 	}
 
 	// CLOSE_RAW_BLOCK
@@ -323,7 +321,7 @@ func (p *Parser) parseOpenBlockExpression(tok *lexer.Token) (*ast.BlockStatement
 	result := ast.NewBlockStatement(tok.Pos, tok.Line)
 
 	// helperName param* hash?
-	result.Path, result.Params, result.Hash = p.parseExpression()
+	result.Expression = p.parseExpression(tok)
 
 	// blockParams?
 	if p.isBlockParams() {
@@ -409,9 +407,9 @@ func (p *Parser) parseCloseBlock(block *ast.BlockStatement) {
 		errNode(endId, "Path expression expected")
 	}
 
-	openName, ok := block.Path.(*ast.PathExpression)
+	openName, ok := block.Expression.Path.(*ast.PathExpression)
 	if !ok {
-		errNode(block.Path, "Path expression expected")
+		errNode(block.Expression.Path, "Path expression expected")
 	}
 
 	if openName.Original != closeName.Original {
@@ -439,7 +437,7 @@ func (p *Parser) parseMustache() *ast.MustacheStatement {
 	result := ast.NewMustacheStatement(tok.Pos, tok.Line)
 
 	// helperName param* hash?
-	result.Path, result.Params, result.Hash = p.parseExpression()
+	result.Expression = p.parseExpression(tok)
 
 	// CLOSE | CLOSE_UNESCAPED
 	tok = p.shift()
@@ -512,7 +510,7 @@ func (p *Parser) parseSexpr() *ast.SubExpression {
 	result := ast.NewSubExpression(tok.Pos, tok.Line)
 
 	// helperName param* hash?
-	result.Path, result.Params, result.Hash = p.parseExpression()
+	result.Expression = p.parseExpression(tok)
 
 	// CLOSE_SEXPR
 	tok = p.shift()

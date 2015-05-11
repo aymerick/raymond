@@ -11,6 +11,7 @@ type PrintVisitor struct {
 	depth int
 
 	original bool
+	inBlock  bool
 }
 
 func NewPrintVisitor() *PrintVisitor {
@@ -48,35 +49,6 @@ func (v *PrintVisitor) line(val string) {
 	v.nl()
 }
 
-func (v *PrintVisitor) printExpression(path Node, params []Node, hash Node, line bool) {
-	if line {
-		v.indent()
-	}
-
-	// path
-	path.Accept(v)
-
-	// params
-	v.str(" [")
-	for i, n := range params {
-		if i > 0 {
-			v.str(", ")
-		}
-		n.Accept(v)
-	}
-	v.str("]")
-
-	// hash
-	if hash != nil {
-		v.str(" ")
-		hash.Accept(v)
-	}
-
-	if line {
-		v.nl()
-	}
-}
-
 //
 // Visitor interface
 //
@@ -99,7 +71,7 @@ func (v *PrintVisitor) VisitMustache(node *MustacheStatement) interface{} {
 	v.indent()
 	v.str("{{ ")
 
-	v.printExpression(node.Path, node.Params, node.Hash, false)
+	node.Expression.Accept(v)
 
 	v.str(" }}")
 	v.nl()
@@ -108,10 +80,12 @@ func (v *PrintVisitor) VisitMustache(node *MustacheStatement) interface{} {
 }
 
 func (v *PrintVisitor) VisitBlock(node *BlockStatement) interface{} {
+	v.inBlock = true
+
 	v.line("BLOCK:")
 	v.depth++
 
-	v.printExpression(node.Path, node.Params, node.Hash, true)
+	node.Expression.Accept(v)
 
 	if node.Program != nil {
 		v.line("PROGRAM:")
@@ -134,6 +108,8 @@ func (v *PrintVisitor) VisitBlock(node *BlockStatement) interface{} {
 		// 	v.depth--
 		// }
 	}
+
+	v.inBlock = false
 
 	return nil
 }
@@ -177,8 +153,39 @@ func (v *PrintVisitor) VisitComment(node *CommentStatement) interface{} {
 
 // Expressions
 
+func (v *PrintVisitor) VisitExpression(node *Expression) interface{} {
+	if v.inBlock {
+		v.indent()
+	}
+
+	// path
+	node.Path.Accept(v)
+
+	// params
+	v.str(" [")
+	for i, n := range node.Params {
+		if i > 0 {
+			v.str(", ")
+		}
+		n.Accept(v)
+	}
+	v.str("]")
+
+	// hash
+	if node.Hash != nil {
+		v.str(" ")
+		node.Hash.Accept(v)
+	}
+
+	if v.inBlock {
+		v.nl()
+	}
+
+	return nil
+}
+
 func (v *PrintVisitor) VisitSubExpression(node *SubExpression) interface{} {
-	v.printExpression(node.Path, node.Params, node.Hash, false)
+	node.Expression.Accept(v)
 
 	return nil
 }

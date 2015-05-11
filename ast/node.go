@@ -34,6 +34,7 @@ type Visitor interface {
 	VisitComment(*CommentStatement) interface{}
 
 	// expressions
+	VisitExpression(*Expression) interface{}
 	VisitSubExpression(*SubExpression) interface{}
 	VisitPath(*PathExpression) interface{}
 
@@ -65,6 +66,7 @@ const (
 	NodeComment
 
 	// expressions
+	NodeExpression
 	NodeSubExpression
 	NodePath
 
@@ -127,9 +129,7 @@ type MustacheStatement struct {
 	NodeType
 	Loc
 
-	Path   Node   // PathExpression
-	Params []Node // [ Expression ... ]
-	Hash   Node   // Hash
+	Expression *Expression
 }
 
 func NewMustacheStatement(pos int, line int) *MustacheStatement {
@@ -155,11 +155,10 @@ type BlockStatement struct {
 	NodeType
 	Loc
 
-	Path    Node   // PathExpression
-	Params  []Node // [ Expression ... ]
-	Hash    Node   // Hash
-	Program Node   // Program
-	Inverse Node   // Program
+	Expression *Expression
+
+	Program Node // Program
+	Inverse Node // Program
 }
 
 func NewBlockStatement(pos int, line int) *BlockStatement {
@@ -262,6 +261,34 @@ func (node *CommentStatement) Accept(visitor Visitor) {
 }
 
 //
+// Expression
+//
+
+type Expression struct {
+	NodeType
+	Loc
+
+	Path   Node   // PathExpression
+	Params []Node // [ Expression ... ]
+	Hash   Node   // Hash
+}
+
+func NewExpression(pos int, line int) *Expression {
+	return &Expression{
+		NodeType: NodeExpression,
+		Loc:      Loc{pos, line},
+	}
+}
+
+func (node *Expression) String() string {
+	return fmt.Sprintf("Expr{Path:%s, Pos:%d}", node.Path, node.Loc.Pos)
+}
+
+func (node *Expression) Accept(visitor Visitor) {
+	visitor.VisitExpression(node)
+}
+
+//
 // SubExpression
 //
 
@@ -269,9 +296,7 @@ type SubExpression struct {
 	NodeType
 	Loc
 
-	Path   Node   // PathExpression
-	Params []Node // [ Expression ... ]
-	Hash   Node   // Hash
+	Expression *Expression
 }
 
 func NewSubExpression(pos int, line int) *SubExpression {
@@ -282,7 +307,7 @@ func NewSubExpression(pos int, line int) *SubExpression {
 }
 
 func (node *SubExpression) String() string {
-	return fmt.Sprintf("Sexp{Path:%s, Pos:%d}", node.Path, node.Loc.Pos)
+	return fmt.Sprintf("Sexp{Path:%s, Pos:%d}", node.Expression.Path, node.Loc.Pos)
 }
 
 func (node *SubExpression) Accept(visitor Visitor) {
