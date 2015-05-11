@@ -489,3 +489,6 @@ func TestLexer(t *testing.T) {
 		}
 	}
 }
+
+// @todo Test errors:
+//   `{{{{raw foo`
