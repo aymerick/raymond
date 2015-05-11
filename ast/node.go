@@ -24,27 +24,27 @@ type Node interface {
 
 // AST visitor interface
 type Visitor interface {
-	visitProgram(node *Program)
+	VisitProgram(*Program) interface{}
 
 	// statements
-	visitMustache(node *MustacheStatement)
-	visitBlock(node *BlockStatement)
-	visitPartial(node *PartialStatement)
-	visitContent(node *ContentStatement)
-	visitComment(node *CommentStatement)
+	VisitMustache(*MustacheStatement) interface{}
+	VisitBlock(*BlockStatement) interface{}
+	VisitPartial(*PartialStatement) interface{}
+	VisitContent(*ContentStatement) interface{}
+	VisitComment(*CommentStatement) interface{}
 
 	// expressions
-	visitSubExpression(node *SubExpression)
-	visitPath(node *PathExpression)
+	VisitSubExpression(*SubExpression) interface{}
+	VisitPath(*PathExpression) interface{}
 
 	// literals
-	visitString(node *StringLiteral)
-	visitBoolean(node *BooleanLiteral)
-	visitNumber(node *NumberLiteral)
+	VisitString(*StringLiteral) interface{}
+	VisitBoolean(*BooleanLiteral) interface{}
+	VisitNumber(*NumberLiteral) interface{}
 
 	// miscellaneous
-	visitHash(node *Hash)
-	visitHashPair(node *HashPair)
+	VisitHash(*Hash) interface{}
+	VisitHashPair(*HashPair) interface{}
 }
 
 // NodeType
@@ -112,7 +112,7 @@ func (node *Program) String() string {
 }
 
 func (node *Program) Accept(visitor Visitor) {
-	visitor.visitProgram(node)
+	visitor.VisitProgram(node)
 }
 
 func (node *Program) AddStatement(statement Node) {
@@ -144,7 +144,7 @@ func (node *MustacheStatement) String() string {
 }
 
 func (node *MustacheStatement) Accept(visitor Visitor) {
-	visitor.visitMustache(node)
+	visitor.VisitMustache(node)
 }
 
 //
@@ -174,7 +174,7 @@ func (node *BlockStatement) String() string {
 }
 
 func (node *BlockStatement) Accept(visitor Visitor) {
-	visitor.visitBlock(node)
+	visitor.VisitBlock(node)
 }
 
 //
@@ -202,7 +202,7 @@ func (node *PartialStatement) String() string {
 }
 
 func (node *PartialStatement) Accept(visitor Visitor) {
-	visitor.visitPartial(node)
+	visitor.VisitPartial(node)
 }
 
 //
@@ -230,7 +230,7 @@ func (node *ContentStatement) String() string {
 }
 
 func (node *ContentStatement) Accept(visitor Visitor) {
-	visitor.visitContent(node)
+	visitor.VisitContent(node)
 }
 
 //
@@ -258,7 +258,7 @@ func (node *CommentStatement) String() string {
 }
 
 func (node *CommentStatement) Accept(visitor Visitor) {
-	visitor.visitComment(node)
+	visitor.VisitComment(node)
 }
 
 //
@@ -286,7 +286,7 @@ func (node *SubExpression) String() string {
 }
 
 func (node *SubExpression) Accept(visitor Visitor) {
-	visitor.visitSubExpression(node)
+	visitor.VisitSubExpression(node)
 }
 
 //
@@ -323,7 +323,7 @@ func (node *PathExpression) String() string {
 }
 
 func (node *PathExpression) Accept(visitor Visitor) {
-	visitor.visitPath(node)
+	visitor.VisitPath(node)
 }
 
 // Adds path part
@@ -370,7 +370,7 @@ func (node *StringLiteral) String() string {
 }
 
 func (node *StringLiteral) Accept(visitor Visitor) {
-	visitor.visitString(node)
+	visitor.VisitString(node)
 }
 
 //
@@ -408,7 +408,7 @@ func (node *BooleanLiteral) String() string {
 }
 
 func (node *BooleanLiteral) Accept(visitor Visitor) {
-	visitor.visitBoolean(node)
+	visitor.VisitBoolean(node)
 }
 
 //
@@ -438,7 +438,7 @@ func (node *NumberLiteral) String() string {
 }
 
 func (node *NumberLiteral) Accept(visitor Visitor) {
-	visitor.visitNumber(node)
+	visitor.VisitNumber(node)
 }
 
 //
@@ -473,7 +473,7 @@ func (node *Hash) String() string {
 }
 
 func (node *Hash) Accept(visitor Visitor) {
-	visitor.visitHash(node)
+	visitor.VisitHash(node)
 }
 
 //
@@ -500,5 +500,5 @@ func (node *HashPair) String() string {
 }
 
 func (node *HashPair) Accept(visitor Visitor) {
-	visitor.visitHashPair(node)
+	visitor.VisitHashPair(node)
 }
