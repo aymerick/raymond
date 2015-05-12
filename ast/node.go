@@ -288,6 +288,20 @@ func (node *Expression) Accept(visitor Visitor) interface{} {
 	return visitor.VisitExpression(node)
 }
 
+// returns path expression representing a feld path, or nil if this can't be a field path
+func (node *Expression) FieldPath() *PathExpression {
+	if len(node.Params) > 0 || ((node.Hash != nil) && (len(node.Hash.Pairs) > 0)) {
+		return nil
+	}
+
+	path, ok := node.Path.(*PathExpression)
+	if !ok {
+		return nil
+	}
+
+	return path
+}
+
 //
 // SubExpression
 //

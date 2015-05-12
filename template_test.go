@@ -51,6 +51,12 @@ type tplTest struct {
 
 var tplTests = []tplTest{
 	{"only content", "this is content", nil, "this is content"},
+
+	//
+	// Next tests come from:
+	//   https://github.com/wycats/handlebars.js/blob/master/spec/basic.js
+	//
+	{"most basic", "{{foo}}", map[string]string{"foo": "foo"}, "foo"},
 }
 
 func TestRenderTemplate(t *testing.T) {

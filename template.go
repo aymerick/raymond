@@ -14,7 +14,7 @@ type Template struct {
 	program *ast.Program
 }
 
-// Parses a template
+// Instanciate a template an parse it
 func Parse(source string) (*Template, error) {
 	tpl := NewTemplate(source)
 
@@ -26,13 +26,14 @@ func Parse(source string) (*Template, error) {
 	return tpl, nil
 }
 
+// Instanciate a new template
 func NewTemplate(source string) *Template {
 	return &Template{
 		source: source,
 	}
 }
 
-// Parses template
+// Parse template
 func (tpl *Template) Parse() error {
 	if tpl.program == nil {
 		var err error
@@ -62,7 +63,7 @@ func (tpl *Template) Exec(wr io.Writer, data interface{}) (err error) {
 	}
 
 	// setup visitor
-	v := NewEvalVisitor(wr, tpl)
+	v := NewEvalVisitor(wr, tpl, data)
 
 	// visit AST
 	tpl.program.Accept(v)
