@@ -50,6 +50,10 @@ func (v *EvalVisitor) at(node ast.Node) {
 
 // evaluates field path
 func (v *EvalVisitor) evalFieldPath(path *ast.PathExpression) string {
+	if v.data == nil {
+		return ""
+	}
+
 	fieldName := path.Parts[0]
 	ctx := reflect.ValueOf(v.data)
 
