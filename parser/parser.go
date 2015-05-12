@@ -181,9 +181,9 @@ func (p *Parser) parseComment() *ast.CommentStatement {
 }
 
 // Parses `param* hash?`
-func (p *Parser) parseExpressionParamsHash() ([]ast.Node, ast.Node) {
+func (p *Parser) parseExpressionParamsHash() ([]ast.Node, *ast.Hash) {
 	var params []ast.Node
-	var hash ast.Node
+	var hash *ast.Hash
 
 	// params*
 	if p.isParam() {

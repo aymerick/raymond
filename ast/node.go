@@ -19,7 +19,7 @@ type Node interface {
 	String() string
 
 	// accepts visitor
-	Accept(Visitor)
+	Accept(Visitor) interface{}
 }
 
 // AST visitor interface
@@ -113,8 +113,8 @@ func (node *Program) String() string {
 	return fmt.Sprintf("Program{Pos: %d}", node.Loc.Pos)
 }
 
-func (node *Program) Accept(visitor Visitor) {
-	visitor.VisitProgram(node)
+func (node *Program) Accept(visitor Visitor) interface{} {
+	return visitor.VisitProgram(node)
 }
 
 func (node *Program) AddStatement(statement Node) {
@@ -143,8 +143,8 @@ func (node *MustacheStatement) String() string {
 	return fmt.Sprintf("Mustache{Pos: %d}", node.Loc.Pos)
 }
 
-func (node *MustacheStatement) Accept(visitor Visitor) {
-	visitor.VisitMustache(node)
+func (node *MustacheStatement) Accept(visitor Visitor) interface{} {
+	return visitor.VisitMustache(node)
 }
 
 //
@@ -172,8 +172,8 @@ func (node *BlockStatement) String() string {
 	return fmt.Sprintf("Block{Pos: %d}", node.Loc.Pos)
 }
 
-func (node *BlockStatement) Accept(visitor Visitor) {
-	visitor.VisitBlock(node)
+func (node *BlockStatement) Accept(visitor Visitor) interface{} {
+	return visitor.VisitBlock(node)
 }
 
 //
@@ -186,7 +186,7 @@ type PartialStatement struct {
 
 	Name   Node   // PathExpression | SubExpression
 	Params []Node // [ Expression ... ]
-	Hash   Node   // Hash
+	Hash   *Hash  // Hash
 }
 
 func NewPartialStatement(pos int, line int) *PartialStatement {
@@ -200,8 +200,8 @@ func (node *PartialStatement) String() string {
 	return fmt.Sprintf("Partial{Name:%s, Pos:%d}", node.Name, node.Loc.Pos)
 }
 
-func (node *PartialStatement) Accept(visitor Visitor) {
-	visitor.VisitPartial(node)
+func (node *PartialStatement) Accept(visitor Visitor) interface{} {
+	return visitor.VisitPartial(node)
 }
 
 //
@@ -228,8 +228,8 @@ func (node *ContentStatement) String() string {
 	return fmt.Sprintf("Content{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
 }
 
-func (node *ContentStatement) Accept(visitor Visitor) {
-	visitor.VisitContent(node)
+func (node *ContentStatement) Accept(visitor Visitor) interface{} {
+	return visitor.VisitContent(node)
 }
 
 //
@@ -256,8 +256,8 @@ func (node *CommentStatement) String() string {
 	return fmt.Sprintf("Comment{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
 }
 
-func (node *CommentStatement) Accept(visitor Visitor) {
-	visitor.VisitComment(node)
+func (node *CommentStatement) Accept(visitor Visitor) interface{} {
+	return visitor.VisitComment(node)
 }
 
 //
@@ -270,7 +270,7 @@ type Expression struct {
 
 	Path   Node   // PathExpression
 	Params []Node // [ Expression ... ]
-	Hash   Node   // Hash
+	Hash   *Hash  // Hash
 }
 
 func NewExpression(pos int, line int) *Expression {
@@ -284,8 +284,8 @@ func (node *Expression) String() string {
 	return fmt.Sprintf("Expr{Path:%s, Pos:%d}", node.Path, node.Loc.Pos)
 }
 
-func (node *Expression) Accept(visitor Visitor) {
-	visitor.VisitExpression(node)
+func (node *Expression) Accept(visitor Visitor) interface{} {
+	return visitor.VisitExpression(node)
 }
 
 //
@@ -310,8 +310,8 @@ func (node *SubExpression) String() string {
 	return fmt.Sprintf("Sexp{Path:%s, Pos:%d}", node.Expression.Path, node.Loc.Pos)
 }
 
-func (node *SubExpression) Accept(visitor Visitor) {
-	visitor.VisitSubExpression(node)
+func (node *SubExpression) Accept(visitor Visitor) interface{} {
+	return visitor.VisitSubExpression(node)
 }
 
 //
@@ -347,8 +347,8 @@ func (node *PathExpression) String() string {
 	return fmt.Sprintf("Path{Original:'%s', Pos:%d}", node.Original, node.Loc.Pos)
 }
 
-func (node *PathExpression) Accept(visitor Visitor) {
-	visitor.VisitPath(node)
+func (node *PathExpression) Accept(visitor Visitor) interface{} {
+	return visitor.VisitPath(node)
 }
 
 // Adds path part
@@ -394,8 +394,8 @@ func (node *StringLiteral) String() string {
 	return fmt.Sprintf("String{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
 }
 
-func (node *StringLiteral) Accept(visitor Visitor) {
-	visitor.VisitString(node)
+func (node *StringLiteral) Accept(visitor Visitor) interface{} {
+	return visitor.VisitString(node)
 }
 
 //
@@ -432,8 +432,8 @@ func (node *BooleanLiteral) String() string {
 	return fmt.Sprintf("Boolean{Value:%s, Pos:%d}", node.Canonical(), node.Loc.Pos)
 }
 
-func (node *BooleanLiteral) Accept(visitor Visitor) {
-	visitor.VisitBoolean(node)
+func (node *BooleanLiteral) Accept(visitor Visitor) interface{} {
+	return visitor.VisitBoolean(node)
 }
 
 //
@@ -462,8 +462,8 @@ func (node *NumberLiteral) String() string {
 	return fmt.Sprintf("Number{Value:%d, Pos:%d}", node.Value, node.Loc.Pos)
 }
 
-func (node *NumberLiteral) Accept(visitor Visitor) {
-	visitor.VisitNumber(node)
+func (node *NumberLiteral) Accept(visitor Visitor) interface{} {
+	return visitor.VisitNumber(node)
 }
 
 //
@@ -497,8 +497,8 @@ func (node *Hash) String() string {
 	return result + fmt.Sprintf("], Pos:%d}", node.Loc.Pos)
 }
 
-func (node *Hash) Accept(visitor Visitor) {
-	visitor.VisitHash(node)
+func (node *Hash) Accept(visitor Visitor) interface{} {
+	return visitor.VisitHash(node)
 }
 
 //
@@ -524,6 +524,6 @@ func (node *HashPair) String() string {
 	return node.Key + "=" + node.Val.String()
 }
 
-func (node *HashPair) Accept(visitor Visitor) {
-	visitor.VisitHashPair(node)
+func (node *HashPair) Accept(visitor Visitor) interface{} {
+	return visitor.VisitHashPair(node)
 }
