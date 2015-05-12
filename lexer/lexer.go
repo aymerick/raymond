@@ -14,10 +14,11 @@ import (
 
 const (
 	// mustache detection
-	ESCAPED_OPEN_MUSTACHE = "\\{{"
-	OPEN_MUSTACHE         = "{{"
-	CLOSE_MUSTACHE        = "}}"
-	CLOSE_STRIP_MUSTACHE  = "~}}"
+	ESCAPED_ESCAPED_OPEN_MUSTACHE = "\\\\{{"
+	ESCAPED_OPEN_MUSTACHE         = "\\{{"
+	OPEN_MUSTACHE                 = "{{"
+	CLOSE_MUSTACHE                = "}}"
+	CLOSE_STRIP_MUSTACHE          = "~}}"
 )
 
 const eof = -1
@@ -175,6 +176,13 @@ func (l *Lexer) emit(kind TokenKind) {
 	l.produce(kind, l.input[l.start:l.pos])
 }
 
+// emits scanned content
+func (l *Lexer) emitContent() {
+	if l.pos > l.start {
+		l.emit(TokenContent)
+	}
+}
+
 // emits a scanned string
 func (l *Lexer) emitString(delimiter rune) {
 	str := l.input[l.start:l.pos]
@@ -262,13 +270,21 @@ func lexContent(l *Lexer) lexFunc {
 		} else {
 			return l.errorf("Unclosed raw block")
 		}
+	} else if l.isString(ESCAPED_ESCAPED_OPEN_MUSTACHE) {
+		// \\{{
+
+		// emit content with only one escaped escape
+		l.next()
+		l.emitContent()
+
+		// ignore second escaped escape
+		l.next()
+		l.ignore()
+
+		next = lexContent
 	} else if l.isString(ESCAPED_OPEN_MUSTACHE) {
-		// check \\{{
-		l.backup()
-		if r := l.next(); r != '\\' {
-			// \{{
-			next = lexEscapedOpenMustache
-		}
+		// \{{
+		next = lexEscapedOpenMustache
 	} else if str := l.findRegexp(rOpenCommentDash); str != "" {
 		// {{!--
 		l.closeComment = rCloseCommentDash
@@ -286,9 +302,7 @@ func lexContent(l *Lexer) lexFunc {
 
 	if next != nil {
 		// emit scanned content
-		if l.pos > l.start {
-			l.emit(TokenContent)
-		}
+		l.emitContent()
 
 		// scan next token
 		return next
@@ -297,9 +311,7 @@ func lexContent(l *Lexer) lexFunc {
 	// scan next rune
 	if l.next() == eof {
 		// emit scanned content
-		if l.pos > l.start {
-			l.emit(TokenContent)
-		}
+		l.emitContent()
 
 		// this is over
 		l.emit(TokenEOF)
@@ -393,10 +405,7 @@ func lexCloseMustache(l *Lexer) lexFunc {
 func lexExpression(l *Lexer) lexFunc {
 	// search close mustache delimiter
 	if l.isString(CLOSE_MUSTACHE) || l.isString(CLOSE_STRIP_MUSTACHE) {
-		if l.pos > l.start {
-			// emit scanned content
-			l.emit(TokenContent)
-		}
+		l.emitContent()
 
 		return lexCloseMustache
 	}

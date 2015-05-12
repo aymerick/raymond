@@ -57,6 +57,12 @@ var tplTests = []tplTest{
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/basic.js
 	//
 	{"most basic", "{{foo}}", map[string]string{"foo": "foo"}, "foo"},
+
+	{"escaping (1)", "\\{{foo}}", map[string]string{"foo": "food"}, "{{foo}}"},
+	{"escaping (2)", "content \\{{foo}}", map[string]string{}, "content {{foo}}"},
+	{"escaping (3)", "\\\\{{foo}}", map[string]string{"foo": "food"}, "\\food"},
+	{"escaping (4)", "content \\\\{{foo}}", map[string]string{"foo": "food"}, "content \\food"},
+	{"escaping (5)", "\\\\ {{foo}}", map[string]string{"foo": "food"}, "\\\\ food"},
 }
 
 func TestRenderTemplate(t *testing.T) {

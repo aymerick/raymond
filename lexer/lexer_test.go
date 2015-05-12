@@ -77,6 +77,11 @@ var lexTests = []lexTest{
 		`{{@../foo}}`,
 		[]Token{tokOpen, tokData, tokID(".."), tokSep("/"), tokID("foo"), tokClose, tokEOF},
 	},
+	{
+		`tokenizes escaped mustaches`,
+		"\\{{bar}}",
+		[]Token{tokContent("{{bar}}"), tokEOF},
+	},
 
 	//
 	// Next tests come from:
@@ -115,27 +120,27 @@ var lexTests = []lexTest{
 	{
 		`supports escaping escape character`,
 		"{{foo}} \\\\{{bar}} {{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\\\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokOpen, tokID("baz"), tokClose, tokEOF},
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
 	{
 		`supports escaping multiple escape characters`,
 		"{{foo}} \\\\{{bar}} \\\\{{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\\\"), tokOpen, tokID("bar"), tokClose, tokContent(" \\\\"), tokOpen, tokID("baz"), tokClose, tokEOF},
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpen, tokID("bar"), tokClose, tokContent(" \\"), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
 	{
 		`supports escaped mustaches after escaped escape characters`,
 		"{{foo}} \\\\{{bar}} \\{{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\\\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokContent("{{baz}}"), tokEOF},
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokContent("{{baz}}"), tokEOF},
 	},
 	{
 		`supports escaped escape characters after escaped mustaches`,
 		"{{foo}} \\{{bar}} \\\\{{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} \\\\"), tokOpen, tokID("baz"), tokClose, tokEOF},
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} \\"), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
 	{
 		`supports escaped escape character on a triple stash`,
 		"{{foo}} \\\\{{{bar}}} {{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\\\"), tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokContent(" "), tokOpen, tokID("baz"), tokClose, tokEOF},
+		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokContent(" "), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
 	{
 		`tokenizes a simple path`,
