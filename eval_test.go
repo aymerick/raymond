@@ -32,7 +32,7 @@ var evalTests = []evalTest{
 	{"compiling with a basic context", "Goodbye\n{{cruel}}\n{{world}}!", map[string]string{"cruel": "cruel", "world": "world"}, "Goodbye\ncruel\nworld!"},
 
 	{"compiling with an undefined context (1)", "Goodbye\n{{cruel}}\n{{world.bar}}!", nil, "Goodbye\n\n!"},
-	// {"compiling with an undefined context (2)", "{{#unless foo}}Goodbye{{../test}}{{test2}}{{/unless}}", nil, "Goodbye"},
+	{"compiling with an undefined context (2)", "{{#unless foo}}Goodbye{{../test}}{{test2}}{{/unless}}", nil, "Goodbye"},
 
 	{"comments (1)", "{{! Goodbye}}Goodbye\n{{cruel}}\n{{world}}!", map[string]string{"cruel": "cruel", "world": "world"}, "Goodbye\ncruel\nworld!"},
 	// {"comments (2)", "    {{~! comment ~}}      blah", nil, "blah"},
