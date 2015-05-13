@@ -223,10 +223,7 @@ func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	// helperName param* hash?
 	result.Expression = p.parseExpression(tok)
 
-	openName, ok := result.Expression.Path.(*ast.PathExpression)
-	if !ok {
-		errNode(result.Expression.Path, "Path expression expected")
-	}
+	openName := result.Expression.Str()
 
 	// CLOSE_RAW_BLOCK
 	tok = p.shift()
@@ -253,13 +250,13 @@ func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	// helperName
 	endId := p.parseHelperName()
 
-	closeName, ok := endId.(*ast.PathExpression)
+	closeName, ok := ast.HelperNameStr(endId)
 	if !ok {
-		errNode(endId, "Path expression expected")
+		errNode(endId, "Erroneous closing expression")
 	}
 
-	if openName.Original != closeName.Original {
-		errNode(endId, fmt.Sprintf("%s doesn't match %s", openName.Original, closeName.Original))
+	if openName != closeName {
+		errNode(endId, fmt.Sprintf("%s doesn't match %s", openName, closeName))
 	}
 
 	// CLOSE_RAW_BLOCK
@@ -402,18 +399,14 @@ func (p *Parser) parseCloseBlock(block *ast.BlockStatement) {
 	// helperName
 	endId := p.parseHelperName()
 
-	closeName, ok := endId.(*ast.PathExpression)
+	closeName, ok := ast.HelperNameStr(endId)
 	if !ok {
-		errNode(endId, "Path expression expected")
+		errNode(endId, "Erroneous closing expression")
 	}
 
-	openName, ok := block.Expression.Path.(*ast.PathExpression)
-	if !ok {
-		errNode(block.Expression.Path, "Path expression expected")
-	}
-
-	if openName.Original != closeName.Original {
-		errNode(endId, fmt.Sprintf("%s doesn't match %s", openName.Original, closeName.Original))
+	openName := block.Expression.Str()
+	if openName != closeName {
+		errNode(endId, fmt.Sprintf("%s doesn't match %s", openName, closeName))
 	}
 
 	// CLOSE

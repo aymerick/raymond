@@ -271,7 +271,7 @@ type Expression struct {
 	NodeType
 	Loc
 
-	Path   Node   // PathExpression
+	Path   Node   // PathExpression | StringLiteral | BooleanLiteral | NumberLiteral
 	Params []Node // [ Expression ... ]
 	Hash   *Hash  // Hash
 }
@@ -329,15 +329,55 @@ func (node *Expression) LiteralStr() (string, bool) {
 		return "", false
 	}
 
-	if lit, ok := node.Path.(*StringLiteral); ok {
+	return LiteralStr(node.Path)
+}
+
+// returns string representation of expression
+func (node *Expression) Str() string {
+	if str, ok := HelperNameStr(node.Path); ok {
+		return str
+	}
+
+	return ""
+}
+
+// returns string representation of an helper name, with a boolean set to false if this is not a valid helper name
+//
+// helperName : path | dataName | STRING | NUMBER | BOOLEAN | UNDEFINED | NULL
+func HelperNameStr(node Node) (string, bool) {
+	// PathExpression
+	if str, ok := PathExpressionStr(node); ok {
+		return str, ok
+	}
+
+	// Literal
+	if str, ok := LiteralStr(node); ok {
+		return str, ok
+	}
+
+	return "", false
+}
+
+// returns string representation of path expression value, with a boolean set to false if this is not a path expression
+func PathExpressionStr(node Node) (string, bool) {
+	if path, ok := node.(*PathExpression); ok {
+		return path.Original, true
+	}
+
+	return "", false
+}
+
+// returns string representation of literal value, with a boolean set to false if this is not a literal
+func LiteralStr(node Node) (string, bool) {
+	if lit, ok := node.(*StringLiteral); ok {
 		return lit.Value, true
 	}
 
-	if lit, ok := node.Path.(*BooleanLiteral); ok {
+	if lit, ok := node.(*BooleanLiteral); ok {
 		return lit.Canonical(), true
 	}
 
-	if lit, ok := node.Path.(*NumberLiteral); ok {
+	if lit, ok := node.(*NumberLiteral); ok {
 		return lit.Canonical(), true
 	}
 

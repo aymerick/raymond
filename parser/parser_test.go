@@ -115,16 +115,18 @@ var parserErrorTests = []parserTest{
 
 	{"open raw block must be closed", `{{{{raw foo}} bar {{{{/raw}}}}`, "Expecting CloseRawBlock"},
 	{"end raw block must be closed", `{{{{raw foo}}}} bar {{{{/raw}}`, "Expecting CloseRawBlock"},
-	{"name in open raw block must be a path", `{{{{1}}}}{{foo}}{{{{/raw}}}}`, "Path expression expected"},
-	{"name in close raw block must be a path", `{{{{raw}}}}{{foo}}{{{{/1}}}}`, "Path expression expected"},
-	{"raw block names must match", `{{{{goodbyes}}}}test{{{{/hellos}}}}`, "goodbyes doesn't match hellos"},
+
+	{"raw block names must match (1)", `{{{{1}}}}{{foo}}{{{{/raw}}}}`, "1 doesn't match raw"},
+	{"raw block names must match (2)", `{{{{raw}}}}{{foo}}{{{{/1}}}}`, "raw doesn't match 1"},
+	{"raw block names must match (3)", `{{{{goodbyes}}}}test{{{{/hellos}}}}`, "goodbyes doesn't match hellos"},
 
 	{"open block must be closed", `{{#foo bar}}}{{/foo}}`, "Expecting Close"},
 	{"end block must be closed", `{{#foo bar}}{{/foo}}}`, "Expecting Close"},
-	{"name in open raw block must be a path", `{{#1 bar}}{{/foo}}`, "Path expression expected"},
-	{"name in close raw block must be a path", `{{#foo bar}}{{/1}}`, "Path expression expected"},
-	{"block names must match", `{{#foo}}test{{/bar}}`, "foo doesn't match bar"},
 	{"an open block must have a end block", `{{#foo}}test`, "Expecting OpenEndBlock"},
+
+	{"block names must match (1)", `{{#1 bar}}{{/foo}}`, "1 doesn't match foo"},
+	{"block names must match (2)", `{{#foo bar}}{{/1}}`, "foo doesn't match 1"},
+	{"block names must match (3)", `{{#foo}}test{{/bar}}`, "foo doesn't match bar"},
 
 	{"an mustache must terminate with a close mustache", `{{foo}}}`, "Expecting Close"},
 	{"an unescaped mustache must terminate with a close unescaped mustache", `{{{foo}}`, "Expecting CloseUnescaped"},
