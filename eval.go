@@ -12,6 +12,8 @@ var (
 	// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
 	errorType       = reflect.TypeOf((*error)(nil)).Elem()
 	fmtStringerType = reflect.TypeOf((*fmt.Stringer)(nil)).Elem()
+
+	zero reflect.Value
 )
 
 // Template evaluation visitor
@@ -19,6 +21,7 @@ type EvalVisitor struct {
 	wr   io.Writer
 	tpl  *Template
 	data interface{}
+	ctx  reflect.Value
 
 	curNode ast.Node
 }
@@ -29,6 +32,7 @@ func NewEvalVisitor(wr io.Writer, tpl *Template, data interface{}) *EvalVisitor 
 		wr:   wr,
 		tpl:  tpl,
 		data: data,
+		ctx:  reflect.ValueOf(data),
 	}
 }
 
@@ -49,17 +53,19 @@ func (v *EvalVisitor) at(node ast.Node) {
 }
 
 // evaluates field path
-func (v *EvalVisitor) evalFieldPath(path *ast.PathExpression) string {
+func (v *EvalVisitor) evalFieldPath(ctx reflect.Value, path *ast.PathExpression) reflect.Value {
 	if v.data == nil {
-		return ""
+		return zero
 	}
 
-	fieldName := path.Parts[0]
-	ctx := reflect.ValueOf(v.data)
+	for i := 0; i < len(path.Parts); i++ {
+		ctx = v.evalField(ctx, path.Parts[i])
+		if ctx == zero {
+			return zero
+		}
+	}
 
-	value := v.evalField(ctx, fieldName)
-
-	return v.strValue(value)
+	return ctx
 }
 
 func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Value {
@@ -85,29 +91,47 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Val
 		}
 	}
 
-	// wat
-	v.errorf("NOT IMPLEMENTED")
-	panic("not reached")
+	return zero
 }
 
 func (v *EvalVisitor) strValue(value reflect.Value) string {
+	result := ""
+
 	val, ok := printableValue(value)
 	if !ok {
 		v.errorf("Can't print value")
 	}
 
-	return fmt.Sprintf("%s", val)
+	switch val.(type) {
+	case bool:
+		s := "false"
+		if reflect.ValueOf(val).Bool() {
+			s = "true"
+		}
+		result = fmt.Sprintf("%s", s)
+	case int64, int32, int16, int8, int:
+		result = fmt.Sprintf("%d", val)
+	case float64, float32:
+		result = fmt.Sprintf("%f", val)
+	case nil:
+		result = ""
+	default:
+		result = fmt.Sprintf("%s", val)
+	}
+
+	return result
 }
 
 // printableValue returns the, possibly indirected, interface value inside v that
 // is best for a call to formatted printer.
+//
 // @note borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
 func printableValue(v reflect.Value) (interface{}, bool) {
 	if v.Kind() == reflect.Ptr {
 		v, _ = indirect(v) // fmt.Fprint handles nil.
 	}
 	if !v.IsValid() {
-		return "<no value>", true
+		return "", true
 	}
 
 	if !v.Type().Implements(errorType) && !v.Type().Implements(fmtStringerType) {
@@ -126,6 +150,7 @@ func printableValue(v reflect.Value) (interface{}, bool) {
 // indirect returns the item at the end of indirection, and a bool to indicate if it's nil.
 // We indirect through pointers and empty interfaces (only) because
 // non-empty interfaces have methods we might need.
+//
 // @note borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
 func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
 	for ; v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface; v = v.Elem() {
@@ -202,16 +227,22 @@ func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	v.at(node)
 
+	val := zero
+
 	// @todo Check if this is an helper
 
-	// so this must be a field
+	// field path
 	path := node.FieldPath()
-	if path == nil {
-		v.errorf("Invalid expression or helper not found.")
+	if path != nil {
+		val = v.evalFieldPath(v.ctx, path)
 	}
 
-	// evaluate field path
-	return v.evalFieldPath(path)
+	// literal
+	if literal, ok := node.LiteralStr(); ok {
+		val = v.evalField(v.ctx, literal)
+	}
+
+	return v.strValue(val)
 }
 
 func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {

@@ -599,12 +599,9 @@ func (p *Parser) parseHelperName() ast.Node {
 	case lexer.TokenNumber:
 		// NUMBER
 		p.shift()
-		val, err := strconv.Atoi(tok.Val)
-		if err != nil {
-			// @todo Is that really possible ?
-			errToken(tok, "Integer convertion failed")
-		}
-		result = ast.NewNumberLiteral(tok.Pos, tok.Line, val, tok.Val)
+
+		val, isInt := parseNumber(tok)
+		result = ast.NewNumberLiteral(tok.Pos, tok.Line, val, isInt, tok.Val)
 	case lexer.TokenString:
 		// STRING
 		p.shift()
@@ -618,6 +615,28 @@ func (p *Parser) parseHelperName() ast.Node {
 	}
 
 	return result
+}
+
+func parseNumber(tok *lexer.Token) (result float64, isInt bool) {
+	var valInt int
+	var err error
+
+	valInt, err = strconv.Atoi(tok.Val)
+	if err == nil {
+		isInt = true
+
+		result = float64(valInt)
+	} else {
+		isInt = false
+
+		result, err = strconv.ParseFloat(tok.Val, 64)
+		if err != nil {
+			errToken(tok, fmt.Sprintf("Failed to parse number: %s", tok.Val))
+		}
+	}
+
+	// named returned values
+	return
 }
 
 // Returns true if next tokens represent a `helperName`

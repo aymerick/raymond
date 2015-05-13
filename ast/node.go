@@ -1,6 +1,9 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // References:
 //   - https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/ast.js
@@ -288,9 +291,27 @@ func (node *Expression) Accept(visitor Visitor) interface{} {
 	return visitor.VisitExpression(node)
 }
 
-// returns path expression representing a feld path, or nil if this can't be a field path
+func (node *Expression) haveParams() bool {
+	return (len(node.Params) > 0) || ((node.Hash != nil) && (len(node.Hash.Pairs) > 0))
+}
+
+// return helper name, or an empty string if this expression can't be an helper
+func (node *Expression) HelperName() string {
+	path, ok := node.Path.(*PathExpression)
+	if !ok {
+		return ""
+	}
+
+	if path.Data || (len(path.Parts) != 1) || (path.Parts[0] == "this") {
+		return ""
+	}
+
+	return path.Parts[0]
+}
+
+// returns path expression representing a field path, or nil if this is not a field path
 func (node *Expression) FieldPath() *PathExpression {
-	if len(node.Params) > 0 || ((node.Hash != nil) && (len(node.Hash.Pairs) > 0)) {
+	if node.haveParams() {
 		return nil
 	}
 
@@ -300,6 +321,27 @@ func (node *Expression) FieldPath() *PathExpression {
 	}
 
 	return path
+}
+
+// returns string representation of literal value, with a boolean set to false if this is not a literal
+func (node *Expression) LiteralStr() (string, bool) {
+	if node.haveParams() {
+		return "", false
+	}
+
+	if lit, ok := node.Path.(*StringLiteral); ok {
+		return lit.Value, true
+	}
+
+	if lit, ok := node.Path.(*BooleanLiteral); ok {
+		return lit.Canonical(), true
+	}
+
+	if lit, ok := node.Path.(*NumberLiteral); ok {
+		return lit.Canonical(), true
+	}
+
+	return "", false
 }
 
 //
@@ -434,20 +476,20 @@ func NewBooleanLiteral(pos int, line int, val bool, original string) *BooleanLit
 	}
 }
 
-func (node *BooleanLiteral) Canonical() string {
-	if node.Value {
-		return "true"
-	} else {
-		return "false"
-	}
-}
-
 func (node *BooleanLiteral) String() string {
 	return fmt.Sprintf("Boolean{Value:%s, Pos:%d}", node.Canonical(), node.Loc.Pos)
 }
 
 func (node *BooleanLiteral) Accept(visitor Visitor) interface{} {
 	return visitor.VisitBoolean(node)
+}
+
+func (node *BooleanLiteral) Canonical() string {
+	if node.Value {
+		return "true"
+	} else {
+		return "false"
+	}
 }
 
 //
@@ -458,26 +500,36 @@ type NumberLiteral struct {
 	NodeType
 	Loc
 
-	Value    int
+	Value    float64
+	IsInt    bool
 	Original string
 }
 
-func NewNumberLiteral(pos int, line int, val int, original string) *NumberLiteral {
+func NewNumberLiteral(pos int, line int, val float64, isInt bool, original string) *NumberLiteral {
 	return &NumberLiteral{
 		NodeType: NodeNumber,
 		Loc:      Loc{pos, line},
 
 		Value:    val,
+		IsInt:    isInt,
 		Original: original,
 	}
 }
 
 func (node *NumberLiteral) String() string {
-	return fmt.Sprintf("Number{Value:%d, Pos:%d}", node.Value, node.Loc.Pos)
+	return fmt.Sprintf("Number{Value:%s, Pos:%d}", node.Canonical(), node.Loc.Pos)
 }
 
 func (node *NumberLiteral) Accept(visitor Visitor) interface{} {
 	return visitor.VisitNumber(node)
+}
+
+func (node *NumberLiteral) Canonical() string {
+	prec := -1
+	if node.IsInt {
+		prec = 0
+	}
+	return strconv.FormatFloat(node.Value, 'f', prec, 64)
 }
 
 //

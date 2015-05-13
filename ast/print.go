@@ -233,7 +233,7 @@ func (v *PrintVisitor) VisitNumber(node *NumberLiteral) interface{} {
 	if v.original {
 		v.str(node.Original)
 	} else {
-		v.str(fmt.Sprintf("NUMBER{%d}", node.Value))
+		v.str(fmt.Sprintf("NUMBER{%s}", node.Canonical()))
 	}
 
 	return nil
