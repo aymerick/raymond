@@ -335,7 +335,7 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 			return val
 		}
 
-		// erroneous field path
+		// invalid field path
 		return nil
 	}
 
@@ -345,7 +345,6 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 			return val.Interface()
 		}
 
-		// erroneous literal
 		return nil
 	}
 
