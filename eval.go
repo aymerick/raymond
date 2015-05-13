@@ -21,7 +21,7 @@ type EvalVisitor struct {
 	wr   io.Writer
 	tpl  *Template
 	data interface{}
-	ctx  reflect.Value
+	ctx  []reflect.Value
 
 	curNode ast.Node
 }
@@ -32,8 +32,23 @@ func NewEvalVisitor(wr io.Writer, tpl *Template, data interface{}) *EvalVisitor 
 		wr:   wr,
 		tpl:  tpl,
 		data: data,
-		ctx:  reflect.ValueOf(data),
+		ctx:  []reflect.Value{reflect.ValueOf(data)},
 	}
+}
+
+func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
+	v.ctx = append(v.ctx, ctx)
+}
+
+func (v *EvalVisitor) popCtx() reflect.Value {
+	var result reflect.Value
+
+	result, v.ctx = v.ctx[len(v.ctx)-1], v.ctx[:len(v.ctx)-1]
+	return result
+}
+
+func (v *EvalVisitor) curCtx() reflect.Value {
+	return v.ctx[len(v.ctx)-1]
 }
 
 // fatal evaluation error
@@ -52,15 +67,11 @@ func (v *EvalVisitor) at(node ast.Node) {
 	v.curNode = node
 }
 
-// evaluates field path
+// evaluates field path in given context
 func (v *EvalVisitor) evalFieldPath(ctx reflect.Value, path *ast.PathExpression) reflect.Value {
-	if v.data == nil {
-		return zero
-	}
-
 	for i := 0; i < len(path.Parts); i++ {
 		ctx = v.evalField(ctx, path.Parts[i])
-		if ctx == zero {
+		if !ctx.IsValid() {
 			return zero
 		}
 	}
@@ -68,8 +79,9 @@ func (v *EvalVisitor) evalFieldPath(ctx reflect.Value, path *ast.PathExpression)
 	return ctx
 }
 
+// evaluates field in given context
 func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Value {
-	var result reflect.Value
+	result := zero
 
 	if !ctx.IsValid() {
 		return result
@@ -87,10 +99,12 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Val
 			v.errorf("%s is an unexported field of struct type %s", fieldName, ctx.Type())
 		}
 
+		// struct field
 		result = ctx.FieldByIndex(tField.Index)
 	case reflect.Map:
 		nameVal := reflect.ValueOf(fieldName)
 		if nameVal.Type().AssignableTo(ctx.Type().Key()) {
+			// map key
 			result = ctx.MapIndex(nameVal)
 		}
 	}
@@ -109,6 +123,10 @@ func (v *EvalVisitor) strValue(value reflect.Value) string {
 	val := reflect.ValueOf(ival)
 
 	switch val.Kind() {
+	case reflect.Array, reflect.Slice:
+		for i := 0; i < val.Len(); i++ {
+			result += val.Index(i).String()
+		}
 	case reflect.Bool:
 		s := "false"
 		if val.Bool() {
@@ -124,6 +142,8 @@ func (v *EvalVisitor) strValue(value reflect.Value) string {
 	default:
 		result = fmt.Sprintf("%s", ival)
 	}
+
+	// log.Printf("strValue(%q) => %s", ival, result)
 
 	return result
 }
@@ -240,7 +260,7 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	// evaluate expression
 	val := reflect.ValueOf(node.Expression.Accept(v))
 
-	// @todo Push val to v.ctx
+	v.pushCtx(val)
 
 	truth, _ := isTrue(val)
 	if truth && (node.Program != nil) {
@@ -249,7 +269,7 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 		node.Inverse.Accept(v)
 	}
 
-	// @todo Pop v.ctx
+	v.popCtx()
 
 	return nil
 }
@@ -290,12 +310,12 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	// field path
 	path := node.FieldPath()
 	if path != nil {
-		val = v.evalFieldPath(v.ctx, path)
+		val = v.evalFieldPath(v.curCtx(), path)
 	}
 
 	// literal
 	if literal, ok := node.LiteralStr(); ok {
-		val = v.evalField(v.ctx, literal)
+		val = v.evalField(v.curCtx(), literal)
 	}
 
 	if !val.IsValid() {

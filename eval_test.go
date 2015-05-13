@@ -110,7 +110,7 @@ var evalTests = []evalTest{
 
 	{"pass string literals (1)", `{{"foo"}}`, map[string]string{}, ""},
 	{"pass string literals (2)", `{{"foo"}}`, map[string]string{"foo": "bar"}, "bar"},
-	// {"pass string literals (3)", `{{#"foo"}}{{.}}{{/"foo"}}`, map[string]interface{}{"foo": []string{"bar", "baz"}}, "barbaz"},
+	{"pass string literals (3)", `{{#"foo"}}{{.}}{{/"foo"}}`, map[string]interface{}{"foo": []string{"bar", "baz"}}, "barbaz"},
 
 	{"pass number literals (1)", "{{12}}", map[string]string{}, ""},
 	{"pass number literals (2)", "{{12}}", map[string]string{"12": "bar"}, "bar"},
