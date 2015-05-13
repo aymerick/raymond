@@ -302,7 +302,7 @@ func (node *Expression) HelperName() string {
 		return ""
 	}
 
-	if path.Data || (len(path.Parts) != 1) || (path.Parts[0] == "this") {
+	if path.Data || (len(path.Parts) != 1) || (path.Depth > 0) {
 		return ""
 	}
 
@@ -570,6 +570,15 @@ func (node *NumberLiteral) Canonical() string {
 		prec = 0
 	}
 	return strconv.FormatFloat(node.Value, 'f', prec, 64)
+}
+
+// Returns an integer or a float
+func (node *NumberLiteral) Number() interface{} {
+	if node.IsInt {
+		return int(node.Value)
+	} else {
+		return node.Value
+	}
 }
 
 //

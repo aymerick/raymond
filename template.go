@@ -1,6 +1,7 @@
 package raymond
 
 import (
+	"fmt"
 	"io"
 	"runtime"
 
@@ -12,6 +13,7 @@ import (
 type Template struct {
 	source  string
 	program *ast.Program
+	helpers map[string]Helper
 }
 
 // Instanciate a template an parse it
@@ -29,7 +31,8 @@ func Parse(source string) (*Template, error) {
 // Instanciate a new template
 func NewTemplate(source string) *Template {
 	return &Template{
-		source: source,
+		source:  source,
+		helpers: make(map[string]Helper),
 	}
 }
 
@@ -47,9 +50,20 @@ func (tpl *Template) Parse() error {
 	return nil
 }
 
-// Returns string version of parsed template
-func (tpl *Template) PrintAST() string {
-	return ast.PrintNode(tpl.program)
+// Register several helpers
+func (tpl *Template) RegisterHelpers(helpers map[string]Helper) {
+	for name, helper := range helpers {
+		tpl.RegisterHelper(name, helper)
+	}
+}
+
+// Register an helper
+func (tpl *Template) RegisterHelper(name string, helper Helper) {
+	if tpl.helpers[name] != nil {
+		panic(fmt.Sprintf("Helper %s already registered", name))
+	}
+
+	tpl.helpers[name] = helper
 }
 
 // Renders a template with input data
@@ -84,4 +98,9 @@ func errRecover(errp *error) {
 			panic(e)
 		}
 	}
+}
+
+// Returns string version of parsed template
+func (tpl *Template) PrintAST() string {
+	return ast.PrintNode(tpl.program)
 }

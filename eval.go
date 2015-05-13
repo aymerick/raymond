@@ -67,18 +67,6 @@ func (v *EvalVisitor) at(node ast.Node) {
 	v.curNode = node
 }
 
-// evaluates field path in given context
-func (v *EvalVisitor) evalFieldPath(ctx reflect.Value, path *ast.PathExpression) reflect.Value {
-	for i := 0; i < len(path.Parts); i++ {
-		ctx = v.evalField(ctx, path.Parts[i])
-		if !ctx.IsValid() {
-			return zero
-		}
-	}
-
-	return ctx
-}
-
 // evaluates field in given context
 func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Value {
 	result := zero
@@ -222,6 +210,32 @@ func isTrue(val reflect.Value) (truth, ok bool) {
 	return truth, true
 }
 
+// Finds given helper
+func (v *EvalVisitor) findHelper(name string) Helper {
+	// check template helpers
+	if v.tpl.helpers[name] != nil {
+		return v.tpl.helpers[name]
+	}
+
+	// check global helpers
+	return FindHelper(name)
+}
+
+// Computes helper parameters from an expression
+func (v *EvalVisitor) helperParams(node *ast.Expression) *HelperParams {
+	var params []interface{}
+	var hash map[string]interface{}
+
+	for _, paramNode := range node.Params {
+		param := paramNode.Accept(v)
+		params = append(params, param)
+	}
+
+	// @todo Fill hash
+
+	return NewHelperParams(params, hash)
+}
+
 //
 // Visitor interface
 //
@@ -294,8 +308,7 @@ func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	return ""
 }
 
 // Expressions
@@ -303,26 +316,33 @@ func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	v.at(node)
 
-	var val reflect.Value
-
-	// @todo Check if this is an helper
+	// check if this is an helper
+	if helperName := node.HelperName(); helperName != "" {
+		if helper := v.findHelper(helperName); helper != nil {
+			// call helper function
+			return helper(v.helperParams(node))
+		}
+	}
 
 	// field path
-	path := node.FieldPath()
-	if path != nil {
-		val = v.evalFieldPath(v.curCtx(), path)
+	if path := node.FieldPath(); path != nil {
+		if val := path.Accept(v); val != nil {
+			return val
+		}
+
+		return nil
 	}
 
 	// literal
 	if literal, ok := node.LiteralStr(); ok {
-		val = v.evalField(v.curCtx(), literal)
-	}
+		if val := v.evalField(v.curCtx(), literal); val.IsValid() {
+			return val.Interface()
+		}
 
-	if !val.IsValid() {
 		return nil
 	}
 
-	return val.Interface()
+	return nil
 }
 
 func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
@@ -335,8 +355,20 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	ctx := v.curCtx()
+
+	for i := 0; i < len(node.Parts); i++ {
+		ctx = v.evalField(ctx, node.Parts[i])
+		if !ctx.IsValid() {
+			break
+		}
+	}
+
+	if !ctx.IsValid() {
+		return nil
+	}
+
+	return ctx.Interface()
 }
 
 // Literals
@@ -344,22 +376,19 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 func (v *EvalVisitor) VisitString(node *ast.StringLiteral) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	return node.Value
 }
 
 func (v *EvalVisitor) VisitBoolean(node *ast.BooleanLiteral) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	return node.Value
 }
 
 func (v *EvalVisitor) VisitNumber(node *ast.NumberLiteral) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	return node.Number()
 }
 
 // Miscellaneous

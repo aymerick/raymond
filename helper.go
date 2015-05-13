@@ -2,12 +2,14 @@ package raymond
 
 import "fmt"
 
-// Context argument provided to helpers
-type HelperContext struct {
+// Arguments provided to helpers
+type HelperParams struct {
+	params []interface{}
+	hash   map[string]interface{}
 }
 
 // Helper function
-type Helper func(ctx *HelperContext) string
+type Helper func(p *HelperParams) string
 
 // All registered helpers
 var helpers map[string]Helper
@@ -28,4 +30,20 @@ func RegisterHelper(name string, helper Helper) {
 // Find a registered helper function
 func FindHelper(name string) Helper {
 	return helpers[name]
+}
+
+func NewHelperParams(params []interface{}, hash map[string]interface{}) *HelperParams {
+	return &HelperParams{
+		params: params,
+		hash:   hash,
+	}
+}
+
+// Get parameter at given position
+func (p *HelperParams) at(pos int) interface{} {
+	if len(p.params) > pos {
+		return p.params[pos]
+	} else {
+		return nil
+	}
 }

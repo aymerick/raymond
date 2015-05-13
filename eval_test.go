@@ -20,6 +20,7 @@ var evalTests = []evalTest{
 	// Next tests come from:
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/basic.js
 	//
+
 	{"most basic", "{{foo}}", map[string]string{"foo": "foo"}, "foo"},
 
 	{"escaping (1)", "\\{{foo}}", map[string]string{"foo": "food"}, "{{foo}}"},
@@ -87,7 +88,6 @@ var evalTests = []evalTest{
 
 	// {"literal paths (1)", "Goodbye {{[@alan]/expression}} world!", map[string]map[string]string{"@alan": {"expression": "beautiful"}}, "Goodbye beautiful world!', 'Literal paths can be used"},
 	// {"literal paths (2)", "Goodbye {{[foo bar]/expression}} world!", map[string]string{"expression": "beautiful"}, "Goodbye beautiful world!', 'Literal paths can be used"},
-
 	// {"literal references", "Goodbye {{[foo bar]}} world!", map[string]string{"foo bar": "beautiful"}, "Goodbye beautiful world!"},
 
 	// @todo "that current context path ({{.}}) doesn't hit helpers"
@@ -129,7 +129,6 @@ var evalTests = []evalTest{
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/blocks.js
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/builtin.js
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/data.js
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/helpers.js
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/partials.js
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/regressions.js
 	//   https://github.com/wycats/handlebars.js/blob/master/spec/strict.js
