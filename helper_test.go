@@ -68,6 +68,62 @@ var helperTests = []helperTest{
 		map[string]Helper{"echo": echoHelper},
 		`GnAK!GnAK!GnAK!`,
 	},
+	{
+		"#if helper with true literal",
+		`{{#if true}}YES MAN{{/if}}`,
+		nil,
+		nil,
+		`YES MAN`,
+	},
+	{
+		"#if helper with false literal",
+		`{{#if false}}YES MAN{{/if}}`,
+		nil,
+		nil,
+		``,
+	},
+	{
+		"#if helper with truthy identifier",
+		`{{#if ok}}YES MAN{{/if}}`,
+		map[string]interface{}{"ok": true},
+		nil,
+		`YES MAN`,
+	},
+	{
+		"#if helper with falsy identifier",
+		`{{#if ok}}YES MAN{{/if}}`,
+		map[string]interface{}{"ok": false},
+		nil,
+		``,
+	},
+	{
+		"#unless helper with true literal",
+		`{{#unless true}}YES MAN{{/unless}}`,
+		nil,
+		nil,
+		``,
+	},
+	{
+		"#unless helper with false literal",
+		`{{#unless false}}YES MAN{{/unless}}`,
+		nil,
+		nil,
+		`YES MAN`,
+	},
+	{
+		"#unless helper with truthy identifier",
+		`{{#unless ok}}YES MAN{{/unless}}`,
+		map[string]interface{}{"ok": true},
+		nil,
+		``,
+	},
+	{
+		"#unless helper with falsy identifier",
+		`{{#unless ok}}YES MAN{{/unless}}`,
+		map[string]interface{}{"ok": false},
+		nil,
+		`YES MAN`,
+	},
 
 	//
 	// Next tests come from:
@@ -90,8 +146,8 @@ var helperTests = []helperTest{
 func barHelper(p *HelperParams) string { return "bar" }
 
 func echoHelper(p *HelperParams) string {
-	str, _ := p.at(0).(string)
-	nb, ok := p.at(1).(int)
+	str, _ := p.At(0).(string)
+	nb, ok := p.At(1).(int)
 	if !ok {
 		nb = 1
 	}
@@ -105,7 +161,7 @@ func echoHelper(p *HelperParams) string {
 }
 
 func boolHelper(p *HelperParams) string {
-	b, _ := p.at(0).(bool)
+	b, _ := p.At(0).(bool)
 	if b {
 		return "yes it is"
 	}
@@ -114,7 +170,7 @@ func boolHelper(p *HelperParams) string {
 }
 
 func gnakHelper(p *HelperParams) string {
-	nb, ok := p.at(0).(int)
+	nb, ok := p.At(0).(int)
 	if !ok {
 		nb = 1
 	}

@@ -23,7 +23,8 @@ type EvalVisitor struct {
 	data interface{}
 	ctx  []reflect.Value
 
-	curNode ast.Node
+	curNode  ast.Node
+	curBlock *ast.BlockStatement
 }
 
 // Instanciate a new evaluation visitor
@@ -178,11 +179,11 @@ func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
 	return v, false
 }
 
-// isTrue reports whether the value is 'true', in the sense of not the zero of its type,
+// IsTruth reports whether the value is 'true', in the sense of not the zero of its type,
 // and whether the value has a meaningful truth value.
 //
 // @note borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
-func isTrue(val reflect.Value) (truth, ok bool) {
+func IsTruth(val reflect.Value) (truth, ok bool) {
 	if !val.IsValid() {
 		// Something like var x interface{}, never set. It's a form of nil.
 		return false, true
@@ -233,7 +234,7 @@ func (v *EvalVisitor) helperParams(node *ast.Expression) *HelperParams {
 
 	// @todo Fill hash
 
-	return NewHelperParams(params, hash)
+	return NewHelperParams(v, params, hash)
 }
 
 //
@@ -270,13 +271,14 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 
 func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.at(node)
+	v.curBlock = node
 
 	// evaluate expression
 	val := reflect.ValueOf(node.Expression.Accept(v))
 
 	v.pushCtx(val)
 
-	truth, _ := isTrue(val)
+	truth, _ := IsTruth(val)
 	if truth && (node.Program != nil) {
 		node.Program.Accept(v)
 	} else if node.Inverse != nil {
@@ -284,6 +286,8 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	}
 
 	v.popCtx()
+
+	v.curBlock = nil
 
 	return nil
 }
