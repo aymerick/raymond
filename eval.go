@@ -69,54 +69,60 @@ func (v *EvalVisitor) evalFieldPath(ctx reflect.Value, path *ast.PathExpression)
 }
 
 func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Value {
-	ctxType := ctx.Type()
+	var result reflect.Value
+
+	if !ctx.IsValid() {
+		return result
+	}
 
 	switch ctx.Kind() {
 	case reflect.Struct:
 		tField, ok := ctx.Type().FieldByName(fieldName)
 		if !ok {
-			v.errorf("%s is not a field of struct type %s", fieldName, ctxType)
+			v.errorf("%s is not a field of struct type %s", fieldName, ctx.Type())
 		}
 
 		if tField.PkgPath != "" {
 			// field is unexported
-			v.errorf("%s is an unexported field of struct type %s", fieldName, ctxType)
+			v.errorf("%s is an unexported field of struct type %s", fieldName, ctx.Type())
 		}
 
-		return ctx.FieldByIndex(tField.Index)
+		result = ctx.FieldByIndex(tField.Index)
 	case reflect.Map:
 		nameVal := reflect.ValueOf(fieldName)
 		if nameVal.Type().AssignableTo(ctx.Type().Key()) {
-			return ctx.MapIndex(nameVal)
+			result = ctx.MapIndex(nameVal)
 		}
 	}
 
-	return zero
+	return result
 }
 
 func (v *EvalVisitor) strValue(value reflect.Value) string {
 	result := ""
 
-	val, ok := printableValue(value)
+	ival, ok := printableValue(value)
 	if !ok {
 		v.errorf("Can't print value")
 	}
 
-	switch val.(type) {
-	case bool:
+	val := reflect.ValueOf(ival)
+
+	switch val.Kind() {
+	case reflect.Bool:
 		s := "false"
-		if reflect.ValueOf(val).Bool() {
+		if val.Bool() {
 			s = "true"
 		}
 		result = fmt.Sprintf("%s", s)
-	case int64, int32, int16, int8, int:
-		result = fmt.Sprintf("%d", val)
-	case float64, float32:
-		result = fmt.Sprintf("%f", val)
-	case nil:
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		result = fmt.Sprintf("%d", ival)
+	case reflect.Float32, reflect.Float64:
+		result = fmt.Sprintf("%f", ival)
+	case reflect.Invalid:
 		result = ""
 	default:
-		result = fmt.Sprintf("%s", val)
+		result = fmt.Sprintf("%s", ival)
 	}
 
 	return result
@@ -164,6 +170,38 @@ func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
 	return v, false
 }
 
+// isTrue reports whether the value is 'true', in the sense of not the zero of its type,
+// and whether the value has a meaningful truth value.
+//
+// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
+func isTrue(val reflect.Value) (truth, ok bool) {
+	if !val.IsValid() {
+		// Something like var x interface{}, never set. It's a form of nil.
+		return false, true
+	}
+	switch val.Kind() {
+	case reflect.Array, reflect.Map, reflect.Slice, reflect.String:
+		truth = val.Len() > 0
+	case reflect.Bool:
+		truth = val.Bool()
+	case reflect.Complex64, reflect.Complex128:
+		truth = val.Complex() != 0
+	case reflect.Chan, reflect.Func, reflect.Ptr, reflect.Interface:
+		truth = !val.IsNil()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		truth = val.Int() != 0
+	case reflect.Float32, reflect.Float64:
+		truth = val.Float() != 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		truth = val.Uint() != 0
+	case reflect.Struct:
+		truth = true // Struct values are always true.
+	default:
+		return
+	}
+	return truth, true
+}
+
 //
 // Visitor interface
 //
@@ -183,7 +221,12 @@ func (v *EvalVisitor) VisitProgram(node *ast.Program) interface{} {
 func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	v.at(node)
 
-	str, _ := node.Expression.Accept(v).(string)
+	// evaluate expression
+	val := reflect.ValueOf(node.Expression.Accept(v))
+
+	str := v.strValue(val)
+
+	// write result
 	if _, err := v.wr.Write([]byte(str)); err != nil {
 		v.errPanic(err)
 	}
@@ -194,7 +237,20 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.at(node)
 
-	// @todo
+	// evaluate expression
+	val := reflect.ValueOf(node.Expression.Accept(v))
+
+	// @todo Push val to v.ctx
+
+	truth, _ := isTrue(val)
+	if truth && (node.Program != nil) {
+		node.Program.Accept(v)
+	} else if node.Inverse != nil {
+		node.Inverse.Accept(v)
+	}
+
+	// @todo Pop v.ctx
+
 	return nil
 }
 
@@ -227,7 +283,7 @@ func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	v.at(node)
 
-	val := zero
+	var val reflect.Value
 
 	// @todo Check if this is an helper
 
@@ -242,7 +298,11 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 		val = v.evalField(v.ctx, literal)
 	}
 
-	return v.strValue(val)
+	if !val.IsValid() {
+		return nil
+	}
+
+	return val.Interface()
 }
 
 func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {

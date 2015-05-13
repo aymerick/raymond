@@ -41,7 +41,7 @@ var evalTests = []evalTest{
 	// {"comments (6)", "    {{~! comment}}      blah", nil, "      blah"},
 	// {"comments (7)", "    {{~!-- long-comment --}}      blah", nil, "      blah"},
 
-	// {"boolean (1)", "{{#goodbye}}GOODBYE {{/goodbye}}cruel {{world}}!", map[string]interface{}{"goodbye": true, "world": "world"}, "GOODBYE cruel world!"},
+	{"boolean (1)", "{{#goodbye}}GOODBYE {{/goodbye}}cruel {{world}}!", map[string]interface{}{"goodbye": true, "world": "world"}, "GOODBYE cruel world!"},
 	{"boolean (2)", "{{#goodbye}}GOODBYE {{/goodbye}}cruel {{world}}!", map[string]interface{}{"goodbye": false, "world": "world"}, "cruel world!"},
 
 	{"zeros (1)", "num1: {{num1}}, num2: {{num2}}", map[string]interface{}{"num1": 42, "num2": 0}, "num1: 42, num2: 0"},
