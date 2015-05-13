@@ -301,6 +301,7 @@ func (v *EvalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 	v.at(node)
 
+	// write content as is
 	if _, err := v.wr.Write([]byte(node.Value)); err != nil {
 		v.errPanic(err)
 	}
@@ -311,6 +312,7 @@ func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 	v.at(node)
 
+	// ignore comments
 	return ""
 }
 
@@ -333,6 +335,7 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 			return val
 		}
 
+		// erroneous field path
 		return nil
 	}
 
@@ -342,9 +345,11 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 			return val.Interface()
 		}
 
+		// erroneous literal
 		return nil
 	}
 
+	// wat
 	return nil
 }
 

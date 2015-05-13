@@ -24,7 +24,7 @@ var helpers map[string]Helper
 func init() {
 	helpers = make(map[string]Helper)
 
-	// register default helpers
+	// register global helpers
 	RegisterHelper("if", ifHelper)
 	RegisterHelper("unless", unlessHelper)
 }
