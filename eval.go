@@ -117,11 +117,10 @@ func (v *EvalVisitor) strValue(value reflect.Value) string {
 			result += val.Index(i).String()
 		}
 	case reflect.Bool:
-		s := "false"
+		result = "false"
 		if val.Bool() {
-			s = "true"
+			result = "true"
 		}
-		result = fmt.Sprintf("%s", s)
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		result = fmt.Sprintf("%d", ival)
 	case reflect.Float32, reflect.Float64:
