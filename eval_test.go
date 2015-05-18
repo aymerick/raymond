@@ -203,9 +203,18 @@ var evalTests = []evalTest{
 		map[string]string{"awesome": "&'\\<>"},
 		"&'\\<>",
 	},
-
-	// {"escaping expressions (8)", "{{awesome}}", map[string]string{"awesome": "&\"'`\\<>"}, "&amp;&quot;&#x27;&#x60;\\&lt;&gt;"},
-	// {"escaping expressions (9)", "{{awesome}}", map[string]string{"awesome": "Escaped, <b> looks like: &lt;b&gt;"}, "Escaped, &lt;b&gt; looks like: &amp;lt;b&amp;gt;"},
+	{
+		"escaping expressions (8)",
+		"{{awesome}}",
+		map[string]string{"awesome": "&\"'`\\<>"},
+		"&amp;&#34;&#39;`\\&lt;&gt;",
+	},
+	{
+		"escaping expressions (9)",
+		"{{awesome}}",
+		map[string]string{"awesome": "Escaped, <b> looks like: &lt;b&gt;"},
+		"Escaped, &lt;b&gt; looks like: &amp;lt;b&amp;gt;",
+	},
 
 	// @todo "functions returning safestrings shouldn't be escaped"
 	// @todo "functions"

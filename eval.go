@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"fmt"
+	"html"
 	"io"
 	"reflect"
 
@@ -259,6 +260,10 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	val := reflect.ValueOf(node.Expression.Accept(v))
 
 	str := v.strValue(val)
+	if !node.Unescaped {
+		// escape html
+		str = html.EscapeString(str)
+	}
 
 	// write result
 	if _, err := v.wr.Write([]byte(str)); err != nil {

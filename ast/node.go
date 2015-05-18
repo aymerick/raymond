@@ -132,13 +132,15 @@ type MustacheStatement struct {
 	NodeType
 	Loc
 
+	Unescaped  bool
 	Expression *Expression
 }
 
-func NewMustacheStatement(pos int, line int) *MustacheStatement {
+func NewMustacheStatement(pos int, line int, unescaped bool) *MustacheStatement {
 	return &MustacheStatement{
-		NodeType: NodeMustache,
-		Loc:      Loc{pos, line},
+		NodeType:  NodeMustache,
+		Loc:       Loc{pos, line},
+		Unescaped: unescaped,
 	}
 }
 

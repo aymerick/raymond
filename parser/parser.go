@@ -32,6 +32,7 @@ type Parser struct {
 var (
 	rOpenComment  = regexp.MustCompile(`^\{\{~?!-?-?`)
 	rCloseComment = regexp.MustCompile(`-?-?~?\}\}$`)
+	rOpenAmp      = regexp.MustCompile(`^\{\{~?&`)
 )
 
 // instanciate a new parser
@@ -427,7 +428,12 @@ func (p *Parser) parseMustache() *ast.MustacheStatement {
 		closeToken = lexer.TokenCloseUnescaped
 	}
 
-	result := ast.NewMustacheStatement(tok.Pos, tok.Line)
+	unescaped := false
+	if (tok.Kind == lexer.TokenOpenUnescaped) || (rOpenAmp.MatchString(tok.Val)) {
+		unescaped = true
+	}
+
+	result := ast.NewMustacheStatement(tok.Pos, tok.Line, unescaped)
 
 	// helperName param* hash?
 	result.Expression = p.parseExpression(tok)
