@@ -283,8 +283,23 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.pushCtx(val)
 
 	truth, _ := IsTruth(val)
-	if truth && (node.Program != nil) {
-		node.Program.Accept(v)
+	if truth {
+		if node.Program != nil {
+			switch val.Kind() {
+			case reflect.Array, reflect.Slice:
+				// Array context
+				for i := 0; i < val.Len(); i++ {
+					v.pushCtx(val.Index(i))
+
+					node.Program.Accept(v)
+
+					v.popCtx()
+				}
+			default:
+				// NOT array
+				node.Program.Accept(v)
+			}
+		}
 	} else if node.Inverse != nil {
 		node.Inverse.Accept(v)
 	}

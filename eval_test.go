@@ -6,17 +6,24 @@ import (
 	"testing"
 )
 
+func barSuffixHelper(p *HelperParams) string {
+	str, _ := p.At(0).(string)
+	return "bar " + str
+}
+
 type evalTest struct {
-	name   string
-	input  string
-	data   interface{}
-	output string
+	name    string
+	input   string
+	data    interface{}
+	helpers map[string]Helper
+	output  string
 }
 
 var evalTests = []evalTest{
 	{
 		"only content",
 		"this is content",
+		nil,
 		nil,
 		"this is content",
 	},
@@ -31,58 +38,70 @@ var evalTests = []evalTest{
 		"most basic",
 		"{{foo}}",
 		map[string]string{"foo": "foo"},
+		nil,
 		"foo",
 	},
 	{
 		"escaping (1)",
 		"\\{{foo}}",
 		map[string]string{"foo": "food"},
+		nil,
 		"{{foo}}",
 	},
 	{
 		"escaping (2)",
 		"content \\{{foo}}",
 		map[string]string{},
+		nil,
 		"content {{foo}}",
 	},
 	{
 		"escaping (3)",
 		"\\\\{{foo}}",
 		map[string]string{"foo": "food"},
+		nil,
 		"\\food",
 	},
 	{
 		"escaping (4)",
 		"content \\\\{{foo}}",
 		map[string]string{"foo": "food"},
+		nil,
 		"content \\food",
 	},
 	{
 		"escaping (5)",
 		"\\\\ {{foo}}",
 		map[string]string{"foo": "food"},
+		nil,
 		"\\\\ food",
 	},
 	{
 		"compiling with a basic context",
 		"Goodbye\n{{cruel}}\n{{world}}!",
 		map[string]string{"cruel": "cruel", "world": "world"},
+		nil,
 		"Goodbye\ncruel\nworld!",
 	},
 	{
 		"compiling with an undefined context (1)",
 		"Goodbye\n{{cruel}}\n{{world.bar}}!",
-		nil, "Goodbye\n\n!",
+		nil,
+		nil,
+		"Goodbye\n\n!",
 	},
 	{
 		"compiling with an undefined context (2)",
 		"{{#unless foo}}Goodbye{{../test}}{{test2}}{{/unless}}",
-		nil, "Goodbye",
+		nil,
+		nil,
+		"Goodbye",
 	},
 	{
 		"comments (1)",
 		"{{! Goodbye}}Goodbye\n{{cruel}}\n{{world}}!",
 		map[string]string{"cruel": "cruel", "world": "world"},
+		nil,
 		"Goodbye\ncruel\nworld!",
 	},
 	// {"comments (2)", "    {{~! comment ~}}      blah", nil, "blah"},
@@ -95,64 +114,76 @@ var evalTests = []evalTest{
 		"boolean (1)",
 		"{{#goodbye}}GOODBYE {{/goodbye}}cruel {{world}}!",
 		map[string]interface{}{"goodbye": true, "world": "world"},
+		nil,
 		"GOODBYE cruel world!",
 	},
 	{
 		"boolean (2)",
 		"{{#goodbye}}GOODBYE {{/goodbye}}cruel {{world}}!",
 		map[string]interface{}{"goodbye": false, "world": "world"},
+		nil,
 		"cruel world!",
 	},
 	{
 		"zeros (1)",
 		"num1: {{num1}}, num2: {{num2}}",
 		map[string]interface{}{"num1": 42, "num2": 0},
+		nil,
 		"num1: 42, num2: 0",
 	},
 	{
 		"zeros (2)",
 		"num: {{.}}",
 		0,
+		nil,
 		"num: 0",
 	},
 	{
 		"zeros (3)",
 		"num: {{num1/num2}}",
 		map[string]map[string]interface{}{"num1": {"num2": 0}},
+		nil,
 		"num: 0",
 	},
 	{
 		"false (1)",
 		"val1: {{val1}}, val2: {{val2}}",
 		map[string]interface{}{"val1": false, "val2": false},
+		nil,
 		"val1: false, val2: false",
 	},
 	{
 		"false (2)",
 		"val: {{.}}",
-		false, "val: false",
+		false,
+		nil,
+		"val: false",
 	},
 	{
 		"false (3)",
 		"val: {{val1/val2}}",
 		map[string]map[string]interface{}{"val1": {"val2": false}},
+		nil,
 		"val: false",
 	},
 	{
 		"false (4)",
 		"val1: {{{val1}}}, val2: {{{val2}}}",
 		map[string]interface{}{"val1": false, "val2": false},
+		nil,
 		"val1: false, val2: false",
 	},
 	{
 		"false (5)",
 		"val: {{{val1/val2}}}",
 		map[string]map[string]interface{}{"val1": {"val2": false}},
+		nil,
 		"val: false",
 	},
 	{
 		"newlines (1)",
 		"Alan's\nTest",
+		nil,
 		nil,
 		"Alan's\nTest",
 	},
@@ -160,60 +191,70 @@ var evalTests = []evalTest{
 		"newlines (2)",
 		"Alan's\rTest",
 		nil,
+		nil,
 		"Alan's\rTest",
 	},
 	{
 		"escaping text (1)",
 		"Awesome's",
 		map[string]string{},
+		nil,
 		"Awesome's",
 	},
 	{
 		"escaping text (2)",
 		"Awesome\\",
 		map[string]string{},
+		nil,
 		"Awesome\\",
 	},
 	{
 		"escaping text (3)",
 		"Awesome\\\\ foo",
 		map[string]string{},
+		nil,
 		"Awesome\\\\ foo",
 	},
 	{
 		"escaping text (4)",
 		"Awesome {{foo}}",
 		map[string]string{"foo": "\\"},
+		nil,
 		"Awesome \\",
 	},
 	{
 		"escaping text (5)",
 		" ' ' ",
 		map[string]string{},
+		nil,
 		" ' ' ",
 	},
 	{
 		"escaping expressions (6)",
 		"{{{awesome}}}",
 		map[string]string{"awesome": "&'\\<>"},
+		nil,
 		"&'\\<>",
 	},
 	{
 		"escaping expressions (7)",
 		"{{&awesome}}",
 		map[string]string{"awesome": "&'\\<>"},
+		nil,
 		"&'\\<>",
 	},
 	{
 		"escaping expressions (8)",
 		"{{awesome}}",
 		map[string]string{"awesome": "&\"'`\\<>"},
+		nil,
 		"&amp;&#34;&#39;`\\&lt;&gt;",
 	},
 	{
 		"escaping expressions (9)",
 		"{{awesome}}",
 		map[string]string{"awesome": "Escaped, <b> looks like: &lt;b&gt;"},
+		nil,
 		"Escaped, &lt;b&gt; looks like: &amp;lt;b&amp;gt;",
 	},
 
@@ -231,48 +272,56 @@ var evalTests = []evalTest{
 		"paths with hyphens (1)",
 		"{{foo-bar}}",
 		map[string]string{"foo-bar": "baz"},
+		nil,
 		"baz",
 	},
 	{
 		"paths with hyphens (2)",
 		"{{foo.foo-bar}}",
 		map[string]map[string]string{"foo": {"foo-bar": "baz"}},
+		nil,
 		"baz",
 	},
 	{
 		"paths with hyphens (3)",
 		"{{foo/foo-bar}}",
 		map[string]map[string]string{"foo": {"foo-bar": "baz"}},
+		nil,
 		"baz",
 	},
 	{
 		"nested paths",
 		"Goodbye {{alan/expression}} world!",
 		map[string]map[string]string{"alan": {"expression": "beautiful"}},
+		nil,
 		"Goodbye beautiful world!",
 	},
 	{
 		"nested paths with empty string value",
 		"Goodbye {{alan/expression}} world!",
 		map[string]map[string]string{"alan": {"expression": ""}},
+		nil,
 		"Goodbye  world!",
 	},
 	{
 		"literal paths (1)",
 		"Goodbye {{[@alan]/expression}} world!",
 		map[string]map[string]string{"@alan": {"expression": "beautiful"}},
+		nil,
 		"Goodbye beautiful world!",
 	},
 	{
 		"literal paths (2)",
 		"Goodbye {{[foo bar]/expression}} world!",
 		map[string]map[string]string{"foo bar": {"expression": "beautiful"}},
+		nil,
 		"Goodbye beautiful world!",
 	},
 	{
 		"literal references",
 		"Goodbye {{[foo bar]}} world!",
 		map[string]string{"foo bar": "beautiful"},
+		nil,
 		"Goodbye beautiful world!",
 	},
 
@@ -282,18 +331,21 @@ var evalTests = []evalTest{
 		"complex but empty paths (1)",
 		"{{person/name}}",
 		map[string]map[string]interface{}{"person": {"name": nil}},
+		nil,
 		"",
 	},
 	{
 		"complex but empty paths (2)",
 		"{{person/name}}",
 		map[string]map[string]string{"person": {}},
+		nil,
 		"",
 	},
 	{
 		"this keyword in paths (1)",
 		"{{#goodbyes}}{{this}}{{/goodbyes}}",
 		map[string]interface{}{"goodbyes": []string{"goodbye", "Goodbye", "GOODBYE"}},
+		nil,
 		"goodbyeGoodbyeGOODBYE",
 	},
 	{
@@ -304,16 +356,40 @@ var evalTests = []evalTest{
 			map[string]string{"text": "Hello"},
 			map[string]string{"text": "HELLO"},
 		}},
+		nil,
 		"helloHelloHELLO",
 	},
 
 	// @todo "{{#hellos}}{{text/this/foo}}{{/hellos}}" should throw error 'Invalid path: text/this'
 
-	// {"this keyword nested inside path' (1)", "{{[this]}}", map[string]string{"this": "bar"}, "bar"},
-	// {"this keyword nested inside path' (2)", "{{text/[this]}}", map[string]map[string]string{"text": {"this": "bar"}}, "bar"},
-
-	// @todo {"this keyword in helpers (1)", "{{#goodbyes}}{{foo this}}{{/goodbyes}}", ..., "bar goodbyebar Goodbyebar GOODBYE"},
-	// @todo {"this keyword in helpers (2)", "{{#hellos}}{{foo this/text}}{{/hellos}}", ..., "bar hellobar Hellobar HELLO', 'This keyword evaluates in more complex paths"},
+	{
+		"this keyword nested inside path' (1)",
+		"{{[this]}}",
+		map[string]string{"this": "bar"},
+		nil,
+		"bar",
+	},
+	{
+		"this keyword nested inside path' (2)",
+		"{{text/[this]}}",
+		map[string]map[string]string{"text": {"this": "bar"}},
+		nil,
+		"bar",
+	},
+	{
+		"this keyword in helpers (1)",
+		"{{#goodbyes}}{{foo this}}{{/goodbyes}}",
+		map[string]interface{}{"goodbyes": []string{"goodbye", "Goodbye", "GOODBYE"}},
+		map[string]Helper{"foo": barSuffixHelper},
+		"bar goodbyebar Goodbyebar GOODBYE",
+	},
+	{
+		"this keyword in helpers (2)",
+		"{{#hellos}}{{foo this/text}}{{/hellos}}",
+		map[string]interface{}{"hellos": []map[string]string{{"text": "hello"}, {"text": "Hello"}, {"text": "HELLO"}}},
+		map[string]Helper{"foo": barSuffixHelper},
+		"bar hellobar Hellobar HELLO",
+	},
 
 	// @todo "this keyword nested inside helpers param"
 
@@ -321,42 +397,49 @@ var evalTests = []evalTest{
 		"pass string literals (1)",
 		`{{"foo"}}`,
 		map[string]string{},
+		nil,
 		"",
 	},
 	{
 		"pass string literals (2)",
 		`{{"foo"}}`,
 		map[string]string{"foo": "bar"},
+		nil,
 		"bar",
 	},
 	{
 		"pass string literals (3)",
 		`{{#"foo"}}{{.}}{{/"foo"}}`,
 		map[string]interface{}{"foo": []string{"bar", "baz"}},
+		nil,
 		"barbaz",
 	},
 	{
 		"pass number literals (1)",
 		"{{12}}",
 		map[string]string{},
+		nil,
 		"",
 	},
 	{
 		"pass number literals (2)",
 		"{{12}}",
 		map[string]string{"12": "bar"},
+		nil,
 		"bar",
 	},
 	{
 		"pass number literals (3)",
 		"{{12.34}}",
 		map[string]string{},
+		nil,
 		"",
 	},
 	{
 		"pass number literals (4)",
 		"{{12.34}}",
 		map[string]string{"12.34": "bar"},
+		nil,
 		"bar",
 	},
 
@@ -366,18 +449,21 @@ var evalTests = []evalTest{
 		"pass boolean literals (1)",
 		"{{true}}",
 		map[string]string{},
+		nil,
 		"",
 	},
 	{
 		"pass boolean literals (2)",
 		"{{true}}",
 		map[string]string{"": "foo"},
+		nil,
 		"",
 	},
 	{
 		"pass boolean literals (3)",
 		"{{false}}",
 		map[string]string{"false": "foo"},
+		nil,
 		"foo",
 	},
 
@@ -411,6 +497,11 @@ func TestEval(t *testing.T) {
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {
+			if len(test.helpers) > 0 {
+				// register helpers
+				tpl.RegisterHelpers(test.helpers)
+			}
+
 			// render template
 			err = tpl.Exec(buf, test.data)
 			if err != nil {
