@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 )
 
@@ -289,9 +290,22 @@ var evalTests = []evalTest{
 		map[string]map[string]string{"person": {}},
 		"",
 	},
-
-	// {"this keyword in paths (1)", "{{#goodbyes}}{{this}}{{/goodbyes}}", map[string]interface{}{"goodbyes": []string{"goodbye", "Goodbye", "GOODBYE"}}, "goodbyeGoodbyeGOODBYE"},
-	// {"this keyword in paths (2)", "{{#hellos}}{{this/text}}{{/hellos}}", map[string]interface{}{"hellos": []interface{}{map[string]string{"text": "hello"}, map[string]string{"text": "Hello"}, map[string]string{"text": "HELLO"}}}, "helloHelloHELLO"},
+	{
+		"this keyword in paths (1)",
+		"{{#goodbyes}}{{this}}{{/goodbyes}}",
+		map[string]interface{}{"goodbyes": []string{"goodbye", "Goodbye", "GOODBYE"}},
+		"goodbyeGoodbyeGOODBYE",
+	},
+	{
+		"this keyword in paths (2)",
+		"{{#hellos}}{{this/text}}{{/hellos}}",
+		map[string]interface{}{"hellos": []interface{}{
+			map[string]string{"text": "hello"},
+			map[string]string{"text": "Hello"},
+			map[string]string{"text": "HELLO"},
+		}},
+		"helloHelloHELLO",
+	},
 
 	// @todo "{{#hellos}}{{text/this/foo}}{{/hellos}}" should throw error 'Invalid path: text/this'
 
@@ -408,6 +422,32 @@ func TestEval(t *testing.T) {
 					t.Errorf("Test '%s' failed\ninput:\n\t'%s'\nexpected\n\t%q\ngot\n\t%q\nAST:\n\t%s", test.name, test.input, test.output, output, tpl.PrintAST())
 				}
 			}
+		}
+	}
+}
+
+type strTest struct {
+	name   string
+	input  interface{}
+	output string
+}
+
+var strTests = []strTest{
+	{"String", "foo", "foo"},
+	{"Boolean true", true, "true"},
+	{"Boolean false", false, "false"},
+	{"Integer", 25, "25"},
+	{"Float", 25.75, "25.75"},
+	{"Nil", nil, ""},
+	{"[]string", []string{"foo", "bar"}, "foobar"},
+	{"[]interface{} (strings)", []interface{}{"foo", "bar"}, "foobar"},
+	{"[]Boolean", []bool{true, false}, "truefalse"},
+}
+
+func TestStrValue(t *testing.T) {
+	for _, test := range strTests {
+		if res := strValue(reflect.ValueOf(test.input)); res != test.output {
+			t.Errorf("Failed to stringify: %s\nexpected:\n\t'%s'got:\n\t%q", test.name, test.output, res)
 		}
 	}
 }

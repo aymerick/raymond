@@ -5,6 +5,7 @@ import (
 	"html"
 	"io"
 	"reflect"
+	"strconv"
 
 	"github.com/aymerick/raymond/ast"
 )
@@ -73,6 +74,7 @@ func (v *EvalVisitor) at(node ast.Node) {
 func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Value {
 	result := zero
 
+	ctx, _ = indirect(ctx)
 	if !ctx.IsValid() {
 		return result
 	}
@@ -102,12 +104,12 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Val
 	return result
 }
 
-func (v *EvalVisitor) strValue(value reflect.Value) string {
+func strValue(value reflect.Value) string {
 	result := ""
 
 	ival, ok := printableValue(value)
 	if !ok {
-		v.errorf("Can't print value")
+		panic("Can't print value")
 	}
 
 	val := reflect.ValueOf(ival)
@@ -115,7 +117,7 @@ func (v *EvalVisitor) strValue(value reflect.Value) string {
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
-			result += val.Index(i).String()
+			result += strValue(val.Index(i))
 		}
 	case reflect.Bool:
 		result = "false"
@@ -125,14 +127,12 @@ func (v *EvalVisitor) strValue(value reflect.Value) string {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		result = fmt.Sprintf("%d", ival)
 	case reflect.Float32, reflect.Float64:
-		result = fmt.Sprintf("%f", ival)
+		result = strconv.FormatFloat(val.Float(), 'f', -1, 64)
 	case reflect.Invalid:
 		result = ""
 	default:
 		result = fmt.Sprintf("%s", ival)
 	}
-
-	// log.Printf("strValue(%q) => %s", ival, result)
 
 	return result
 }
@@ -259,7 +259,7 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	// evaluate expression
 	val := reflect.ValueOf(node.Expression.Accept(v))
 
-	str := v.strValue(val)
+	str := strValue(val)
 	if !node.Unescaped {
 		// escape html
 		str = html.EscapeString(str)
@@ -367,10 +367,38 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	v.at(node)
 
+	var value reflect.Value
+
 	ctx := v.curCtx()
 
-	for i := 0; i < len(node.Parts); i++ {
-		part := node.Parts[i]
+	// Array context
+	switch ctx.Kind() {
+	case reflect.Array, reflect.Slice:
+		var result []interface{}
+
+		for i := 0; i < ctx.Len(); i++ {
+			value = v.evalPathParts(ctx.Index(i), node.Parts)
+			if value.IsValid() {
+				result = append(result, value.Interface())
+			}
+			// else raise ?
+		}
+
+		return result
+	}
+
+	// NOT array context
+	value = v.evalPathParts(ctx, node.Parts)
+	if !value.IsValid() {
+		return nil
+	}
+
+	return value.Interface()
+}
+
+func (v *EvalVisitor) evalPathParts(ctx reflect.Value, parts []string) reflect.Value {
+	for i := 0; i < len(parts); i++ {
+		part := parts[i]
 
 		// "[foo bar]"" => "foo bar"
 		if (len(part) >= 2) && (part[0] == '[') && (part[len(part)-1] == ']') {
@@ -383,11 +411,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 		}
 	}
 
-	if !ctx.IsValid() {
-		return nil
-	}
-
-	return ctx.Interface()
+	return ctx
 }
 
 // Literals
