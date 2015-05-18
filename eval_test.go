@@ -391,8 +391,22 @@ var evalTests = []evalTest{
 		"bar hellobar Hellobar HELLO",
 	},
 
-	// @todo "this keyword nested inside helpers param"
+	// @todo "{{#hellos}}{{foo text/this/foo}}{{/hellos}}" should throw error 'Invalid path: text/this'
 
+	{
+		"this keyword nested inside helpers param (1)",
+		"{{foo [this]}}",
+		map[string]interface{}{"this": "bar"},
+		map[string]Helper{"foo": echoHelper},
+		"bar",
+	},
+	{
+		"this keyword nested inside helpers param (2)",
+		"{{foo text/[this]}}",
+		map[string]map[string]string{"text": {"this": "bar"}},
+		map[string]Helper{"foo": echoHelper},
+		"bar",
+	},
 	{
 		"pass string literals (1)",
 		`{{"foo"}}`,
