@@ -370,7 +370,14 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	ctx := v.curCtx()
 
 	for i := 0; i < len(node.Parts); i++ {
-		ctx = v.evalField(ctx, node.Parts[i])
+		part := node.Parts[i]
+
+		// "[foo bar]"" => "foo bar"
+		if (len(part) >= 2) && (part[0] == '[') && (part[len(part)-1] == ']') {
+			part = part[1 : len(part)-1]
+		}
+
+		ctx = v.evalField(ctx, part)
 		if !ctx.IsValid() {
 			break
 		}

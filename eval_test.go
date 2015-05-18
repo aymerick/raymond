@@ -256,10 +256,24 @@ var evalTests = []evalTest{
 		map[string]map[string]string{"alan": {"expression": ""}},
 		"Goodbye  world!",
 	},
-
-	// {"literal paths (1)", "Goodbye {{[@alan]/expression}} world!", map[string]map[string]string{"@alan": {"expression": "beautiful"}}, "Goodbye beautiful world!', 'Literal paths can be used"},
-	// {"literal paths (2)", "Goodbye {{[foo bar]/expression}} world!", map[string]string{"expression": "beautiful"}, "Goodbye beautiful world!', 'Literal paths can be used"},
-	// {"literal references", "Goodbye {{[foo bar]}} world!", map[string]string{"foo bar": "beautiful"}, "Goodbye beautiful world!"},
+	{
+		"literal paths (1)",
+		"Goodbye {{[@alan]/expression}} world!",
+		map[string]map[string]string{"@alan": {"expression": "beautiful"}},
+		"Goodbye beautiful world!",
+	},
+	{
+		"literal paths (2)",
+		"Goodbye {{[foo bar]/expression}} world!",
+		map[string]map[string]string{"foo bar": {"expression": "beautiful"}},
+		"Goodbye beautiful world!",
+	},
+	{
+		"literal references",
+		"Goodbye {{[foo bar]}} world!",
+		map[string]string{"foo bar": "beautiful"},
+		"Goodbye beautiful world!",
+	},
 
 	// @todo "that current context path ({{.}}) doesn't hit helpers"
 
@@ -331,7 +345,9 @@ var evalTests = []evalTest{
 		map[string]string{"12.34": "bar"},
 		"bar",
 	},
+
 	// @todo {"pass number literals (5)", "{{12.34 1}}", ...function..., "bar1"},
+
 	{
 		"pass boolean literals (1)",
 		"{{true}}",
@@ -350,6 +366,7 @@ var evalTests = []evalTest{
 		map[string]string{"false": "foo"},
 		"foo",
 	},
+
 	// @todo "should handle literals in subexpression"
 
 	//
