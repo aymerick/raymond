@@ -124,15 +124,86 @@ var hbBlocksTests = []raymondTest{
 		"No people",
 	},
 
-	// @todo Add remaining tests !
+	// @todo "{{#people}}{{name}}{{else if none}}{{none}}{{/if}}" should throw error
 
+	{
+		"block inverted sections with empty arrays",
+		"{{#people}}{{name}}{{^}}{{none}}{{/people}}",
+		map[string]interface{}{"none": "No people", "people": map[string]interface{}{}},
+		nil,
+		"No people",
+	},
+	// @todo Check the \n issue with original handebars.js test
+	{
+		"block standalone else sections (1)",
+		"{{#people}}{{name}}{{^}}{{none}}{{/people}}",
+		map[string]interface{}{"none": "No people"},
+		nil,
+		"No people",
+	},
+	// @todo Check the \n issue with original handebars.js test
+	{
+		"block standalone else sections (2)",
+		"{{#none}}{{.}}{{^}}{{none}}{{/none}}",
+		map[string]interface{}{"none": "No people"},
+		nil,
+		"No people",
+	},
+	// @todo Check the \n issue with original handebars.js test
+	{
+		"block standalone else sections (3)",
+		"{{#people}}{{name}}{{^}}{{none}}{{/people}}",
+		map[string]interface{}{"none": "No people"},
+		nil,
+		"No people",
+	},
+	// @todo Check the \n issue with original handebars.js test
+	{
+		"block standalone chained else sections (1)",
+		"{{#people}}{{name}}{{else if none}}{{none}}{{/people}}",
+		map[string]interface{}{"none": "No people"},
+		nil,
+		"No people",
+	},
+	// @todo Check the \n issue with original handebars.js test
+	{
+		"block standalone chained else sections (2)",
+		"{{#people}}{{name}}{{else if none}}{{none}}{{^}}{{/people}}",
+		map[string]interface{}{"none": "No people"},
+		nil,
+		"No people",
+	},
+	// @todo Check the \n issue with original handebars.js test
+	{
+		"should handle nesting",
+		"{{#data}}{{#if true}}{{.}}{{/if}}{{/data}}OK.",
+		map[string]interface{}{"data": []int{1, 3, 5}},
+		nil,
+		"135OK.",
+	},
+	// // @todo compat mode
 	// {
-	//     "",
-	//     "",
-	//     map[string]interface{}{"": ""},
-	//     nil,
-	//     "",
+	// 	"block with deep recursive lookup lookup",
+	// 	"{{#outer}}Goodbye {{#inner}}cruel {{omg}}{{/inner}}{{/outer}}",
+	// 	map[string]interface{}{"omg": "OMG!", "outer": []map[string]interface{}{{"inner": []map[string]string{{"text": "goodbye"}}}}},
+	// 	nil,
+	// 	"Goodbye cruel OMG!",
 	// },
+	// // @todo compat mode
+	// {
+	// 	"block with deep recursive pathed lookup",
+	// 	"{{#outer}}Goodbye {{#inner}}cruel {{omg.yes}}{{/inner}}{{/outer}}",
+	// 	map[string]interface{}{"omg": map[string]string{"yes": "OMG!"}, "outer": []map[string]interface{}{{"inner": []map[string]string{{"yes": "no", "text": "goodbye"}}}}},
+	// 	nil,
+	// 	"Goodbye cruel OMG!",
+	// },
+	{
+		"block with missed recursive lookup",
+		"{{#outer}}Goodbye {{#inner}}cruel {{omg.yes}}{{/inner}}{{/outer}}",
+		map[string]interface{}{"omg": map[string]string{"no": "OMG!"}, "outer": []map[string]interface{}{{"inner": []map[string]string{{"yes": "no", "text": "goodbye"}}}}},
+		nil,
+		"Goodbye cruel ",
+	},
 }
 
 func TestHandlebarsBlocks(t *testing.T) {
