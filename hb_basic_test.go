@@ -3,6 +3,20 @@ package raymond
 import "testing"
 
 //
+// @todo Adds tests from:
+//   https://github.com/wycats/handlebars.js/blob/master/spec/builtin.js
+//   https://github.com/wycats/handlebars.js/blob/master/spec/data.js
+//   https://github.com/wycats/handlebars.js/blob/master/spec/partials.js
+//   https://github.com/wycats/handlebars.js/blob/master/spec/regressions.js
+//   https://github.com/wycats/handlebars.js/blob/master/spec/strict.js
+//   https://github.com/wycats/handlebars.js/blob/master/spec/string-params.js
+//   https://github.com/wycats/handlebars.js/blob/master/spec/subexpression.js
+//   https://github.com/wycats/handlebars.js/blob/master/spec/whitespace-control.js
+//
+//   https://github.com/wycats/handlebars.js/blob/master/spec/mustache/
+//
+
+//
 // Those tests come from:
 //   https://github.com/wycats/handlebars.js/blob/master/spec/basic.js
 //
@@ -462,20 +476,6 @@ var hbBasicTests = []raymondTest{
 	//  ...,
 	//  "bar",
 	// },
-
-	//
-	// @todo Adds tests from:
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/builtin.js
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/data.js
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/partials.js
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/regressions.js
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/strict.js
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/string-params.js
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/subexpression.js
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/whitespace-control.js
-	//
-	//   https://github.com/wycats/handlebars.js/blob/master/spec/mustache/
-	//
 }
 
 func TestHandlebarsBasic(t *testing.T) {
