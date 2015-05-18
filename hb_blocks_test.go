@@ -49,31 +49,30 @@ var hbBlocksTests = []raymondTest{
 		nil,
 		"cruel world!",
 	},
-	// {
-	// 	"block with complex lookup - Templates can access variables in contexts up the stack with relative path syntax",
-	// 	"{{#goodbyes}}{{text}} cruel {{../name}}! {{/goodbyes}}",
-	// 	map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "name": "Alan"},
-	// 	nil,
-	// 	"goodbye cruel Alan! Goodbye cruel Alan! GOODBYE cruel Alan! ",
-	// },
-	// {
-	// 	"multiple blocks with complex lookup",
-	// 	"{{#goodbyes}}{{../name}}{{../name}}{{/goodbyes}}",
-	// 	map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "name": "Alan"},
-	// 	nil,
-	// 	"AlanAlanAlanAlanAlanAlan",
-	// },
+	{
+		"block with complex lookup - Templates can access variables in contexts up the stack with relative path syntax",
+		"{{#goodbyes}}{{text}} cruel {{../name}}! {{/goodbyes}}",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "name": "Alan"},
+		nil,
+		"goodbye cruel Alan! Goodbye cruel Alan! GOODBYE cruel Alan! ",
+	},
+	{
+		"multiple blocks with complex lookup",
+		"{{#goodbyes}}{{../name}}{{../name}}{{/goodbyes}}",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "name": "Alan"},
+		nil,
+		"AlanAlanAlanAlanAlanAlan",
+	},
 
 	// @todo "{{#goodbyes}}{{text}} cruel {{foo/../name}}! {{/goodbyes}}" should throw error
 
-	// {
-	// 	"block with deep nested complex lookup",
-	// 	"{{#outer}}Goodbye {{#inner}}cruel {{../sibling}} {{../../omg}}{{/inner}}{{/outer}}",
-	// 	map[string]interface{}{"omg": "OMG!", "outer": []map[string]interface{}{{"sibling": "sad", "inner": []map[string]string{{"text": "goodbye"}}}}},
-	// 	nil,
-	// 	"Goodbye cruel sad OMG!",
-	// },
-
+	{
+		"block with deep nested complex lookup",
+		"{{#outer}}Goodbye {{#inner}}cruel {{../sibling}} {{../../omg}}{{/inner}}{{/outer}}",
+		map[string]interface{}{"omg": "OMG!", "outer": []map[string]interface{}{{"sibling": "sad", "inner": []map[string]string{{"text": "goodbye"}}}}},
+		nil,
+		"Goodbye cruel sad OMG!",
+	},
 	{
 		"inverted sections with unset value - Inverted section rendered when value isn't set.",
 		"{{#goodbyes}}{{this}}{{/goodbyes}}{{^goodbyes}}Right On!{{/goodbyes}}",

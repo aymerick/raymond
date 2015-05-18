@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 )
 
@@ -62,12 +63,12 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 			// render template
 			err = tpl.Exec(buf, test.data)
 			if err != nil {
-				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, err, tpl.PrintAST())
+				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, strValue(reflect.ValueOf(test.data)), err, tpl.PrintAST())
 			} else {
 				// check output
 				output := buf.String()
 				if test.output != output {
-					t.Errorf("Test '%s' failed\ninput:\n\t'%s'\nexpected\n\t%q\ngot\n\t%q\nAST:\n\t%s", test.name, test.input, test.output, output, tpl.PrintAST())
+					t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n\t%s", test.name, test.input, strValue(reflect.ValueOf(test.data)), test.output, output, tpl.PrintAST())
 				}
 			}
 		}

@@ -690,9 +690,11 @@ func (p *Parser) parsePath(data bool) *ast.PathExpression {
 
 		result.Part(tok.Val)
 
-		switch tok.Val {
-		case "..", ".", "this":
-			errToken(tok, "Invalid path: "+result.Original)
+		if len(result.Parts) > 0 {
+			switch tok.Val {
+			case "..", ".", "this":
+				errToken(tok, "Invalid path: "+result.Original)
+			}
 		}
 	}
 

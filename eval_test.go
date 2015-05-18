@@ -20,6 +20,8 @@ func TestEval(t *testing.T) {
 	launchRaymondTests(t, evalTests)
 }
 
+// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
+
 //
 // strValue() tests
 //

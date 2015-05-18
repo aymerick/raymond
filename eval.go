@@ -52,6 +52,10 @@ func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
 }
 
 func (v *EvalVisitor) popCtx() reflect.Value {
+	if len(v.ctx) == 0 {
+		return zero
+	}
+
 	var result reflect.Value
 
 	result, v.ctx = v.ctx[len(v.ctx)-1], v.ctx[:len(v.ctx)-1]
@@ -64,6 +68,10 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 }
 
 func (v *EvalVisitor) curCtx() reflect.Value {
+	if len(v.ctx) == 0 {
+		return zero
+	}
+
 	return v.ctx[len(v.ctx)-1]
 }
 
@@ -72,13 +80,20 @@ func (v *EvalVisitor) pushBlock(block *ast.BlockStatement) {
 }
 
 func (v *EvalVisitor) popBlock() *ast.BlockStatement {
-	var result *ast.BlockStatement
+	if len(v.blocks) == 0 {
+		return nil
+	}
 
+	var result *ast.BlockStatement
 	result, v.blocks = v.blocks[len(v.blocks)-1], v.blocks[:len(v.blocks)-1]
 	return result
 }
 
 func (v *EvalVisitor) curBlock() *ast.BlockStatement {
+	if len(v.blocks) == 0 {
+		return nil
+	}
+
 	return v.blocks[len(v.blocks)-1]
 }
 
@@ -326,8 +341,6 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	if !v.isHelperCall(node.Expression) {
 		truth, _ := IsTruth(val)
 		if truth {
-			v.pushCtx(val)
-
 			if node.Program != nil {
 				if VERBOSE_EVAL {
 					log.Printf("VisitBlock(): Truthy, visiting Program")
@@ -345,11 +358,13 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 					}
 				default:
 					// NOT array
+					v.pushCtx(val)
+
 					node.Program.Accept(v)
+
+					v.popCtx()
 				}
 			}
-
-			v.popCtx()
 		} else if node.Inverse != nil {
 			if VERBOSE_EVAL {
 				log.Printf("VisitBlock(): Falsy, visiting Inverse")
@@ -435,48 +450,60 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	v.at(node)
 
-	var value reflect.Value
+	var result interface{}
 
+	if node.Depth > len(v.ctx) {
+		// @todo Panics ?
+		return nil
+	}
+
+	// go back to parent context
+	var prevCtxList []reflect.Value
+	for i := node.Depth; i > 0; i-- {
+		prevCtxList = append(prevCtxList, v.popCtx())
+	}
+
+	// get current context
 	ctx := v.curCtx()
 
 	if VERBOSE_EVAL {
 		log.Printf("VisitPath(): %s with context '%s'", node.Original, strValue(ctx))
 	}
 
-	// Array context
 	switch ctx.Kind() {
 	case reflect.Array, reflect.Slice:
-		var result []interface{}
+		// Array context
+		var results []interface{}
 
 		for i := 0; i < ctx.Len(); i++ {
-			value = v.evalPathParts(ctx.Index(i), node.Parts)
+			value := v.evalPathParts(ctx.Index(i), node.Parts)
 			if value.IsValid() {
-				result = append(result, value.Interface())
+				results = append(results, value.Interface())
 			}
 			// else raise ?
 		}
 
-		if VERBOSE_EVAL {
-			log.Printf("VisitPath(): result => %s", strValue(reflect.ValueOf(result)))
+		result = results
+	default:
+		// NOT array context
+		value := v.evalPathParts(ctx, node.Parts)
+		if value.IsValid() {
+			result = value.Interface()
 		}
-
-		return result
 	}
 
-	// NOT array context
-	value = v.evalPathParts(ctx, node.Parts)
-	if !value.IsValid() {
-		if VERBOSE_EVAL {
-			log.Printf("VisitPath(): INVALID")
-		}
-		return nil
+	// set back contexts
+	for i := len(prevCtxList); i > 0; i-- {
+		var prev reflect.Value
+		prev, prevCtxList = prevCtxList[len(prevCtxList)-1], prevCtxList[:len(prevCtxList)-1]
+		v.pushCtx(prev)
 	}
 
 	if VERBOSE_EVAL {
-		log.Printf("VisitPath(): result => %s", strValue(value))
+		log.Printf("VisitPath(): result => %s", strValue(reflect.ValueOf(result)))
 	}
 
-	return value.Interface()
+	return result
 }
 
 func (v *EvalVisitor) evalPathParts(ctx reflect.Value, parts []string) reflect.Value {

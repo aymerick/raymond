@@ -142,10 +142,6 @@ var parserErrorTests = []parserTest{
 
 	{"a path must start with an ID", `{{#/}}content{{/foo}}`, "Expecting ID"},
 	{"a path must end with an ID", `{{foo/bar/}}`, "Expecting ID"},
-	{"raises on invalid path depth (1)", `{{foo/./bar}}`, "Invalid path: foo/."},
-	{"raises on invalid path depth (2)", `{{foo/../bar}}`, "Invalid path: foo/.."},
-	{"raises on invalid path depth (3)", `{{foo/this/bar}}`, "Invalid path: foo/this"},
-	{"raises on invalid path depth (4)", `{{../../bar}}`, "Invalid path: ../.."},
 
 	//
 	// Next tests come from:
