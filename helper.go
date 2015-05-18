@@ -77,15 +77,15 @@ func (p *HelperParams) TruthFirstParam() bool {
 
 // Evaluate block
 func (p *HelperParams) EvaluateBlock() {
-	if p.eval.curBlock != nil && p.eval.curBlock.Program != nil {
-		p.eval.curBlock.Program.Accept(p.eval)
+	if block := p.eval.curBlock(); (block != nil) && (block.Program != nil) {
+		block.Program.Accept(p.eval)
 	}
 }
 
 // Evaluate inverse
 func (p *HelperParams) EvaluateInverse() {
-	if p.eval.curBlock != nil && p.eval.curBlock.Inverse != nil {
-		p.eval.curBlock.Inverse.Accept(p.eval)
+	if block := p.eval.curBlock(); (block != nil) && (block.Inverse != nil) {
+		block.Inverse.Accept(p.eval)
 	}
 }
 
