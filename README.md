@@ -2,6 +2,8 @@
 
 Handlebars for golang
 
+**WARNING: This is a work in progress, some features are missing.**
+
 ## Test
 
     go test ./... -v
