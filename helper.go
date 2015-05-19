@@ -28,6 +28,7 @@ func init() {
 	RegisterHelper("if", ifHelper)
 	RegisterHelper("unless", unlessHelper)
 	RegisterHelper("with", withHelper)
+	RegisterHelper("each", eachHelper)
 }
 
 // Registers a new helper function
@@ -108,6 +109,15 @@ func (p *HelperParams) EvaluateInverse() {
 	}
 }
 
+// Evaluate block with given context
+func (p *HelperParams) EvaluateBlockWith(ctx interface{}) {
+	p.PushCtx(ctx)
+
+	p.EvaluateBlock()
+
+	p.PopCtx()
+}
+
 // Push context
 func (p *HelperParams) PushCtx(ctx interface{}) {
 	p.eval.PushCtx(reflect.ValueOf(ctx))
@@ -153,13 +163,35 @@ func unlessHelper(p *HelperParams) string {
 
 func withHelper(p *HelperParams) string {
 	if p.TruthFirstParam() {
-		p.PushCtx(p.At(0))
-
-		p.EvaluateBlock()
-
-		p.PopCtx()
+		p.EvaluateBlockWith(p.At(0))
 	} else {
 		p.EvaluateInverse()
+	}
+
+	// irrelevant
+	return ""
+}
+
+func eachHelper(p *HelperParams) string {
+	if !p.TruthFirstParam() {
+		p.EvaluateInverse()
+		return ""
+	}
+
+	val := reflect.ValueOf(p.At(0))
+	switch val.Kind() {
+	case reflect.Array, reflect.Slice:
+		for i := 0; i < val.Len(); i++ {
+			p.EvaluateBlockWith(val.Index(i).Interface())
+		}
+	case reflect.Map:
+		// note: a go hash is not ordered, so result may vary, this behaviour differs from the JS implementation
+		keys := val.MapKeys()
+		for i := 0; i < len(keys); i++ {
+			p.EvaluateBlockWith(val.MapIndex(keys[i]).Interface())
+		}
+	case reflect.Struct:
+		// @todo !!!
 	}
 
 	// irrelevant

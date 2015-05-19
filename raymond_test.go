@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -40,13 +41,16 @@ type raymondTest struct {
 	input   string
 	data    interface{}
 	helpers map[string]Helper
-	output  string
+	output  interface{}
 }
 
 func launchRaymondTests(t *testing.T, tests []raymondTest) {
 	for _, test := range tests {
 		var err error
 		var tpl *Template
+
+		// log.Printf("****************************************")
+		// log.Printf("* TEST: '%s'", test.name)
 
 		buf := new(bytes.Buffer)
 
@@ -67,8 +71,30 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 			} else {
 				// check output
 				output := buf.String()
-				if test.output != output {
-					t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n\t%s", test.name, test.input, strValue(reflect.ValueOf(test.data)), test.output, output, tpl.PrintAST())
+
+				var expectedArr []string
+				expectedArr, ok := test.output.([]string)
+				if ok {
+					match := false
+					for _, expectedStr := range expectedArr {
+						if expectedStr == output {
+							match = true
+							break
+						}
+					}
+
+					if !match {
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n\t%s", test.name, test.input, strValue(reflect.ValueOf(test.data)), expectedArr, output, tpl.PrintAST())
+					}
+				} else {
+					expectedStr, ok := test.output.(string)
+					if !ok {
+						panic(fmt.Errorf("Erroneous test output description: %q", test.output))
+					}
+
+					if expectedStr != output {
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n\t%s", test.name, test.input, strValue(reflect.ValueOf(test.data)), expectedStr, output, tpl.PrintAST())
+					}
 				}
 			}
 		}

@@ -115,6 +115,36 @@ var hbBuiltinsTests = []raymondTest{
 		"Person is not present",
 	},
 
+	{
+		"#each - each with array argument iterates over the contents when not empty",
+		"{{#each goodbyes}}{{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		"goodbye! Goodbye! GOODBYE! cruel world!",
+	},
+	{
+		"#each - each with array argument ignores the contents when empty",
+		"{{#each goodbyes}}{{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{}, "world": "world"},
+		nil,
+		"cruel world!",
+	},
+	{
+		"#each - each without data (1)",
+		"{{#each goodbyes}}{{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		"goodbye! Goodbye! GOODBYE! cruel world!",
+	},
+	{
+		"#each - each without data (2)",
+		"{{#each .}}{{.}}{{/each}}",
+		map[string]interface{}{"goodbyes": "cruel", "world": "world"},
+		nil,
+		// note: a go hash is not ordered, so result may vary, this behaviour differs from the JS implementation
+		[]string{"cruelworld", "worldcruel"},
+	},
+
 	// {
 	// 	"",
 	// 	"",
