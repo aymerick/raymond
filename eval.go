@@ -160,12 +160,12 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Val
 	return result
 }
 
-// returns string value of a `interface{}`
-func StrInterface(value interface{}) string {
+// returns string representation of a `interface{}`
+func Str(value interface{}) string {
 	return StrValue(reflect.ValueOf(value))
 }
 
-// returns string value of a `reflect.Value`
+// returns string representation of a `reflect.Value`
 func StrValue(value reflect.Value) string {
 	result := ""
 
@@ -321,7 +321,7 @@ func (v *EvalVisitor) VisitProgram(node *ast.Program) interface{} {
 	buf := new(bytes.Buffer)
 
 	for _, n := range node.Body {
-		if str := StrInterface(n.Accept(v)); str != "" {
+		if str := Str(n.Accept(v)); str != "" {
 			if _, err := buf.Write([]byte(str)); err != nil {
 				v.errPanic(err)
 			}
@@ -338,7 +338,7 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	expr := node.Expression.Accept(v)
 
 	// get string value
-	str := StrInterface(expr)
+	str := Str(expr)
 	if !node.Unescaped {
 		// escape html
 		str = html.EscapeString(str)
@@ -509,7 +509,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	}
 
 	if VERBOSE_EVAL {
-		log.Printf("VisitPath(): result => %s", StrInterface(result))
+		log.Printf("VisitPath(): result => %s", Str(result))
 	}
 
 	return result

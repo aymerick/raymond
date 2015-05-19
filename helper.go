@@ -84,7 +84,7 @@ func (p *HelperParams) Data(name string) interface{} {
 
 // Get string version of input data by name
 func (p *HelperParams) DataStr(name string) string {
-	return StrInterface(p.Data(name))
+	return Str(p.Data(name))
 }
 
 // Returns true if first param is truthy

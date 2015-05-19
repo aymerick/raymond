@@ -34,7 +34,6 @@ var hbHelpersTests = []raymondTest{
 		map[string]interface{}{"name": "Alan"},
 		map[string]Helper{"goodbyes": func(p *HelperParams) string {
 			out := ""
-
 			for _, str := range []string{"Goodbye", "goodbye", "GOODBYE"} {
 				out += str + " " + p.BlockWith(str) + "! "
 			}

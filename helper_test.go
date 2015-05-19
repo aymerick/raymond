@@ -68,7 +68,7 @@ func rawHelper(p *HelperParams) string {
 	result := p.Block()
 
 	for _, param := range p.Params() {
-		result += StrInterface(param)
+		result += Str(param)
 	}
 
 	return result
