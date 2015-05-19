@@ -24,7 +24,7 @@ var helpers map[string]Helper
 func init() {
 	helpers = make(map[string]Helper)
 
-	// register global helpers
+	// register builtin helpers
 	RegisterHelper("if", ifHelper)
 	RegisterHelper("unless", unlessHelper)
 }
@@ -60,6 +60,11 @@ func (p *HelperParams) At(pos int) interface{} {
 	}
 }
 
+// Get hash option by name
+func (p *HelperParams) Option(name string) interface{} {
+	return p.hash[name]
+}
+
 // Returns true if first param is truthy
 func (p *HelperParams) TruthFirstParam() bool {
 	val := p.At(0)
@@ -73,6 +78,19 @@ func (p *HelperParams) TruthFirstParam() bool {
 	}
 
 	return thruth
+}
+
+// Returns true if 'includeZero' option is set and first param is the number 0
+func (p *HelperParams) IsIncludableZero() bool {
+	b, ok := p.Option("includeZero").(bool)
+	if ok && b {
+		nb, ok := p.At(0).(int)
+		if ok && nb == 0 {
+			return true
+		}
+	}
+
+	return false
 }
 
 // Evaluate block
@@ -90,11 +108,11 @@ func (p *HelperParams) EvaluateInverse() {
 }
 
 //
-// Default helpers
+// Builtin helpers
 //
 
 func ifHelper(p *HelperParams) string {
-	if p.TruthFirstParam() {
+	if p.IsIncludableZero() || p.TruthFirstParam() {
 		p.EvaluateBlock()
 	} else {
 		p.EvaluateInverse()
@@ -105,7 +123,7 @@ func ifHelper(p *HelperParams) string {
 }
 
 func unlessHelper(p *HelperParams) string {
-	if p.TruthFirstParam() {
+	if p.IsIncludableZero() || p.TruthFirstParam() {
 		p.EvaluateInverse()
 	} else {
 		p.EvaluateBlock()
