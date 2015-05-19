@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -72,6 +73,36 @@ func rawHelper(p *HelperParams) string {
 	}
 
 	return result
+}
+
+func formHelper(p *HelperParams) string {
+	return "<form>" + p.Block() + "</form>"
+}
+
+func formCtxHelper(p *HelperParams) string {
+	return "<form>" + p.BlockWith(p.Param(0)) + "</form>"
+}
+
+func listHelper(p *HelperParams) string {
+	ctx := p.Param(0)
+
+	val := reflect.ValueOf(ctx)
+	switch val.Kind() {
+	case reflect.Array, reflect.Slice:
+		if val.Len() > 0 {
+			result := "<ul>"
+			for i := 0; i < val.Len(); i++ {
+				result += "<li>"
+				result += p.BlockWith(val.Index(i).Interface())
+				result += "</li>"
+			}
+			result += "</ul>"
+
+			return result
+		}
+	}
+
+	return "<p>" + p.Inverse() + "</p>"
 }
 
 //

@@ -177,15 +177,7 @@ var hbBuiltinsTests = []raymondTest{
 	// 	"0. goodbye!  0 0 0 1 After 0 1. Goodbye!  1 0 1 1 After 1 cruel world!",
 	// },
 
-	// @todo Add more tests
-
-	// {
-	// 	"",
-	// 	"",
-	// 	map[string]interface{}{},
-	// 	nil,
-	// 	"",
-	// },
+	// @todo Add remaining tests
 }
 
 func TestHandlebarsBuiltins(t *testing.T) {
