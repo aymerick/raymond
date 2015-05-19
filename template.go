@@ -2,7 +2,6 @@ package raymond
 
 import (
 	"fmt"
-	"io"
 	"runtime"
 
 	"github.com/aymerick/raymond/ast"
@@ -67,7 +66,7 @@ func (tpl *Template) RegisterHelper(name string, helper Helper) {
 }
 
 // Renders a template with input data
-func (tpl *Template) Exec(wr io.Writer, data interface{}) (err error) {
+func (tpl *Template) Exec(data interface{}) (result string, err error) {
 	defer errRecover(&err)
 
 	// parses template if necessary
@@ -77,11 +76,15 @@ func (tpl *Template) Exec(wr io.Writer, data interface{}) (err error) {
 	}
 
 	// setup visitor
-	v := NewEvalVisitor(wr, tpl, data)
+	v := NewEvalVisitor(tpl, data)
 
 	// visit AST
-	tpl.program.Accept(v)
+	resEval := tpl.program.Accept(v)
 
+	// get result
+	result, _ = resEval.(string)
+
+	// named return values
 	return
 }
 

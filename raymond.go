@@ -1,7 +1,5 @@
 package raymond
 
-import "bytes"
-
 // Renders a template with input data and returns result.
 //
 // Panics on error.
@@ -9,8 +7,6 @@ import "bytes"
 // Note that this function call is not optimal as your template is parsed
 // everytime you call it. You should use `Parse()` function instead.
 func Render(source string, data interface{}) string {
-	buf := new(bytes.Buffer)
-
 	// parse template
 	tpl, err := Parse(source)
 	if err != nil {
@@ -18,9 +14,10 @@ func Render(source string, data interface{}) string {
 	}
 
 	// renders template
-	if err := tpl.Exec(buf, data); err != nil {
+	str, err := tpl.Exec(data)
+	if err != nil {
 		panic(err)
 	}
 
-	return buf.String()
+	return str
 }

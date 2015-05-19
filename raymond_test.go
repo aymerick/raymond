@@ -1,7 +1,6 @@
 package raymond
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 )
@@ -51,8 +50,6 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 		// log.Printf("****************************************")
 		// log.Printf("* TEST: '%s'", test.name)
 
-		buf := new(bytes.Buffer)
-
 		// parse template
 		tpl, err = Parse(test.input)
 		if err != nil {
@@ -64,13 +61,11 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 			}
 
 			// render template
-			err = tpl.Exec(buf, test.data)
+			output, err := tpl.Exec(test.data)
 			if err != nil {
 				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, StrInterface(test.data), err, tpl.PrintAST())
 			} else {
 				// check output
-				output := buf.String()
-
 				var expectedArr []string
 				expectedArr, ok := test.output.([]string)
 				if ok {

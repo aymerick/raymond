@@ -87,11 +87,6 @@ func (p *HelperParams) DataStr(name string) string {
 	return StrInterface(p.Data(name))
 }
 
-// Writes string to output
-func (p *HelperParams) Write(str string) {
-	p.eval.write(str)
-}
-
 // Returns true if first param is truthy
 func (p *HelperParams) TruthFirstParam() bool {
 	val := p.Param(0)
@@ -121,26 +116,32 @@ func (p *HelperParams) IsIncludableZero() bool {
 }
 
 // Evaluate block
-func (p *HelperParams) EvaluateBlock() {
+func (p *HelperParams) Block() string {
+	result := ""
 	if block := p.eval.curBlock(); (block != nil) && (block.Program != nil) {
-		block.Program.Accept(p.eval)
+		result, _ = block.Program.Accept(p.eval).(string)
 	}
+
+	return result
 }
 
 // Evaluate inverse
-func (p *HelperParams) EvaluateInverse() {
+func (p *HelperParams) Inverse() string {
+	result := ""
 	if block := p.eval.curBlock(); (block != nil) && (block.Inverse != nil) {
-		block.Inverse.Accept(p.eval)
+		result, _ = block.Inverse.Accept(p.eval).(string)
 	}
+
+	return result
 }
 
 // Evaluate block with given context
-func (p *HelperParams) EvaluateBlockWith(ctx interface{}) {
+func (p *HelperParams) BlockWith(ctx interface{}) string {
 	p.PushCtx(ctx)
-
-	p.EvaluateBlock()
-
+	result := p.Block()
 	p.PopCtx()
+
+	return result
 }
 
 // Push context
@@ -166,59 +167,51 @@ func (p *HelperParams) PopCtx() interface{} {
 
 func ifHelper(p *HelperParams) string {
 	if p.IsIncludableZero() || p.TruthFirstParam() {
-		p.EvaluateBlock()
-	} else {
-		p.EvaluateInverse()
+		return p.Block()
 	}
 
-	// irrelevant
-	return ""
+	return p.Inverse()
 }
 
 func unlessHelper(p *HelperParams) string {
 	if p.IsIncludableZero() || p.TruthFirstParam() {
-		p.EvaluateInverse()
-	} else {
-		p.EvaluateBlock()
+		return p.Inverse()
 	}
 
-	// irrelevant
-	return ""
+	return p.Block()
 }
 
 func withHelper(p *HelperParams) string {
 	if p.TruthFirstParam() {
-		p.EvaluateBlockWith(p.Param(0))
-	} else {
-		p.EvaluateInverse()
+		return p.BlockWith(p.Param(0))
 	}
 
-	// irrelevant
-	return ""
+	return p.Inverse()
 }
 
 func eachHelper(p *HelperParams) string {
 	if !p.TruthFirstParam() {
-		p.EvaluateInverse()
+		p.Inverse()
 		return ""
 	}
+
+	result := ""
 
 	val := reflect.ValueOf(p.Param(0))
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
-			p.EvaluateBlockWith(val.Index(i).Interface())
+			result += p.BlockWith(val.Index(i).Interface())
 		}
 	case reflect.Map:
 		// note: a go hash is not ordered, so result may vary, this behaviour differs from the JS implementation
 		keys := val.MapKeys()
 		for i := 0; i < len(keys); i++ {
-			p.EvaluateBlockWith(val.MapIndex(keys[i]).Interface())
+			result += p.BlockWith(val.MapIndex(keys[i]).Interface())
 		}
 	case reflect.Struct:
 		// @todo !!!
 	}
 
-	// irrelevant
-	return ""
+	return result
 }

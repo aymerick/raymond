@@ -33,14 +33,12 @@ var hbHelpersTests = []raymondTest{
 		"{{#goodbyes}}{{../name}}{{/goodbyes}}",
 		map[string]interface{}{"name": "Alan"},
 		map[string]Helper{"goodbyes": func(p *HelperParams) string {
-			// @todo This is ugly, compared to the JS implementation API.
-			//       We should capture the result of block evaluation.
+			out := ""
+
 			for _, str := range []string{"Goodbye", "goodbye", "GOODBYE"} {
-				p.Write(str + " ")
-				p.EvaluateBlockWith(str)
-				p.Write("! ")
+				out += str + " " + p.BlockWith(str) + "! "
 			}
-			return ""
+			return out
 		}},
 		"Goodbye Alan! goodbye Alan! GOODBYE Alan! ",
 	},

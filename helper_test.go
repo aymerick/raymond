@@ -65,9 +65,7 @@ func linkHelper(p *HelperParams) string {
 }
 
 func rawHelper(p *HelperParams) string {
-	p.EvaluateBlock()
-
-	result := ""
+	result := p.Block()
 
 	for _, param := range p.Params() {
 		result += StrInterface(param)

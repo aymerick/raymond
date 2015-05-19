@@ -1,9 +1,9 @@
 package raymond
 
 import (
+	"bytes"
 	"fmt"
 	"html"
-	"io"
 	"log"
 	"reflect"
 	"strconv"
@@ -24,7 +24,6 @@ var (
 
 // Template evaluation visitor
 type EvalVisitor struct {
-	wr   io.Writer
 	tpl  *Template
 	data interface{}
 	ctx  []reflect.Value
@@ -34,19 +33,11 @@ type EvalVisitor struct {
 }
 
 // Instanciate a new evaluation visitor
-func NewEvalVisitor(wr io.Writer, tpl *Template, data interface{}) *EvalVisitor {
+func NewEvalVisitor(tpl *Template, data interface{}) *EvalVisitor {
 	return &EvalVisitor{
-		wr:   wr,
 		tpl:  tpl,
 		data: data,
 		ctx:  []reflect.Value{reflect.ValueOf(data)},
-	}
-}
-
-// Write string to output
-func (v *EvalVisitor) write(str string) {
-	if _, err := v.wr.Write([]byte(str)); err != nil {
-		v.errPanic(err)
 	}
 }
 
@@ -121,6 +112,14 @@ func (v *EvalVisitor) at(node ast.Node) {
 	}
 
 	v.curNode = node
+}
+
+// Evaluate node with given context and returns string result
+func (v *EvalVisitor) evalNodeWith(node ast.Node, ctx reflect.Value) string {
+	v.pushCtx(ctx)
+	result, _ := node.Accept(v).(string)
+	v.popCtx()
+	return result
 }
 
 // evaluates field in given context
@@ -319,11 +318,17 @@ func (v *EvalVisitor) helperParams(node *ast.Expression) *HelperParams {
 func (v *EvalVisitor) VisitProgram(node *ast.Program) interface{} {
 	v.at(node)
 
+	buf := new(bytes.Buffer)
+
 	for _, n := range node.Body {
-		n.Accept(v)
+		if str := StrInterface(n.Accept(v)); str != "" {
+			if _, err := buf.Write([]byte(str)); err != nil {
+				v.errPanic(err)
+			}
+		}
 	}
 
-	return nil
+	return buf.String()
 }
 
 func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
@@ -339,24 +344,20 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 		str = html.EscapeString(str)
 	}
 
-	// write result
-	v.write(str)
-
-	return nil
+	return str
 }
 
 func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.at(node)
 	v.pushBlock(node)
 
+	result := ""
+
 	// evaluate expression
 	expr := node.Expression.Accept(v)
 
 	if v.isHelperCall(node.Expression) {
-		// check if helper returned a string
-		if str, ok := expr.(string); ok && (str != "") {
-			v.write(str)
-		}
+		result, _ = expr.(string)
 	} else {
 		val := reflect.ValueOf(expr)
 
@@ -371,19 +372,11 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 				case reflect.Array, reflect.Slice:
 					// Array context
 					for i := 0; i < val.Len(); i++ {
-						v.pushCtx(val.Index(i))
-
-						node.Program.Accept(v)
-
-						v.popCtx()
+						result += v.evalNodeWith(node.Program, val.Index(i))
 					}
 				default:
 					// NOT array
-					v.pushCtx(val)
-
-					node.Program.Accept(v)
-
-					v.popCtx()
+					result = v.evalNodeWith(node.Program, val)
 				}
 			}
 		} else if node.Inverse != nil {
@@ -391,13 +384,13 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 				log.Printf("VisitBlock(): Falsy, visiting Inverse")
 			}
 
-			node.Inverse.Accept(v)
+			result, _ = node.Inverse.Accept(v).(string)
 		}
 	}
 
 	v.popBlock()
 
-	return nil
+	return result
 }
 
 func (v *EvalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
@@ -411,9 +404,7 @@ func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 	v.at(node)
 
 	// write content as is
-	v.write(node.Value)
-
-	return nil
+	return node.Value
 }
 
 func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
@@ -472,7 +463,6 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	var result interface{}
 
 	if node.Depth > len(v.ctx) {
-		// @todo Panics ?
 		return nil
 	}
 
