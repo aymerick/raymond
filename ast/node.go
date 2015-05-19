@@ -591,7 +591,7 @@ type Hash struct {
 	NodeType
 	Loc
 
-	Pairs []Node // [ HashPair ... ]
+	Pairs []*HashPair // [ HashPair ... ]
 }
 
 func NewHash(pos int, line int) *Hash {

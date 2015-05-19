@@ -290,7 +290,9 @@ func (v *EvalVisitor) helperParams(node *ast.Expression) *HelperParams {
 		params = append(params, param)
 	}
 
-	// @todo Fill hash
+	if node.Hash != nil {
+		hash, _ = node.Hash.Accept(v).(map[string]interface{})
+	}
 
 	return NewHelperParams(v, params, hash)
 }
@@ -549,13 +551,19 @@ func (v *EvalVisitor) VisitNumber(node *ast.NumberLiteral) interface{} {
 func (v *EvalVisitor) VisitHash(node *ast.Hash) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	result := make(map[string]interface{})
+
+	for _, pair := range node.Pairs {
+		if value := pair.Accept(v); value != nil {
+			result[pair.Key] = value
+		}
+	}
+
+	return result
 }
 
 func (v *EvalVisitor) VisitHashPair(node *ast.HashPair) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	return node.Val.Accept(v)
 }

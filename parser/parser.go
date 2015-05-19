@@ -522,7 +522,7 @@ func (p *Parser) parseSexpr() *ast.SubExpression {
 
 // hash : hashSegment+
 func (p *Parser) parseHash() *ast.Hash {
-	var pairs []ast.Node
+	var pairs []*ast.HashPair
 
 	for p.isHashSegment() {
 		pairs = append(pairs, p.parseHashSegment())
