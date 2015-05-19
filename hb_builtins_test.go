@@ -57,11 +57,62 @@ var hbBuiltinsTests = []raymondTest{
 		"cruel world!",
 	},
 	{
-		"#if - if with zero and includeZero option shows the contents'",
+		"#if - if with zero and includeZero option shows the contents",
 		"{{#if goodbye includeZero=true}}GOODBYE {{/if}}cruel {{world}}!",
 		map[string]interface{}{"goodbye": 0, "world": "world"},
 		nil,
 		"GOODBYE cruel world!",
+	},
+
+	// {
+	// 	"#if - if with function shows the contents when function returns true",
+	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
+	// 	map[string]interface{}{},
+	// 	nil,
+	// 	"GOODBYE cruel world!",
+	// },
+	// {
+	// 	"#if - if with function shows the contents when function returns string",
+	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
+	// 	map[string]interface{}{},
+	// 	nil,
+	// 	"GOODBYE cruel world!",
+	// },
+	// {
+	// 	"#if - if with function does not show the contents when returns false",
+	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
+	// 	map[string]interface{}{},
+	// 	nil,
+	// 	"cruel world!",
+	// },
+	//    {
+	//        "#if - if with function does not show the contents when returns undefined",
+	//        "{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
+	//        map[string]interface{}{},
+	//        nil,
+	//        "cruel world!",
+	//    },
+
+	{
+		"#with",
+		"{{#with person}}{{first}} {{last}}{{/with}}",
+		map[string]interface{}{"person": map[string]string{"first": "Alan", "last": "Johnson"}},
+		nil,
+		"Alan Johnson",
+	},
+	// {
+	//     "#with - with with function argument",
+	//     "{{#with person}}{{first}} {{last}}{{/with}}",
+	//     map[string]interface{}{},
+	//     nil,
+	//     "Alan Johnson",
+	// },
+	{
+		"#with - with with else",
+		"{{#with person}}Person is present{{else}}Person is not present{{/with}}",
+		map[string]interface{}{},
+		nil,
+		"Person is not present",
 	},
 
 	// {

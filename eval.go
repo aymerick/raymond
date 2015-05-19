@@ -43,7 +43,7 @@ func NewEvalVisitor(wr io.Writer, tpl *Template, data interface{}) *EvalVisitor 
 	}
 }
 
-func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
+func (v *EvalVisitor) PushCtx(ctx reflect.Value) {
 	if VERBOSE_EVAL {
 		log.Printf("Push context: %s", strValue(ctx))
 	}
@@ -51,7 +51,7 @@ func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
 	v.ctx = append(v.ctx, ctx)
 }
 
-func (v *EvalVisitor) popCtx() reflect.Value {
+func (v *EvalVisitor) PopCtx() reflect.Value {
 	if len(v.ctx) == 0 {
 		return zero
 	}
@@ -352,19 +352,19 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 				case reflect.Array, reflect.Slice:
 					// Array context
 					for i := 0; i < val.Len(); i++ {
-						v.pushCtx(val.Index(i))
+						v.PushCtx(val.Index(i))
 
 						node.Program.Accept(v)
 
-						v.popCtx()
+						v.PopCtx()
 					}
 				default:
 					// NOT array
-					v.pushCtx(val)
+					v.PushCtx(val)
 
 					node.Program.Accept(v)
 
-					v.popCtx()
+					v.PopCtx()
 				}
 			}
 		} else if node.Inverse != nil {
@@ -462,7 +462,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	// go back to parent context
 	var prevCtxList []reflect.Value
 	for i := node.Depth; i > 0; i-- {
-		prevCtxList = append(prevCtxList, v.popCtx())
+		prevCtxList = append(prevCtxList, v.PopCtx())
 	}
 
 	// get current context
@@ -498,7 +498,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	for i := len(prevCtxList); i > 0; i-- {
 		var prev reflect.Value
 		prev, prevCtxList = prevCtxList[len(prevCtxList)-1], prevCtxList[:len(prevCtxList)-1]
-		v.pushCtx(prev)
+		v.PushCtx(prev)
 	}
 
 	if VERBOSE_EVAL {

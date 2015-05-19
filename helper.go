@@ -27,6 +27,7 @@ func init() {
 	// register builtin helpers
 	RegisterHelper("if", ifHelper)
 	RegisterHelper("unless", unlessHelper)
+	RegisterHelper("with", withHelper)
 }
 
 // Registers a new helper function
@@ -107,6 +108,23 @@ func (p *HelperParams) EvaluateInverse() {
 	}
 }
 
+// Push context
+func (p *HelperParams) PushCtx(ctx interface{}) {
+	p.eval.PushCtx(reflect.ValueOf(ctx))
+}
+
+// Pop context
+func (p *HelperParams) PopCtx() interface{} {
+	var value reflect.Value
+
+	value = p.eval.PopCtx()
+	if !value.IsValid() {
+		return value
+	}
+
+	return value.Interface()
+}
+
 //
 // Builtin helpers
 //
@@ -127,6 +145,21 @@ func unlessHelper(p *HelperParams) string {
 		p.EvaluateInverse()
 	} else {
 		p.EvaluateBlock()
+	}
+
+	// irrelevant
+	return ""
+}
+
+func withHelper(p *HelperParams) string {
+	if p.TruthFirstParam() {
+		p.PushCtx(p.At(0))
+
+		p.EvaluateBlock()
+
+		p.PopCtx()
+	} else {
+		p.EvaluateInverse()
 	}
 
 	// irrelevant
