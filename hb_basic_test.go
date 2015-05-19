@@ -9,7 +9,6 @@ import "testing"
 //   https://github.com/wycats/handlebars.js/blob/master/spec/regressions.js
 //   https://github.com/wycats/handlebars.js/blob/master/spec/strict.js
 //   https://github.com/wycats/handlebars.js/blob/master/spec/string-params.js
-//   https://github.com/wycats/handlebars.js/blob/master/spec/subexpression.js
 //   https://github.com/wycats/handlebars.js/blob/master/spec/whitespace-control.js
 //
 //   https://github.com/wycats/handlebars.js/blob/master/spec/mustache/
