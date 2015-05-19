@@ -76,7 +76,7 @@ func (p *HelperParams) Option(name string) interface{} {
 func (p *HelperParams) Data(name string) interface{} {
 	value := p.eval.evalField(p.eval.curCtx(), name)
 	if !value.IsValid() {
-		return ""
+		return nil
 	}
 
 	return value.Interface()
@@ -85,6 +85,11 @@ func (p *HelperParams) Data(name string) interface{} {
 // Get string version of input data by name
 func (p *HelperParams) DataStr(name string) string {
 	return StrInterface(p.Data(name))
+}
+
+// Writes string to output
+func (p *HelperParams) Write(str string) {
+	p.eval.write(str)
 }
 
 // Returns true if first param is truthy

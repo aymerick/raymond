@@ -28,6 +28,24 @@ var hbHelpersTests = []raymondTest{
 		map[string]Helper{"raw": rawHelper},
 		" {{test}} 123",
 	},
+	{
+		"helper block with complex lookup expression",
+		"{{#goodbyes}}{{../name}}{{/goodbyes}}",
+		map[string]interface{}{"name": "Alan"},
+		map[string]Helper{"goodbyes": func(p *HelperParams) string {
+			// @todo This is ugly, compared to the JS implementation API.
+			//       We should capture the result of block evaluation.
+			for _, str := range []string{"Goodbye", "goodbye", "GOODBYE"} {
+				p.Write(str + " ")
+				p.EvaluateBlockWith(str)
+				p.Write("! ")
+			}
+			return ""
+		}},
+		"Goodbye Alan! goodbye Alan! GOODBYE Alan! ",
+	},
+
+	// @todo Add remaining tests
 }
 
 func TestHandlebarsHelpers(t *testing.T) {

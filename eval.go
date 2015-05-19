@@ -44,7 +44,7 @@ func NewEvalVisitor(wr io.Writer, tpl *Template, data interface{}) *EvalVisitor 
 }
 
 // Write string to output
-func (v *EvalVisitor) Write(str string) {
+func (v *EvalVisitor) write(str string) {
 	if _, err := v.wr.Write([]byte(str)); err != nil {
 		v.errPanic(err)
 	}
@@ -340,7 +340,7 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	}
 
 	// write result
-	v.Write(str)
+	v.write(str)
 
 	return nil
 }
@@ -355,7 +355,7 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	if v.isHelperCall(node.Expression) {
 		// check if helper returned a string
 		if str, ok := expr.(string); ok && (str != "") {
-			v.Write(str)
+			v.write(str)
 		}
 	} else {
 		val := reflect.ValueOf(expr)
@@ -411,7 +411,7 @@ func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 	v.at(node)
 
 	// write content as is
-	v.Write(node.Value)
+	v.write(node.Value)
 
 	return nil
 }
