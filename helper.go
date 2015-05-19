@@ -67,9 +67,19 @@ func (p *HelperParams) Param(pos int) interface{} {
 	}
 }
 
+// Get string representation of parameter at given position
+func (p *HelperParams) ParamStr(pos int) string {
+	return Str(p.Param(pos))
+}
+
 // Returns hash value by name
 func (p *HelperParams) Option(name string) interface{} {
 	return p.hash[name]
+}
+
+// Returns string representation of hash value by name
+func (p *HelperParams) OptionStr(name string) string {
+	return Str(p.hash[name])
 }
 
 // Returns input data by name
@@ -82,7 +92,7 @@ func (p *HelperParams) Data(name string) interface{} {
 	return value.Interface()
 }
 
-// Get string version of input data by name
+// Get string representation of input data by name
 func (p *HelperParams) DataStr(name string) string {
 	return Str(p.Data(name))
 }

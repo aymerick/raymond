@@ -105,6 +105,22 @@ func listHelper(p *HelperParams) string {
 	return "<p>" + p.Inverse() + "</p>"
 }
 
+func blogHelper(p *HelperParams) string {
+	return "val is " + p.ParamStr(0)
+}
+
+func equalHelper(p *HelperParams) string {
+	return Str(p.ParamStr(0) == p.ParamStr(1))
+}
+
+func dashHelper(p *HelperParams) string {
+	return p.ParamStr(0) + "-" + p.ParamStr(1)
+}
+
+func concatHelper(p *HelperParams) string {
+	return p.ParamStr(0) + p.ParamStr(1)
+}
+
 //
 // Tests
 //

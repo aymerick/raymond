@@ -148,6 +148,8 @@ var hbHelpersTests = []raymondTest{
 		`<p>Nobody&#39;s here</p>`,
 	},
 
+	// @todo "pathed lambas with parameters"
+
 	// {
 	// 	"",
 	// 	"",

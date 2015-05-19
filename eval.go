@@ -453,8 +453,7 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	return node.Expression.Accept(v)
 }
 
 func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
