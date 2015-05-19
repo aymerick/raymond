@@ -53,6 +53,11 @@ func NewHelperParams(eval *EvalVisitor, params []interface{}, hash map[string]in
 	}
 }
 
+// Returns all parameters
+func (p *HelperParams) Params() []interface{} {
+	return p.params
+}
+
 // Get parameter at given position
 func (p *HelperParams) At(pos int) interface{} {
 	if len(p.params) > pos {
@@ -65,6 +70,21 @@ func (p *HelperParams) At(pos int) interface{} {
 // Get hash option by name
 func (p *HelperParams) Option(name string) interface{} {
 	return p.hash[name]
+}
+
+// Get input data by name
+func (p *HelperParams) Data(name string) interface{} {
+	value := p.eval.evalField(p.eval.curCtx(), name)
+	if !value.IsValid() {
+		return ""
+	}
+
+	return value.Interface()
+}
+
+// Get string version of input data by name
+func (p *HelperParams) DataStr(name string) string {
+	return StrInterface(p.Data(name))
 }
 
 // Returns true if first param is truthy
@@ -120,14 +140,14 @@ func (p *HelperParams) EvaluateBlockWith(ctx interface{}) {
 
 // Push context
 func (p *HelperParams) PushCtx(ctx interface{}) {
-	p.eval.PushCtx(reflect.ValueOf(ctx))
+	p.eval.pushCtx(reflect.ValueOf(ctx))
 }
 
 // Pop context
 func (p *HelperParams) PopCtx() interface{} {
 	var value reflect.Value
 
-	value = p.eval.PopCtx()
+	value = p.eval.popCtx()
 	if !value.IsValid() {
 		return value
 	}

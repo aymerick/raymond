@@ -1,9 +1,6 @@
 package raymond
 
-import (
-	"reflect"
-	"testing"
-)
+import "testing"
 
 var evalTests = []raymondTest{
 	{
@@ -23,7 +20,7 @@ func TestEval(t *testing.T) {
 // @todo Test with a "../../path" (depth 2 path) while context is only depth 1
 
 //
-// strValue() tests
+// StrValue() / StrInterface() tests
 //
 
 type strTest struct {
@@ -44,9 +41,9 @@ var strTests = []strTest{
 	{"[]Boolean", []bool{true, false}, "truefalse"},
 }
 
-func TestStrValue(t *testing.T) {
+func TestStrInterface(t *testing.T) {
 	for _, test := range strTests {
-		if res := strValue(reflect.ValueOf(test.input)); res != test.output {
+		if res := StrInterface(test.input); res != test.output {
 			t.Errorf("Failed to stringify: %s\nexpected:\n\t'%s'got:\n\t%q", test.name, test.output, res)
 		}
 	}

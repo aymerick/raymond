@@ -43,15 +43,22 @@ func NewEvalVisitor(wr io.Writer, tpl *Template, data interface{}) *EvalVisitor 
 	}
 }
 
-func (v *EvalVisitor) PushCtx(ctx reflect.Value) {
+// Write string to output
+func (v *EvalVisitor) Write(str string) {
+	if _, err := v.wr.Write([]byte(str)); err != nil {
+		v.errPanic(err)
+	}
+}
+
+func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
 	if VERBOSE_EVAL {
-		log.Printf("Push context: %s", strValue(ctx))
+		log.Printf("Push context: %s", StrValue(ctx))
 	}
 
 	v.ctx = append(v.ctx, ctx)
 }
 
-func (v *EvalVisitor) PopCtx() reflect.Value {
+func (v *EvalVisitor) popCtx() reflect.Value {
 	if len(v.ctx) == 0 {
 		return zero
 	}
@@ -61,7 +68,7 @@ func (v *EvalVisitor) PopCtx() reflect.Value {
 	result, v.ctx = v.ctx[len(v.ctx)-1], v.ctx[:len(v.ctx)-1]
 
 	if VERBOSE_EVAL {
-		log.Printf("Pop context, back to: %s", strValue(v.curCtx()))
+		log.Printf("Pop context, back to: %s", StrValue(v.curCtx()))
 	}
 
 	return result
@@ -148,13 +155,19 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Val
 	}
 
 	if VERBOSE_EVAL {
-		log.Printf("evalField(): '%s' with context %s => %s", fieldName, strValue(ctx), strValue(result))
+		log.Printf("evalField(): '%s' with context %s => %s", fieldName, StrValue(ctx), StrValue(result))
 	}
 
 	return result
 }
 
-func strValue(value reflect.Value) string {
+// returns string value of a `interface{}`
+func StrInterface(value interface{}) string {
+	return StrValue(reflect.ValueOf(value))
+}
+
+// returns string value of a `reflect.Value`
+func StrValue(value reflect.Value) string {
 	result := ""
 
 	ival, ok := printableValue(value)
@@ -167,7 +180,7 @@ func strValue(value reflect.Value) string {
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
-			result += strValue(val.Index(i))
+			result += StrValue(val.Index(i))
 		}
 	case reflect.Bool:
 		result = "false"
@@ -317,18 +330,17 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	v.at(node)
 
 	// evaluate expression
-	val := reflect.ValueOf(node.Expression.Accept(v))
+	expr := node.Expression.Accept(v)
 
-	str := strValue(val)
+	// get string value
+	str := StrInterface(expr)
 	if !node.Unescaped {
 		// escape html
 		str = html.EscapeString(str)
 	}
 
 	// write result
-	if _, err := v.wr.Write([]byte(str)); err != nil {
-		v.errPanic(err)
-	}
+	v.Write(str)
 
 	return nil
 }
@@ -338,9 +350,16 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.pushBlock(node)
 
 	// evaluate expression
-	val := reflect.ValueOf(node.Expression.Accept(v))
+	expr := node.Expression.Accept(v)
 
-	if !v.isHelperCall(node.Expression) {
+	if v.isHelperCall(node.Expression) {
+		// check if helper returned a string
+		if str, ok := expr.(string); ok && (str != "") {
+			v.Write(str)
+		}
+	} else {
+		val := reflect.ValueOf(expr)
+
 		truth, _ := IsTruth(val)
 		if truth {
 			if node.Program != nil {
@@ -352,19 +371,19 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 				case reflect.Array, reflect.Slice:
 					// Array context
 					for i := 0; i < val.Len(); i++ {
-						v.PushCtx(val.Index(i))
+						v.pushCtx(val.Index(i))
 
 						node.Program.Accept(v)
 
-						v.PopCtx()
+						v.popCtx()
 					}
 				default:
 					// NOT array
-					v.PushCtx(val)
+					v.pushCtx(val)
 
 					node.Program.Accept(v)
 
-					v.PopCtx()
+					v.popCtx()
 				}
 			}
 		} else if node.Inverse != nil {
@@ -392,9 +411,7 @@ func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 	v.at(node)
 
 	// write content as is
-	if _, err := v.wr.Write([]byte(node.Value)); err != nil {
-		v.errPanic(err)
-	}
+	v.Write(node.Value)
 
 	return nil
 }
@@ -462,14 +479,14 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	// go back to parent context
 	var prevCtxList []reflect.Value
 	for i := node.Depth; i > 0; i-- {
-		prevCtxList = append(prevCtxList, v.PopCtx())
+		prevCtxList = append(prevCtxList, v.popCtx())
 	}
 
 	// get current context
 	ctx := v.curCtx()
 
 	if VERBOSE_EVAL {
-		log.Printf("VisitPath(): %s with context '%s'", node.Original, strValue(ctx))
+		log.Printf("VisitPath(): %s with context '%s'", node.Original, StrValue(ctx))
 	}
 
 	switch ctx.Kind() {
@@ -498,11 +515,11 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	for i := len(prevCtxList); i > 0; i-- {
 		var prev reflect.Value
 		prev, prevCtxList = prevCtxList[len(prevCtxList)-1], prevCtxList[:len(prevCtxList)-1]
-		v.PushCtx(prev)
+		v.pushCtx(prev)
 	}
 
 	if VERBOSE_EVAL {
-		log.Printf("VisitPath(): result => %s", strValue(reflect.ValueOf(result)))
+		log.Printf("VisitPath(): result => %s", StrInterface(result))
 	}
 
 	return result

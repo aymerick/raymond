@@ -144,6 +144,40 @@ var hbBuiltinsTests = []raymondTest{
 		// note: a go hash is not ordered, so result may vary, this behaviour differs from the JS implementation
 		[]string{"cruelworld", "worldcruel"},
 	},
+	{
+		"#each - each without context",
+		"{{#each goodbyes}}{{text}}! {{/each}}cruel {{world}}!",
+		nil,
+		nil,
+		"cruel !",
+	},
+
+	// @todo "#each - each with an object and @key"
+
+	// {
+	// 	"#each - each with @index",
+	// 	"{{#each goodbyes}}{{@index}}. {{text}}! {{/each}}cruel {{world}}!",
+	// 	map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+	// 	nil,
+	// 	"0. goodbye! 1. Goodbye! 2. GOODBYE! cruel world!",
+	// },
+	// {
+	// 	"#each - each with nested @index",
+	// 	"{{#each goodbyes}}{{@index}}. {{text}}! {{#each ../goodbyes}}{{@index}} {{/each}}After {{@index}} {{/each}}{{@index}}cruel {{world}}!",
+	// 	map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+	// 	nil,
+	// 	"0. goodbye! 0 1 2 After 0 1. Goodbye! 0 1 2 After 1 2. GOODBYE! 0 1 2 After 2 cruel world!",
+	// },
+
+	// {
+	// 	"#each - each with block params",
+	// 	"{{#each goodbyes as |value index|}}{{index}}. {{value.text}}! {{#each ../goodbyes as |childValue childIndex|}} {{index}} {{childIndex}}{{/each}} After {{index}} {{/each}}{{index}}cruel {{world}}!",
+	// 	map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}}, "world": "world"},
+	// 	nil,
+	// 	"0. goodbye!  0 0 0 1 After 0 1. Goodbye!  1 0 1 1 After 1 cruel world!",
+	// },
+
+	// @todo Add more tests
 
 	// {
 	// 	"",

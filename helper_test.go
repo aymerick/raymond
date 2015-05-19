@@ -1,6 +1,9 @@
 package raymond
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 const (
 	VERBOSE = false
@@ -50,6 +53,24 @@ func gnakHelper(p *HelperParams) string {
 	result := ""
 	for i := 0; i < nb; i++ {
 		result += "GnAK!"
+	}
+
+	return result
+}
+
+func linkHelper(p *HelperParams) string {
+	prefix, _ := p.At(0).(string)
+
+	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, p.DataStr("url"), p.DataStr("text"))
+}
+
+func rawHelper(p *HelperParams) string {
+	p.EvaluateBlock()
+
+	result := ""
+
+	for _, param := range p.Params() {
+		result += StrInterface(param)
 	}
 
 	return result
