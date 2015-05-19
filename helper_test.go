@@ -16,13 +16,13 @@ const (
 func barHelper(p *HelperParams) string { return "bar" }
 
 func barSuffixHelper(p *HelperParams) string {
-	str, _ := p.At(0).(string)
+	str, _ := p.Param(0).(string)
 	return "bar " + str
 }
 
 func echoHelper(p *HelperParams) string {
-	str, _ := p.At(0).(string)
-	nb, ok := p.At(1).(int)
+	str, _ := p.Param(0).(string)
+	nb, ok := p.Param(1).(int)
 	if !ok {
 		nb = 1
 	}
@@ -36,7 +36,7 @@ func echoHelper(p *HelperParams) string {
 }
 
 func boolHelper(p *HelperParams) string {
-	b, _ := p.At(0).(bool)
+	b, _ := p.Param(0).(bool)
 	if b {
 		return "yes it is"
 	}
@@ -45,7 +45,7 @@ func boolHelper(p *HelperParams) string {
 }
 
 func gnakHelper(p *HelperParams) string {
-	nb, ok := p.At(0).(int)
+	nb, ok := p.Param(0).(int)
 	if !ok {
 		nb = 1
 	}
@@ -59,7 +59,7 @@ func gnakHelper(p *HelperParams) string {
 }
 
 func linkHelper(p *HelperParams) string {
-	prefix, _ := p.At(0).(string)
+	prefix, _ := p.Param(0).(string)
 
 	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, p.DataStr("url"), p.DataStr("text"))
 }

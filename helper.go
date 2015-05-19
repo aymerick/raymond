@@ -58,8 +58,8 @@ func (p *HelperParams) Params() []interface{} {
 	return p.params
 }
 
-// Get parameter at given position
-func (p *HelperParams) At(pos int) interface{} {
+// Returns parameter at given position
+func (p *HelperParams) Param(pos int) interface{} {
 	if len(p.params) > pos {
 		return p.params[pos]
 	} else {
@@ -67,12 +67,12 @@ func (p *HelperParams) At(pos int) interface{} {
 	}
 }
 
-// Get hash option by name
+// Returns hash value by name
 func (p *HelperParams) Option(name string) interface{} {
 	return p.hash[name]
 }
 
-// Get input data by name
+// Returns input data by name
 func (p *HelperParams) Data(name string) interface{} {
 	value := p.eval.evalField(p.eval.curCtx(), name)
 	if !value.IsValid() {
@@ -89,7 +89,7 @@ func (p *HelperParams) DataStr(name string) string {
 
 // Returns true if first param is truthy
 func (p *HelperParams) TruthFirstParam() bool {
-	val := p.At(0)
+	val := p.Param(0)
 	if val == nil {
 		return false
 	}
@@ -106,7 +106,7 @@ func (p *HelperParams) TruthFirstParam() bool {
 func (p *HelperParams) IsIncludableZero() bool {
 	b, ok := p.Option("includeZero").(bool)
 	if ok && b {
-		nb, ok := p.At(0).(int)
+		nb, ok := p.Param(0).(int)
 		if ok && nb == 0 {
 			return true
 		}
@@ -183,7 +183,7 @@ func unlessHelper(p *HelperParams) string {
 
 func withHelper(p *HelperParams) string {
 	if p.TruthFirstParam() {
-		p.EvaluateBlockWith(p.At(0))
+		p.EvaluateBlockWith(p.Param(0))
 	} else {
 		p.EvaluateInverse()
 	}
@@ -198,7 +198,7 @@ func eachHelper(p *HelperParams) string {
 		return ""
 	}
 
-	val := reflect.ValueOf(p.At(0))
+	val := reflect.ValueOf(p.Param(0))
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
