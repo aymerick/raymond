@@ -27,10 +27,9 @@ type EvalVisitor struct {
 	tpl  *Template
 	data interface{}
 
-	ctx     []reflect.Value
-	blocks  []*ast.BlockStatement
-	exprs   []*ast.Expression
-	exprCtx []reflect.Value
+	ctx    []reflect.Value
+	blocks []*ast.BlockStatement
+	exprs  []*ast.Expression
 
 	curNode ast.Node
 }
@@ -64,7 +63,6 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 	}
 
 	var result reflect.Value
-
 	result, v.ctx = v.ctx[len(v.ctx)-1], v.ctx[:len(v.ctx)-1]
 
 	if VERBOSE_EVAL {
@@ -81,6 +79,16 @@ func (v *EvalVisitor) curCtx() reflect.Value {
 	}
 
 	return v.ctx[len(v.ctx)-1]
+}
+
+// get ancestor context
+func (v *EvalVisitor) ancestorCtx(depth int) reflect.Value {
+	index := len(v.ctx) - 1 - depth
+	if index < 0 {
+		return zero
+	}
+
+	return v.ctx[index]
 }
 
 //
@@ -157,53 +165,6 @@ func (v *EvalVisitor) curExpr() *ast.Expression {
 	}
 
 	return v.exprs[len(v.exprs)-1]
-}
-
-//
-// Expressions context stack
-//
-// This the stack representing previous context for current expression
-//
-// This is needed to support `{{#with frank}}{{../awesome .}}{{/with}}` where '../awesome' is a function call
-// When evaluating '../awesome' we go back to parent ctx, but when evaluating to '.' we must use previous ctx.
-// That's that previous ctx we are storing in that stack.
-//
-// @todo THIS IS BUGGY ! We should use a linked list of contexts to be sure we can always access an ancestor context.
-//
-
-// push new expression context
-func (v *EvalVisitor) pushExprCtx(ctx reflect.Value) {
-	if VERBOSE_EVAL {
-		log.Printf("Push expression context: %s", StrValue(ctx))
-	}
-
-	v.exprCtx = append(v.exprCtx, ctx)
-}
-
-// pop last expression context
-func (v *EvalVisitor) popExprCtx() reflect.Value {
-	if len(v.exprCtx) == 0 {
-		return zero
-	}
-
-	var result reflect.Value
-
-	result, v.exprCtx = v.exprCtx[len(v.exprCtx)-1], v.exprCtx[:len(v.exprCtx)-1]
-
-	if VERBOSE_EVAL {
-		log.Printf("Pop expression context, current is: %s", StrValue(v.curExprCtx()))
-	}
-
-	return result
-}
-
-// returns current expression context
-func (v *EvalVisitor) curExprCtx() reflect.Value {
-	if len(v.exprCtx) == 0 {
-		return zero
-	}
-
-	return v.exprCtx[len(v.exprCtx)-1]
 }
 
 //
@@ -434,15 +395,6 @@ func (v *EvalVisitor) HelperArg(node *ast.Expression) *HelperArg {
 	var params []interface{}
 	var hash map[string]interface{}
 
-	withDepthPath := false
-	if path := node.FieldPath(); path != nil && path.Depth > 0 {
-		withDepthPath = true
-	}
-
-	if withDepthPath {
-		v.pushCtx(v.curExprCtx())
-	}
-
 	for _, paramNode := range node.Params {
 		param := paramNode.Accept(v)
 		params = append(params, param)
@@ -450,10 +402,6 @@ func (v *EvalVisitor) HelperArg(node *ast.Expression) *HelperArg {
 
 	if node.Hash != nil {
 		hash, _ = node.Hash.Accept(v).(map[string]interface{})
-	}
-
-	if withDepthPath {
-		v.popCtx()
 	}
 
 	return NewHelperArg(v, params, hash)
@@ -626,7 +574,6 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	done := false
 
 	v.pushExpr(node)
-	v.pushExprCtx(v.curCtx())
 
 	// check if this is an helper
 	if helperName := node.HelperName(); helperName != "" {
@@ -660,7 +607,6 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 		}
 	}
 
-	v.popExprCtx()
 	v.popExpr()
 
 	return result
@@ -681,14 +627,15 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 		return nil
 	}
 
-	// go back to parent context
-	var prevCtxList []reflect.Value
-	for i := node.Depth; i > 0; i-- {
-		prevCtxList = append(prevCtxList, v.popCtx())
-	}
+	var ctx reflect.Value
 
-	// get current context
-	ctx := v.curCtx()
+	if node.Depth > 0 {
+		// get ancestor context
+		ctx = v.ancestorCtx(node.Depth)
+	} else {
+		// get current context
+		ctx = v.curCtx()
+	}
 
 	if VERBOSE_EVAL {
 		log.Printf("VisitPath(): '%s' with context '%s'", node.Original, StrValue(ctx))
@@ -714,13 +661,6 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 		if value.IsValid() {
 			result = value.Interface()
 		}
-	}
-
-	// set back contexts
-	for i := len(prevCtxList); i > 0; i-- {
-		var prev reflect.Value
-		prev, prevCtxList = prevCtxList[len(prevCtxList)-1], prevCtxList[:len(prevCtxList)-1]
-		v.pushCtx(prev)
 	}
 
 	if VERBOSE_EVAL {
