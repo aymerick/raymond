@@ -1,6 +1,10 @@
 package raymond
 
-import "testing"
+import (
+	"fmt"
+	"regexp"
+	"testing"
+)
 
 //
 // @todo Adds tests from:
@@ -295,12 +299,54 @@ var hbBasicTests = []raymondTest{
 	// 	nil,
 	// 	"inner 1",
 	// },
-
-	// @todo "depthed block functions with context argument"
-	// @todo "block functions without context argument"
-	// @todo "pathed block functions without context argument"
-	// @todo "depthed block functions without context argument"
-
+	// {
+	// 	"depthed block functions with context argument",
+	// 	"{{#with value}}{{#../awesome 1}}inner {{.}}{{/../awesome}}{{/with}}",
+	// 	map[string]interface{}{
+	// 		"awesome": func(h *HelperArg) string {
+	// 			return h.BlockWith(h.Param(0))
+	// 		},
+	// 		"value": true,
+	// 	},
+	// 	nil,
+	// 	"inner 1",
+	// },
+	{
+		"block functions without context argument",
+		"{{#awesome}}inner{{/awesome}}",
+		map[string]interface{}{
+			"awesome": func(h *HelperArg) string {
+				return h.Block()
+			},
+		},
+		nil,
+		"inner",
+	},
+	{
+		"pathed block functions without context argument",
+		"{{#foo.awesome}}inner{{/foo.awesome}}",
+		map[string]map[string]interface{}{
+			"foo": {
+				"awesome": func(h *HelperArg) string {
+					return Str(h.Data())
+				},
+			},
+		},
+		nil,
+		"inner",
+	},
+	{
+		"depthed block functions without context argument",
+		"{{#with value}}{{#../awesome}}inner{{/../awesome}}{{/with}}",
+		map[string]interface{}{
+			"value": true,
+			"awesome": func(h *HelperArg) string {
+				return Str(h.Data())
+			},
+		},
+		nil,
+		"inner",
+	},
 	{
 		"paths with hyphens (1)",
 		"{{foo-bar}}",
@@ -357,9 +403,13 @@ var hbBasicTests = []raymondTest{
 		nil,
 		"Goodbye beautiful world!",
 	},
-
-	// @todo "that current context path ({{.}}) doesn't hit helpers"
-
+	// {
+	// 	"that current context path ({{.}}) doesn't hit helpers",
+	// 	"test: {{.}}",
+	// 	map[string]string{"helper": "awesome"},
+	// 	nil,
+	// 	"test: ",
+	// },
 	{
 		"complex but empty paths (1)",
 		"{{person/name}}",
@@ -392,9 +442,6 @@ var hbBasicTests = []raymondTest{
 		nil,
 		"helloHelloHELLO",
 	},
-
-	// @todo "{{#hellos}}{{text/this/foo}}{{/hellos}}" should throw error 'Invalid path: text/this'
-
 	{
 		"this keyword nested inside path' (1)",
 		"{{[this]}}",
@@ -423,9 +470,6 @@ var hbBasicTests = []raymondTest{
 		map[string]Helper{"foo": barSuffixHelper},
 		"bar hellobar Hellobar HELLO",
 	},
-
-	// @todo "{{#hellos}}{{foo text/this/foo}}{{/hellos}}" should throw error 'Invalid path: text/this'
-
 	{
 		"this keyword nested inside helpers param (1)",
 		"{{foo [this]}}",
@@ -526,4 +570,33 @@ var hbBasicTests = []raymondTest{
 
 func TestHandlebarsBasic(t *testing.T) {
 	launchRaymondTests(t, hbBasicTests)
+}
+
+func TestHandlebarsBasicErrors(t *testing.T) {
+	var err error
+
+	inputs := []string{
+		// this keyword nested inside path
+		"{{#hellos}}{{text/this/foo}}{{/hellos}}",
+		// this keyword nested inside helpers param
+		"{{#hellos}}{{foo text/this/foo}}{{/hellos}}",
+	}
+
+	expectedError := regexp.QuoteMeta("Invalid path: text/this")
+
+	for _, input := range inputs {
+		_, err = Parse(input)
+		if err == nil {
+			t.Errorf("Test failed - Error expected")
+		}
+
+		match, errMatch := regexp.MatchString(expectedError, fmt.Sprint(err))
+		if errMatch != nil {
+			panic("Failed to match regexp")
+		}
+
+		if !match {
+			t.Errorf("Test failed - Expected error:\n\t%s\n\nGot:\n\t%s", expectedError, err)
+		}
+	}
 }
