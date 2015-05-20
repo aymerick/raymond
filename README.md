@@ -16,6 +16,7 @@ Handlebars for golang
 - [ ] `compat` mode
 - [ ] pass all handlebars.js tests
 - [ ] pass mustache tests
+- [ ] documentation
 
 ## Test
 
