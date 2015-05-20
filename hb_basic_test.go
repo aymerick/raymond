@@ -242,7 +242,23 @@ var hbBasicTests = []raymondTest{
 	},
 
 	// @todo "functions returning safestrings shouldn't be escaped"
-	// @todo "functions"
+
+	{
+		"functions (1)",
+		"{{awesome}}",
+		map[string]interface{}{"awesome": func(p *HelperParams) string { return "Awesome" }},
+		nil,
+		"Awesome",
+	},
+	{
+		"functions (2)",
+		"{{awesome}}",
+		map[string]interface{}{"awesome": func(p *HelperParams) string { return p.DataStr("more") }, "more": "More awesome"},
+		nil,
+		"More awesome",
+	},
+
+	// @todo "functions with context argument"
 	// @todo "pathed functions with context argument"
 	// @todo "depthed functions with context argument"
 	// @todo "block functions with context argument"

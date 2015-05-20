@@ -53,6 +53,13 @@ func NewHelperParams(eval *EvalVisitor, params []interface{}, hash map[string]in
 	}
 }
 
+func NewEmptyHelperParams(eval *EvalVisitor) *HelperParams {
+	return &HelperParams{
+		eval: eval,
+		hash: make(map[string]interface{}),
+	}
+}
+
 // Returns all parameters
 func (p *HelperParams) Params() []interface{} {
 	return p.params

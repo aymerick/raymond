@@ -10,11 +10,13 @@ Handlebars for golang
 - [ ] @data
 - [ ] whitespace control
 - [ ] partials
+- [ ] `safe` strings
+- [ ] `strict` mode
+- [ ] `stringParams` mode
+- [ ] `compat` mode
 - [ ] pass all handlebars.js tests
 - [ ] pass mustache tests
-- [ ] strict mode
-- [ ] stringParams mode
-- [ ] compat mode
+- [ ] find a better name for `HelperParams` struct
 
 ## Test
 

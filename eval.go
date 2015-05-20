@@ -41,6 +41,11 @@ func NewEvalVisitor(tpl *Template, data interface{}) *EvalVisitor {
 	}
 }
 
+//
+// Contexts stack
+//
+
+// push new context
 func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
 	if VERBOSE_EVAL {
 		log.Printf("Push context: %s", StrValue(ctx))
@@ -49,6 +54,7 @@ func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
 	v.ctx = append(v.ctx, ctx)
 }
 
+// pop last context
 func (v *EvalVisitor) popCtx() reflect.Value {
 	if len(v.ctx) == 0 {
 		return zero
@@ -65,6 +71,7 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 	return result
 }
 
+// returns current context
 func (v *EvalVisitor) curCtx() reflect.Value {
 	if len(v.ctx) == 0 {
 		return zero
@@ -73,10 +80,16 @@ func (v *EvalVisitor) curCtx() reflect.Value {
 	return v.ctx[len(v.ctx)-1]
 }
 
+//
+// Blocks stack
+//
+
+// push new block statement
 func (v *EvalVisitor) pushBlock(block *ast.BlockStatement) {
 	v.blocks = append(v.blocks, block)
 }
 
+// pop last block statement
 func (v *EvalVisitor) popBlock() *ast.BlockStatement {
 	if len(v.blocks) == 0 {
 		return nil
@@ -87,6 +100,7 @@ func (v *EvalVisitor) popBlock() *ast.BlockStatement {
 	return result
 }
 
+// returns current block statement
 func (v *EvalVisitor) curBlock() *ast.BlockStatement {
 	if len(v.blocks) == 0 {
 		return nil
@@ -94,6 +108,10 @@ func (v *EvalVisitor) curBlock() *ast.BlockStatement {
 
 	return v.blocks[len(v.blocks)-1]
 }
+
+//
+// Error functions
+//
 
 // fatal evaluation error
 func (v *EvalVisitor) errPanic(err error) {
@@ -113,6 +131,10 @@ func (v *EvalVisitor) at(node ast.Node) {
 
 	v.curNode = node
 }
+
+//
+// Evaluation
+//
 
 // Evaluate node with given context and returns string result
 func (v *EvalVisitor) evalNodeWith(node ast.Node, ctx reflect.Value) string {
@@ -153,12 +175,70 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Val
 		}
 	}
 
+	// check if result is a function
+	result, _ = indirect(result)
+	if result.Kind() == reflect.Func {
+		result = v.evalFunc(result)
+	}
+
 	if VERBOSE_EVAL {
-		log.Printf("evalField(): '%s' with context %s => %s", fieldName, StrValue(ctx), StrValue(result))
+		log.Printf("evalField(): '%s' with context %s => %s | Kind: %s", fieldName, StrValue(ctx), StrValue(result), result.Kind())
 	}
 
 	return result
 }
+
+// evaluates a function
+func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
+	funcType := funcVal.Type()
+
+	// @todo There should be a better way to get the string type
+	strType := reflect.TypeOf("")
+
+	if !strType.AssignableTo(funcType.Out(0)) {
+		v.errorf("Function must return a uniq String value: %q", funcVal)
+	}
+
+	// create helper params
+	params := NewEmptyHelperParams(v)
+
+	if !reflect.TypeOf(params).AssignableTo(funcType.In(0)) {
+		v.errorf("Function must have a uniq *HelperParams argument: %q", funcVal)
+	}
+
+	args := []reflect.Value{reflect.ValueOf(params)}
+
+	// call function
+	resArr := funcVal.Call(args)
+	if (len(resArr) != 1) || (resArr[0].Kind() != reflect.String) {
+		v.errorf("Erroneous value returned by function: %q", resArr)
+	}
+
+	return resArr[0]
+}
+
+// evaluates all path
+func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string) reflect.Value {
+	for i := 0; i < len(parts); i++ {
+		part := parts[i]
+
+		// "[foo bar]"" => "foo bar"
+		if (len(part) >= 2) && (part[0] == '[') && (part[len(part)-1] == ']') {
+			part = part[1 : len(part)-1]
+		}
+
+		ctx = v.evalField(ctx, part)
+		if !ctx.IsValid() {
+			break
+		}
+	}
+
+	return ctx
+}
+
+//
+// Stringification
+//
 
 // returns string representation of a `interface{}`
 func Str(value interface{}) string {
@@ -171,7 +251,7 @@ func StrValue(value reflect.Value) string {
 
 	ival, ok := printableValue(value)
 	if !ok {
-		panic("Can't print value")
+		panic(fmt.Errorf("Can't print value: %q", value))
 	}
 
 	val := reflect.ValueOf(ival)
@@ -224,6 +304,50 @@ func printableValue(v reflect.Value) (interface{}, bool) {
 	return v.Interface(), true
 }
 
+//
+// Helpers
+//
+
+// Returns true if given expression is a helper call
+func (v *EvalVisitor) isHelperCall(node *ast.Expression) bool {
+	if helperName := node.HelperName(); helperName != "" {
+		return v.findHelper(helperName) != nil
+	}
+	return false
+}
+
+// Finds given helper
+func (v *EvalVisitor) findHelper(name string) Helper {
+	// check template helpers
+	if v.tpl.helpers[name] != nil {
+		return v.tpl.helpers[name]
+	}
+
+	// check global helpers
+	return FindHelper(name)
+}
+
+// Computes helper parameters from an expression
+func (v *EvalVisitor) helperParams(node *ast.Expression) *HelperParams {
+	var params []interface{}
+	var hash map[string]interface{}
+
+	for _, paramNode := range node.Params {
+		param := paramNode.Accept(v)
+		params = append(params, param)
+	}
+
+	if node.Hash != nil {
+		hash, _ = node.Hash.Accept(v).(map[string]interface{})
+	}
+
+	return NewHelperParams(v, params, hash)
+}
+
+//
+// Misc
+//
+
 // indirect returns the item at the end of indirection, and a bool to indicate if it's nil.
 // We indirect through pointers and empty interfaces (only) because
 // non-empty interfaces have methods we might need.
@@ -271,42 +395,6 @@ func IsTruth(val reflect.Value) (truth, ok bool) {
 		return
 	}
 	return truth, true
-}
-
-// Returns true if given expression is a helper call
-func (v *EvalVisitor) isHelperCall(node *ast.Expression) bool {
-	if helperName := node.HelperName(); helperName != "" {
-		return v.findHelper(helperName) != nil
-	}
-	return false
-}
-
-// Finds given helper
-func (v *EvalVisitor) findHelper(name string) Helper {
-	// check template helpers
-	if v.tpl.helpers[name] != nil {
-		return v.tpl.helpers[name]
-	}
-
-	// check global helpers
-	return FindHelper(name)
-}
-
-// Computes helper parameters from an expression
-func (v *EvalVisitor) helperParams(node *ast.Expression) *HelperParams {
-	var params []interface{}
-	var hash map[string]interface{}
-
-	for _, paramNode := range node.Params {
-		param := paramNode.Accept(v)
-		params = append(params, param)
-	}
-
-	if node.Hash != nil {
-		hash, _ = node.Hash.Accept(v).(map[string]interface{})
-	}
-
-	return NewHelperParams(v, params, hash)
 }
 
 //
@@ -484,7 +572,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 		var results []interface{}
 
 		for i := 0; i < ctx.Len(); i++ {
-			value := v.evalPathParts(ctx.Index(i), node.Parts)
+			value := v.evalPath(ctx.Index(i), node.Parts)
 			if value.IsValid() {
 				results = append(results, value.Interface())
 			}
@@ -494,7 +582,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 		result = results
 	default:
 		// NOT array context
-		value := v.evalPathParts(ctx, node.Parts)
+		value := v.evalPath(ctx, node.Parts)
 		if value.IsValid() {
 			result = value.Interface()
 		}
@@ -512,24 +600,6 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	}
 
 	return result
-}
-
-func (v *EvalVisitor) evalPathParts(ctx reflect.Value, parts []string) reflect.Value {
-	for i := 0; i < len(parts); i++ {
-		part := parts[i]
-
-		// "[foo bar]"" => "foo bar"
-		if (len(part) >= 2) && (part[0] == '[') && (part[len(part)-1] == ']') {
-			part = part[1 : len(part)-1]
-		}
-
-		ctx = v.evalField(ctx, part)
-		if !ctx.IsValid() {
-			break
-		}
-	}
-
-	return ctx
 }
 
 // Literals
