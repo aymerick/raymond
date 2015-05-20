@@ -557,15 +557,15 @@ var hbBasicTests = []raymondTest{
 		nil,
 		"foo",
 	},
-
-	// @todo
-	// {
-	//  "should handle literals in subexpression",
-	//  "{{foo (false)}}",
-	//  ...,
-	//  ...,
-	//  "bar",
-	// },
+	{
+		"should handle literals in subexpression",
+		"{{foo (false)}}",
+		map[string]interface{}{"false": func() string { return "bar" }},
+		map[string]Helper{"foo": func(h *HelperArg) string {
+			return h.ParamStr(0)
+		}},
+		"bar",
+	},
 }
 
 func TestHandlebarsBasic(t *testing.T) {
