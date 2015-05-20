@@ -253,20 +253,40 @@ var hbBasicTests = []raymondTest{
 	{
 		"functions (2)",
 		"{{awesome}}",
-		map[string]interface{}{"awesome": func(h *HelperArg) string { return h.DataStr("more") }, "more": "More awesome"},
+		map[string]interface{}{"awesome": func(h *HelperArg) string {
+			return h.DataStr("more")
+		}, "more": "More awesome"},
 		nil,
 		"More awesome",
 	},
 	{
 		"functions with context argument",
 		"{{awesome frank}}",
-		map[string]interface{}{"awesome": func(h *HelperArg) string { return h.ParamStr(0) }, "frank": "Frank"},
+		map[string]interface{}{"awesome": func(h *HelperArg) string {
+			return h.ParamStr(0)
+		}, "frank": "Frank"},
+		nil,
+		"Frank",
+	},
+	{
+		"pathed functions with context argument",
+		"{{bar.awesome frank}}",
+		map[string]interface{}{"bar": map[string]interface{}{"awesome": func(h *HelperArg) string {
+			return h.ParamStr(0)
+		}}, "frank": "Frank"},
+		nil,
+		"Frank",
+	},
+	{
+		"depthed functions with context argument",
+		"{{#with frank}}{{../awesome .}}{{/with}}",
+		map[string]interface{}{"awesome": func(h *HelperArg) string {
+			return h.ParamStr(0)
+		}, "frank": "Frank"},
 		nil,
 		"Frank",
 	},
 
-	// @todo "functions with context argument"
-	// @todo "pathed functions with context argument"
 	// @todo "depthed functions with context argument"
 	// @todo "block functions with context argument"
 	// @todo "depthed block functions with context argument"

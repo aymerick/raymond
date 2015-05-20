@@ -27,9 +27,10 @@ type EvalVisitor struct {
 	tpl  *Template
 	data interface{}
 
-	ctx    []reflect.Value
-	blocks []*ast.BlockStatement
-	exprs  []*ast.Expression
+	ctx     []reflect.Value
+	blocks  []*ast.BlockStatement
+	exprs   []*ast.Expression
+	exprCtx []reflect.Value
 
 	curNode ast.Node
 }
@@ -67,7 +68,7 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 	result, v.ctx = v.ctx[len(v.ctx)-1], v.ctx[:len(v.ctx)-1]
 
 	if VERBOSE_EVAL {
-		log.Printf("Pop context, back to: %s", StrValue(v.curCtx()))
+		log.Printf("Pop context, current is: %s", StrValue(v.curCtx()))
 	}
 
 	return result
@@ -88,6 +89,10 @@ func (v *EvalVisitor) curCtx() reflect.Value {
 
 // push new block statement
 func (v *EvalVisitor) pushBlock(block *ast.BlockStatement) {
+	if VERBOSE_EVAL {
+		log.Printf("Push block: %s", Str(block))
+	}
+
 	v.blocks = append(v.blocks, block)
 }
 
@@ -99,6 +104,11 @@ func (v *EvalVisitor) popBlock() *ast.BlockStatement {
 
 	var result *ast.BlockStatement
 	result, v.blocks = v.blocks[len(v.blocks)-1], v.blocks[:len(v.blocks)-1]
+
+	if VERBOSE_EVAL {
+		log.Printf("Pop block, current is: %s", Str(v.curBlock()))
+	}
+
 	return result
 }
 
@@ -116,28 +126,84 @@ func (v *EvalVisitor) curBlock() *ast.BlockStatement {
 //
 
 // push new expression
-func (v *EvalVisitor) pushExpression(expression *ast.Expression) {
+func (v *EvalVisitor) pushExpr(expression *ast.Expression) {
+	if VERBOSE_EVAL {
+		log.Printf("Push expression: %s", Str(expression))
+	}
+
 	v.exprs = append(v.exprs, expression)
 }
 
 // pop last expression
-func (v *EvalVisitor) popExpression() *ast.Expression {
+func (v *EvalVisitor) popExpr() *ast.Expression {
 	if len(v.exprs) == 0 {
 		return nil
 	}
 
 	var result *ast.Expression
 	result, v.exprs = v.exprs[len(v.exprs)-1], v.exprs[:len(v.exprs)-1]
+
+	if VERBOSE_EVAL {
+		log.Printf("Pop expression, current is: %s", Str(v.curExpr()))
+	}
+
 	return result
 }
 
 // returns current expression
-func (v *EvalVisitor) curExpression() *ast.Expression {
+func (v *EvalVisitor) curExpr() *ast.Expression {
 	if len(v.exprs) == 0 {
 		return nil
 	}
 
 	return v.exprs[len(v.exprs)-1]
+}
+
+//
+// Expressions context stack
+//
+// This the stack representing previous context for current expression
+//
+// This is needed to support `{{#with frank}}{{../awesome .}}{{/with}}` where '../awesome' is a function call
+// When evaluating '../awesome' we go back to parent ctx, but when evaluating to '.' we must use previous ctx.
+// That's that previous ctx we are storing in that stack.
+//
+// @todo THIS IS BUGGY ! We should use a linked list of contexts to be sure we can always access an ancestor context.
+//
+
+// push new expression context
+func (v *EvalVisitor) pushExprCtx(ctx reflect.Value) {
+	if VERBOSE_EVAL {
+		log.Printf("Push expression context: %s", StrValue(ctx))
+	}
+
+	v.exprCtx = append(v.exprCtx, ctx)
+}
+
+// pop last expression context
+func (v *EvalVisitor) popExprCtx() reflect.Value {
+	if len(v.exprCtx) == 0 {
+		return zero
+	}
+
+	var result reflect.Value
+
+	result, v.exprCtx = v.exprCtx[len(v.exprCtx)-1], v.exprCtx[:len(v.exprCtx)-1]
+
+	if VERBOSE_EVAL {
+		log.Printf("Pop expression context, current is: %s", StrValue(v.curExprCtx()))
+	}
+
+	return result
+}
+
+// returns current expression context
+func (v *EvalVisitor) curExprCtx() reflect.Value {
+	if len(v.exprCtx) == 0 {
+		return zero
+	}
+
+	return v.exprCtx[len(v.exprCtx)-1]
 }
 
 //
@@ -237,7 +303,7 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
 	args := []reflect.Value{}
 	if funcType.NumIn() == 1 {
 		// create helper argument
-		arg := v.HelperArg(v.curExpression())
+		arg := v.HelperArg(v.curExpr())
 
 		if !reflect.TypeOf(arg).AssignableTo(funcType.In(0)) {
 			v.errorf("Function argument must be a *HelperArg: %q", funcVal)
@@ -253,7 +319,7 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
 	return resArr[0]
 }
 
-// evaluates all path
+// evaluates all path parts
 func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string) reflect.Value {
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
@@ -368,6 +434,15 @@ func (v *EvalVisitor) HelperArg(node *ast.Expression) *HelperArg {
 	var params []interface{}
 	var hash map[string]interface{}
 
+	withDepthPath := false
+	if path := node.FieldPath(); path != nil && path.Depth > 0 {
+		withDepthPath = true
+	}
+
+	if withDepthPath {
+		v.pushCtx(v.curExprCtx())
+	}
+
 	for _, paramNode := range node.Params {
 		param := paramNode.Accept(v)
 		params = append(params, param)
@@ -375,6 +450,10 @@ func (v *EvalVisitor) HelperArg(node *ast.Expression) *HelperArg {
 
 	if node.Hash != nil {
 		hash, _ = node.Hash.Accept(v).(map[string]interface{})
+	}
+
+	if withDepthPath {
+		v.popCtx()
 	}
 
 	return NewHelperArg(v, params, hash)
@@ -546,7 +625,8 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	var result interface{}
 	done := false
 
-	v.pushExpression(node)
+	v.pushExpr(node)
+	v.pushExprCtx(v.curCtx())
 
 	// check if this is an helper
 	if helperName := node.HelperName(); helperName != "" {
@@ -580,7 +660,8 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 		}
 	}
 
-	v.popExpression()
+	v.popExprCtx()
+	v.popExpr()
 
 	return result
 }
@@ -610,7 +691,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	ctx := v.curCtx()
 
 	if VERBOSE_EVAL {
-		log.Printf("VisitPath(): %s with context '%s'", node.Original, StrValue(ctx))
+		log.Printf("VisitPath(): '%s' with context '%s'", node.Original, StrValue(ctx))
 	}
 
 	switch ctx.Kind() {
@@ -643,7 +724,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	}
 
 	if VERBOSE_EVAL {
-		log.Printf("VisitPath(): result => %s", Str(result))
+		log.Printf("VisitPath(): result => '%s'", Str(result))
 	}
 
 	return result
