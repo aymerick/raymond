@@ -27,6 +27,15 @@ func Parse(source string) (*Template, error) {
 	return tpl, nil
 }
 
+// Instanciate a template an parse it. Panics on error.
+func MustParse(source string) *Template {
+	result, err := Parse(source)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 // Instanciate a new template
 func NewTemplate(source string) *Template {
 	return &Template{
@@ -86,6 +95,15 @@ func (tpl *Template) Exec(data interface{}) (result string, err error) {
 
 	// named return values
 	return
+}
+
+// Renders a template with input data. Panics on error.
+func (tpl *Template) MustExec(data interface{}) string {
+	result, err := tpl.Exec(data)
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 // recovers exec panic
