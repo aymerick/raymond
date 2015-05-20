@@ -195,25 +195,30 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
 	// @todo There should be a better way to get the string type
 	strType := reflect.TypeOf("")
 
-	if !strType.AssignableTo(funcType.Out(0)) {
-		v.errorf("Function must return a uniq String value: %q", funcVal)
+	if (funcType.NumOut() != 1) || !strType.AssignableTo(funcType.Out(0)) {
+		v.errorf("Function must return a uniq string value: %q", funcVal)
 	}
 
-	// create helper params
-	params := NewEmptyHelperParams(v)
-
-	if !reflect.TypeOf(params).AssignableTo(funcType.In(0)) {
-		v.errorf("Function must have a uniq *HelperParams argument: %q", funcVal)
+	if funcType.NumIn() > 1 {
+		v.errorf("Function can only have a uniq argument: %q", funcVal)
 	}
 
-	args := []reflect.Value{reflect.ValueOf(params)}
+	args := []reflect.Value{}
+	if funcType.NumIn() == 1 {
+		// create helper params
+		params := NewEmptyHelperParams(v)
+
+		if !reflect.TypeOf(params).AssignableTo(funcType.In(0)) {
+			v.errorf("Function argument must be a *HelperParams: %q", funcVal)
+		}
+
+		args = append(args, reflect.ValueOf(params))
+	}
 
 	// call function
 	resArr := funcVal.Call(args)
-	if (len(resArr) != 1) || (resArr[0].Kind() != reflect.String) {
-		v.errorf("Erroneous value returned by function: %q", resArr)
-	}
 
+	// we already checked that func returns only one value
 	return resArr[0]
 }
 

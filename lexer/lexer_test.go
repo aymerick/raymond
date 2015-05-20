@@ -1,13 +1,6 @@
 package lexer
 
-import (
-	"log"
-	"testing"
-)
-
-const (
-	VERBOSE = false
-)
+import "testing"
 
 type lexTest struct {
 	name   string
@@ -484,10 +477,6 @@ func equal(i1, i2 []Token, checkPos bool) bool {
 
 func TestLexer(t *testing.T) {
 	for _, test := range lexTests {
-		if VERBOSE {
-			log.Printf("\n\n**********************************")
-			log.Printf("Testing: %s", test.name)
-		}
 		tokens := collect(&test)
 		if !equal(tokens, test.tokens, false) {
 			t.Errorf("Test '%s' failed\ninput:\n\t'%s'\nexpected\n\t%v\ngot\n\t%+v\n", test.name, test.input, test.tokens, tokens)

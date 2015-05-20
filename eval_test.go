@@ -11,13 +11,48 @@ var evalTests = []raymondTest{
 		"this is content",
 	},
 	// @todo Test with a struct for data
+
+	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
 }
 
 func TestEval(t *testing.T) {
 	launchRaymondTests(t, evalTests)
 }
 
-// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
+var evalErrors = []raymondTest{
+	{
+		"functions with wrong number of arguments",
+		"{{foo}}",
+		map[string]interface{}{"foo": func(a, b *HelperParams) string { return "foo" }},
+		nil,
+		"Function can only have a uniq argument",
+	},
+	{
+		"functions with wrong argument type",
+		"{{foo}}",
+		map[string]interface{}{"foo": func(a string) string { return "foo" }},
+		nil,
+		"Function argument must be a *HelperParams",
+	},
+	{
+		"functions with wrong number of returned values",
+		"{{foo}}",
+		map[string]interface{}{"foo": func() (string, string) { return "foo", "bar" }},
+		nil,
+		"Function must return a uniq string value",
+	},
+	{
+		"functions with wrong returned value type",
+		"{{foo}}",
+		map[string]interface{}{"foo": func() bool { return true }},
+		nil,
+		"Function must return a uniq string value",
+	},
+}
+
+func TestEvalErrors(t *testing.T) {
+	launchRaymondErrorTests(t, evalErrors)
+}
 
 //
 // StrValue() / Str() tests

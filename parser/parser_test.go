@@ -2,16 +2,11 @@ package parser
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aymerick/raymond/ast"
 	"github.com/aymerick/raymond/lexer"
-)
-
-const (
-	VERBOSE = false
 )
 
 type parserTest struct {
@@ -91,11 +86,6 @@ var parserTests = []parserTest{
 
 func TestParser(t *testing.T) {
 	for _, test := range parserTests {
-		if VERBOSE {
-			log.Printf("\n\n**********************************")
-			log.Printf("Testing: %s", test.name)
-		}
-
 		output := ""
 
 		node, err := Parse(test.input)
@@ -167,11 +157,6 @@ var parserErrorTests = []parserTest{
 
 func TestParserErrors(t *testing.T) {
 	for _, test := range parserErrorTests {
-		if VERBOSE {
-			log.Printf("\n\n**********************************")
-			log.Printf("Testing: %s", test.name)
-		}
-
 		node, err := Parse(test.input)
 		if err == nil {
 			output := ast.PrintNode(node)

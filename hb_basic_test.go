@@ -246,7 +246,7 @@ var hbBasicTests = []raymondTest{
 	{
 		"functions (1)",
 		"{{awesome}}",
-		map[string]interface{}{"awesome": func(p *HelperParams) string { return "Awesome" }},
+		map[string]interface{}{"awesome": func() string { return "Awesome" }},
 		nil,
 		"Awesome",
 	},
