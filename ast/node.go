@@ -313,10 +313,6 @@ func (node *Expression) HelperName() string {
 
 // returns path expression representing a field path, or nil if this is not a field path
 func (node *Expression) FieldPath() *PathExpression {
-	if node.haveParams() {
-		return nil
-	}
-
 	path, ok := node.Path.(*PathExpression)
 	if !ok {
 		return nil

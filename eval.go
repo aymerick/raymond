@@ -26,10 +26,12 @@ var (
 type EvalVisitor struct {
 	tpl  *Template
 	data interface{}
-	ctx  []reflect.Value
+
+	ctx    []reflect.Value
+	blocks []*ast.BlockStatement
+	exprs  []*ast.Expression
 
 	curNode ast.Node
-	blocks  []*ast.BlockStatement
 }
 
 // Instanciate a new evaluation visitor
@@ -107,6 +109,35 @@ func (v *EvalVisitor) curBlock() *ast.BlockStatement {
 	}
 
 	return v.blocks[len(v.blocks)-1]
+}
+
+//
+// Expressions stack
+//
+
+// push new expression
+func (v *EvalVisitor) pushExpression(expression *ast.Expression) {
+	v.exprs = append(v.exprs, expression)
+}
+
+// pop last expression
+func (v *EvalVisitor) popExpression() *ast.Expression {
+	if len(v.exprs) == 0 {
+		return nil
+	}
+
+	var result *ast.Expression
+	result, v.exprs = v.exprs[len(v.exprs)-1], v.exprs[:len(v.exprs)-1]
+	return result
+}
+
+// returns current expression
+func (v *EvalVisitor) curExpression() *ast.Expression {
+	if len(v.exprs) == 0 {
+		return nil
+	}
+
+	return v.exprs[len(v.exprs)-1]
 }
 
 //
@@ -206,7 +237,7 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
 	args := []reflect.Value{}
 	if funcType.NumIn() == 1 {
 		// create helper argument
-		arg := NewEmptyHelperArg(v)
+		arg := v.HelperArg(v.curExpression())
 
 		if !reflect.TypeOf(arg).AssignableTo(funcType.In(0)) {
 			v.errorf("Function argument must be a *HelperArg: %q", funcVal)
@@ -512,35 +543,46 @@ func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	v.at(node)
 
+	var result interface{}
+	done := false
+
+	v.pushExpression(node)
+
 	// check if this is an helper
 	if helperName := node.HelperName(); helperName != "" {
 		if helper := v.findHelper(helperName); helper != nil {
 			// call helper function
-			return helper(v.HelperArg(node))
+			result = helper(v.HelperArg(node))
+			done = true
 		}
 	}
 
-	// field path
-	if path := node.FieldPath(); path != nil {
-		if val := path.Accept(v); val != nil {
-			return val
-		}
+	if !done {
+		// field path
+		if path := node.FieldPath(); path != nil {
+			if val := path.Accept(v); val != nil {
+				result = val
+			}
 
-		// invalid field path
-		return nil
+			// invalid field path
+			done = true
+		}
 	}
 
-	// literal
-	if literal, ok := node.LiteralStr(); ok {
-		if val := v.evalField(v.curCtx(), literal); val.IsValid() {
-			return val.Interface()
-		}
+	if !done {
+		// literal
+		if literal, ok := node.LiteralStr(); ok {
+			if val := v.evalField(v.curCtx(), literal); val.IsValid() {
+				result = val.Interface()
+			}
 
-		return nil
+			done = true
+		}
 	}
 
-	// wat
-	return nil
+	v.popExpression()
+
+	return result
 }
 
 func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {

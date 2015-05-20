@@ -45,6 +45,7 @@ func FindHelper(name string) Helper {
 	return helpers[name]
 }
 
+// Instanciates a new HelperArg
 func NewHelperArg(eval *EvalVisitor, params []interface{}, hash map[string]interface{}) *HelperArg {
 	return &HelperArg{
 		eval:   eval,
@@ -53,10 +54,12 @@ func NewHelperArg(eval *EvalVisitor, params []interface{}, hash map[string]inter
 	}
 }
 
-func NewEmptyHelperArg(eval *EvalVisitor) *HelperArg {
+// Instanciates a new HelperArg for a function call
+func NewFuncHelperArg(eval *EvalVisitor, ctx interface{}) *HelperArg {
 	return &HelperArg{
-		eval: eval,
-		hash: make(map[string]interface{}),
+		eval:   eval,
+		params: []interface{}{ctx},
+		hash:   make(map[string]interface{}),
 	}
 }
 

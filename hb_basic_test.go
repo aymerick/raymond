@@ -257,6 +257,13 @@ var hbBasicTests = []raymondTest{
 		nil,
 		"More awesome",
 	},
+	{
+		"functions with context argument",
+		"{{awesome frank}}",
+		map[string]interface{}{"awesome": func(h *HelperArg) string { return h.ParamStr(0) }, "frank": "Frank"},
+		nil,
+		"Frank",
+	},
 
 	// @todo "functions with context argument"
 	// @todo "pathed functions with context argument"
