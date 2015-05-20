@@ -25,9 +25,9 @@ var testOutput = `<div class="entry">
 </div>`
 
 func TestRender(t *testing.T) {
-	output := Render(testInput, map[string]string{"title": "foo", "body": "bar"})
-	if output != testOutput {
-		t.Errorf("Failed to render template\ninput:\n\n'%s'\n\nexpected:\n\n%s\n\ngot:\n\n%s", testInput, testOutput, output)
+	output, err := Render(testInput, map[string]string{"title": "foo", "body": "bar"})
+	if err != nil || (output != testOutput) {
+		t.Errorf("Failed to render template\ninput:\n\n'%s'\n\nexpected:\n\n%s\n\ngot:\n\n%serror:\n\n%s", testInput, testOutput, output, err)
 	}
 }
 
