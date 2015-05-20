@@ -206,6 +206,25 @@ func (v *EvalVisitor) evalNodeWith(node ast.Node, ctx reflect.Value) string {
 	return result
 }
 
+// evaluates all path parts
+func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool) reflect.Value {
+	for i := 0; i < len(parts); i++ {
+		part := parts[i]
+
+		// "[foo bar]"" => "foo bar"
+		if (len(part) >= 2) && (part[0] == '[') && (part[len(part)-1] == ']') {
+			part = part[1 : len(part)-1]
+		}
+
+		ctx = v.evalField(ctx, part, exprRoot)
+		if !ctx.IsValid() {
+			break
+		}
+	}
+
+	return ctx
+}
+
 // evaluates field in given context
 func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bool) reflect.Value {
 	result := zero
@@ -273,7 +292,7 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Val
 		if exprRoot {
 			// create function arg with all params/hash
 			expr := v.curExpr()
-			arg = v.HelperArg(expr)
+			arg = v.helperArg(expr)
 
 			// ok, that expression was a function call
 			v.exprFunc[expr] = true
@@ -295,25 +314,6 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Val
 
 	// we already checked that func returns only one value
 	return resArr[0]
-}
-
-// evaluates all path parts
-func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool) reflect.Value {
-	for i := 0; i < len(parts); i++ {
-		part := parts[i]
-
-		// "[foo bar]"" => "foo bar"
-		if (len(part) >= 2) && (part[0] == '[') && (part[len(part)-1] == ']') {
-			part = part[1 : len(part)-1]
-		}
-
-		ctx = v.evalField(ctx, part, exprRoot)
-		if !ctx.IsValid() {
-			break
-		}
-	}
-
-	return ctx
 }
 
 //
@@ -408,7 +408,7 @@ func (v *EvalVisitor) findHelper(name string) Helper {
 }
 
 // Computes helper argument from an expression
-func (v *EvalVisitor) HelperArg(node *ast.Expression) *HelperArg {
+func (v *EvalVisitor) helperArg(node *ast.Expression) *HelperArg {
 	var params []interface{}
 	var hash map[string]interface{}
 
@@ -606,7 +606,7 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	// helper call
 	if helperName := node.HelperName(); helperName != "" {
 		if helper := v.findHelper(helperName); helper != nil {
-			result = helper(v.HelperArg(node))
+			result = helper(v.helperArg(node))
 			done = true
 		}
 	}
