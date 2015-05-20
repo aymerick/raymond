@@ -286,9 +286,16 @@ var hbBasicTests = []raymondTest{
 		nil,
 		"Frank",
 	},
+	// {
+	// 	"block functions with context argument",
+	// 	"{{#awesome 1}}inner {{.}}{{/awesome}}",
+	// 	map[string]interface{}{"awesome": func(h *HelperArg) string {
+	// 		return h.BlockWith(h.Param(0))
+	// 	}},
+	// 	nil,
+	// 	"inner 1",
+	// },
 
-	// @todo "depthed functions with context argument"
-	// @todo "block functions with context argument"
 	// @todo "depthed block functions with context argument"
 	// @todo "block functions without context argument"
 	// @todo "pathed block functions without context argument"
