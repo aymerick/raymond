@@ -205,14 +205,14 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
 
 	args := []reflect.Value{}
 	if funcType.NumIn() == 1 {
-		// create helper params
-		params := NewEmptyHelperParams(v)
+		// create helper argument
+		arg := NewEmptyHelperArg(v)
 
-		if !reflect.TypeOf(params).AssignableTo(funcType.In(0)) {
-			v.errorf("Function argument must be a *HelperParams: %q", funcVal)
+		if !reflect.TypeOf(arg).AssignableTo(funcType.In(0)) {
+			v.errorf("Function argument must be a *HelperArg: %q", funcVal)
 		}
 
-		args = append(args, reflect.ValueOf(params))
+		args = append(args, reflect.ValueOf(arg))
 	}
 
 	// call function
@@ -332,8 +332,8 @@ func (v *EvalVisitor) findHelper(name string) Helper {
 	return FindHelper(name)
 }
 
-// Computes helper parameters from an expression
-func (v *EvalVisitor) helperParams(node *ast.Expression) *HelperParams {
+// Computes helper argument from an expression
+func (v *EvalVisitor) HelperArg(node *ast.Expression) *HelperArg {
 	var params []interface{}
 	var hash map[string]interface{}
 
@@ -346,7 +346,7 @@ func (v *EvalVisitor) helperParams(node *ast.Expression) *HelperParams {
 		hash, _ = node.Hash.Accept(v).(map[string]interface{})
 	}
 
-	return NewHelperParams(v, params, hash)
+	return NewHelperArg(v, params, hash)
 }
 
 //
@@ -516,7 +516,7 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	if helperName := node.HelperName(); helperName != "" {
 		if helper := v.findHelper(helperName); helper != nil {
 			// call helper function
-			return helper(v.helperParams(node))
+			return helper(v.HelperArg(node))
 		}
 	}
 

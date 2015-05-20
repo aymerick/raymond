@@ -23,7 +23,7 @@ var evalErrors = []raymondTest{
 	{
 		"functions with wrong number of arguments",
 		"{{foo}}",
-		map[string]interface{}{"foo": func(a, b *HelperParams) string { return "foo" }},
+		map[string]interface{}{"foo": func(a, b *HelperArg) string { return "foo" }},
 		nil,
 		"Function can only have a uniq argument",
 	},
@@ -32,7 +32,7 @@ var evalErrors = []raymondTest{
 		"{{foo}}",
 		map[string]interface{}{"foo": func(a string) string { return "foo" }},
 		nil,
-		"Function argument must be a *HelperParams",
+		"Function argument must be a *HelperArg",
 	},
 	{
 		"functions with wrong number of returned values",

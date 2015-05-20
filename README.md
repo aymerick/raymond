@@ -16,7 +16,6 @@ Handlebars for golang
 - [ ] `compat` mode
 - [ ] pass all handlebars.js tests
 - [ ] pass mustache tests
-- [ ] find a better name for `HelperParams` struct
 
 ## Test
 

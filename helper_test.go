@@ -14,16 +14,16 @@ const (
 // Helpers
 //
 
-func barHelper(p *HelperParams) string { return "bar" }
+func barHelper(h *HelperArg) string { return "bar" }
 
-func barSuffixHelper(p *HelperParams) string {
-	str, _ := p.Param(0).(string)
+func barSuffixHelper(h *HelperArg) string {
+	str, _ := h.Param(0).(string)
 	return "bar " + str
 }
 
-func echoHelper(p *HelperParams) string {
-	str, _ := p.Param(0).(string)
-	nb, ok := p.Param(1).(int)
+func echoHelper(h *HelperArg) string {
+	str, _ := h.Param(0).(string)
+	nb, ok := h.Param(1).(int)
 	if !ok {
 		nb = 1
 	}
@@ -36,8 +36,8 @@ func echoHelper(p *HelperParams) string {
 	return result
 }
 
-func boolHelper(p *HelperParams) string {
-	b, _ := p.Param(0).(bool)
+func boolHelper(h *HelperArg) string {
+	b, _ := h.Param(0).(bool)
 	if b {
 		return "yes it is"
 	}
@@ -45,8 +45,8 @@ func boolHelper(p *HelperParams) string {
 	return "absolutely not"
 }
 
-func gnakHelper(p *HelperParams) string {
-	nb, ok := p.Param(0).(int)
+func gnakHelper(h *HelperArg) string {
+	nb, ok := h.Param(0).(int)
 	if !ok {
 		nb = 1
 	}
@@ -59,32 +59,32 @@ func gnakHelper(p *HelperParams) string {
 	return result
 }
 
-func linkHelper(p *HelperParams) string {
-	prefix, _ := p.Param(0).(string)
+func linkHelper(h *HelperArg) string {
+	prefix, _ := h.Param(0).(string)
 
-	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, p.DataStr("url"), p.DataStr("text"))
+	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, h.DataStr("url"), h.DataStr("text"))
 }
 
-func rawHelper(p *HelperParams) string {
-	result := p.Block()
+func rawHelper(h *HelperArg) string {
+	result := h.Block()
 
-	for _, param := range p.Params() {
+	for _, param := range h.Params() {
 		result += Str(param)
 	}
 
 	return result
 }
 
-func formHelper(p *HelperParams) string {
-	return "<form>" + p.Block() + "</form>"
+func formHelper(h *HelperArg) string {
+	return "<form>" + h.Block() + "</form>"
 }
 
-func formCtxHelper(p *HelperParams) string {
-	return "<form>" + p.BlockWith(p.Param(0)) + "</form>"
+func formCtxHelper(h *HelperArg) string {
+	return "<form>" + h.BlockWith(h.Param(0)) + "</form>"
 }
 
-func listHelper(p *HelperParams) string {
-	ctx := p.Param(0)
+func listHelper(h *HelperArg) string {
+	ctx := h.Param(0)
 
 	val := reflect.ValueOf(ctx)
 	switch val.Kind() {
@@ -93,7 +93,7 @@ func listHelper(p *HelperParams) string {
 			result := "<ul>"
 			for i := 0; i < val.Len(); i++ {
 				result += "<li>"
-				result += p.BlockWith(val.Index(i).Interface())
+				result += h.BlockWith(val.Index(i).Interface())
 				result += "</li>"
 			}
 			result += "</ul>"
@@ -102,23 +102,23 @@ func listHelper(p *HelperParams) string {
 		}
 	}
 
-	return "<p>" + p.Inverse() + "</p>"
+	return "<p>" + h.Inverse() + "</p>"
 }
 
-func blogHelper(p *HelperParams) string {
-	return "val is " + p.ParamStr(0)
+func blogHelper(h *HelperArg) string {
+	return "val is " + h.ParamStr(0)
 }
 
-func equalHelper(p *HelperParams) string {
-	return Str(p.ParamStr(0) == p.ParamStr(1))
+func equalHelper(h *HelperArg) string {
+	return Str(h.ParamStr(0) == h.ParamStr(1))
 }
 
-func dashHelper(p *HelperParams) string {
-	return p.ParamStr(0) + "-" + p.ParamStr(1)
+func dashHelper(h *HelperArg) string {
+	return h.ParamStr(0) + "-" + h.ParamStr(1)
 }
 
-func concatHelper(p *HelperParams) string {
-	return p.ParamStr(0) + p.ParamStr(1)
+func concatHelper(h *HelperArg) string {
+	return h.ParamStr(0) + h.ParamStr(1)
 }
 
 //

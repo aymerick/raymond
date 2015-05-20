@@ -12,10 +12,10 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{foo (bar)}}!",
 		map[string]interface{}{},
 		map[string]Helper{
-			"foo": func(p *HelperParams) string {
-				return p.ParamStr(0) + p.ParamStr(0)
+			"foo": func(h *HelperArg) string {
+				return h.ParamStr(0) + h.ParamStr(0)
 			},
-			"bar": func(p *HelperParams) string {
+			"bar": func(h *HelperArg) string {
 				return "LOL"
 			},
 		},
@@ -36,8 +36,8 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{blog baz.bat (equal a b) baz.bar}}",
 		map[string]interface{}{"bar": "LOL", "baz": map[string]string{"bat": "foo!", "bar": "bar!"}},
 		map[string]Helper{
-			"blog": func(p *HelperParams) string {
-				return "val is " + p.ParamStr(0) + ", " + p.ParamStr(1) + " and " + p.ParamStr(2)
+			"blog": func(h *HelperArg) string {
+				return "val is " + h.ParamStr(0) + ", " + h.ParamStr(1) + " and " + h.ParamStr(2)
 			},
 			"equal": equalHelper,
 		},
@@ -115,8 +115,8 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{blog fun=(equal (blog fun=1) 'val is 1')}}",
 		map[string]interface{}{},
 		map[string]Helper{
-			"blog": func(p *HelperParams) string {
-				return "val is " + p.OptionStr("fun")
+			"blog": func(h *HelperArg) string {
+				return "val is " + h.OptionStr("fun")
 			},
 			"equal": equalHelper,
 		},
@@ -128,13 +128,13 @@ var hbSubexpressionsTests = []raymondTest{
 		`{{{input aria-label=(t "Name") placeholder=(t "Example User")}}}`,
 		map[string]interface{}{},
 		map[string]Helper{
-			"input": func(p *HelperParams) string {
+			"input": func(h *HelperArg) string {
 				// @todo Escape values and return a SafeString
-				return `<input aria-label="` + p.OptionStr("aria-label") + `" placeholder="` + p.OptionStr("placeholder") + `" />`
+				return `<input aria-label="` + h.OptionStr("aria-label") + `" placeholder="` + h.OptionStr("placeholder") + `" />`
 			},
-			"t": func(p *HelperParams) string {
+			"t": func(h *HelperArg) string {
 				// @todo Return a SafeString
-				return p.ParamStr(0)
+				return h.ParamStr(0)
 			},
 		},
 		`<input aria-label="Name" placeholder="Example User" />`,
@@ -145,13 +145,13 @@ var hbSubexpressionsTests = []raymondTest{
 		`{{{input aria-label=(t item.field) placeholder=(t item.placeholder)}}}`,
 		map[string]map[string]string{"item": {"field": "Name", "placeholder": "Example User"}},
 		map[string]Helper{
-			"input": func(p *HelperParams) string {
+			"input": func(h *HelperArg) string {
 				// @todo Escape values and return a SafeString
-				return `<input aria-label="` + p.OptionStr("aria-label") + `" placeholder="` + p.OptionStr("placeholder") + `" />`
+				return `<input aria-label="` + h.OptionStr("aria-label") + `" placeholder="` + h.OptionStr("placeholder") + `" />`
 			},
-			"t": func(p *HelperParams) string {
+			"t": func(h *HelperArg) string {
 				// @todo Return a SafeString
-				return p.ParamStr(0)
+				return h.ParamStr(0)
 			},
 		},
 		`<input aria-label="Name" placeholder="Example User" />`,

@@ -35,10 +35,10 @@ var hbHelpersTests = []raymondTest{
 		"helper block with complex lookup expression",
 		"{{#goodbyes}}{{../name}}{{/goodbyes}}",
 		map[string]interface{}{"name": "Alan"},
-		map[string]Helper{"goodbyes": func(p *HelperParams) string {
+		map[string]Helper{"goodbyes": func(h *HelperArg) string {
 			out := ""
 			for _, str := range []string{"Goodbye", "goodbye", "GOODBYE"} {
-				out += str + " " + p.BlockWith(str) + "! "
+				out += str + " " + h.BlockWith(str) + "! "
 			}
 			return out
 		}},
@@ -56,7 +56,7 @@ var hbHelpersTests = []raymondTest{
 		"helper returning undefined value (1)",
 		" {{nothere}}",
 		map[string]interface{}{},
-		map[string]Helper{"nothere": func(p *HelperParams) string {
+		map[string]Helper{"nothere": func(h *HelperArg) string {
 			return ""
 		}},
 		" ",
@@ -66,7 +66,7 @@ var hbHelpersTests = []raymondTest{
 		"helper returning undefined value (2)",
 		" {{#nothere}}{{/nothere}}",
 		map[string]interface{}{},
-		map[string]Helper{"nothere": func(p *HelperParams) string {
+		map[string]Helper{"nothere": func(h *HelperArg) string {
 			return ""
 		}},
 		" ",
@@ -75,8 +75,8 @@ var hbHelpersTests = []raymondTest{
 		"block helper",
 		"{{#goodbyes}}{{text}}! {{/goodbyes}}cruel {{world}}!",
 		map[string]interface{}{"world": "world"},
-		map[string]Helper{"goodbyes": func(p *HelperParams) string {
-			return p.BlockWith(map[string]string{"text": "GOODBYE"})
+		map[string]Helper{"goodbyes": func(h *HelperArg) string {
+			return h.BlockWith(map[string]string{"text": "GOODBYE"})
 		}},
 		"GOODBYE! cruel world!",
 	},
@@ -91,8 +91,8 @@ var hbHelpersTests = []raymondTest{
 		"block helper should have context in this",
 		"<ul>{{#people}}<li>{{#link}}{{name}}{{/link}}</li>{{/people}}</ul>",
 		map[string]interface{}{"people": []map[string]interface{}{{"name": "Alan", "id": 1}, {"name": "Yehuda", "id": 2}}},
-		map[string]Helper{"link": func(p *HelperParams) string {
-			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", p.DataStr("id"), p.Block())
+		map[string]Helper{"link": func(h *HelperArg) string {
+			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", h.DataStr("id"), h.Block())
 		}},
 		`<ul><li><a href="/people/1">Alan</a></li><li><a href="/people/2">Yehuda</a></li></ul>`,
 	},
@@ -121,8 +121,8 @@ var hbHelpersTests = []raymondTest{
 		"nested block helpers",
 		"{{#form yehuda}}<p>{{name}}</p>{{#link}}Hello{{/link}}{{/form}}",
 		map[string]map[string]string{"yehuda": {"name": "Yehuda"}},
-		map[string]Helper{"link": func(p *HelperParams) string {
-			return fmt.Sprintf("<a href=\"%s\">%s</a>", p.DataStr("name"), p.Block())
+		map[string]Helper{"link": func(h *HelperArg) string {
+			return fmt.Sprintf("<a href=\"%s\">%s</a>", h.DataStr("name"), h.Block())
 		}, "form": formCtxHelper},
 		`<form><p>Yehuda</p><a href="Yehuda">Hello</a></form>`,
 	},
