@@ -19,7 +19,9 @@ Handlebars for golang
 
 ## Test
 
-    go test ./... -v
+    $ go test ./...
+
+    $ go test -run="HandlebarsBasic"
 
 ## References
 
