@@ -80,7 +80,7 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 					}
 
 					if !match {
-						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n\t%s", test.name, test.input, Str(test.data), expectedArr, output, tpl.PrintAST())
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), expectedArr, output, tpl.PrintAST())
 					}
 				} else {
 					expectedStr, ok := test.output.(string)
@@ -89,7 +89,7 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 					}
 
 					if expectedStr != output {
-						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n\t%s", test.name, test.input, Str(test.data), expectedStr, output, tpl.PrintAST())
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), expectedStr, output, tpl.PrintAST())
 					}
 				}
 			}
@@ -119,7 +119,7 @@ func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
 			// render template
 			output, err := tpl.Exec(test.data)
 			if err == nil {
-				t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\nAST:\n\t%q", test.name, test.input, output, tpl.PrintAST())
+				t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\nAST:\n%q", test.name, test.input, output, tpl.PrintAST())
 			} else {
 				var errMatch error
 				match := false
