@@ -248,31 +248,7 @@ func main() {
 
 ## Limitations
 
-### Function in data
-
-When providing a function inside data, that function MUST NOT call `Block()`, `BlockWith()` or `Inverse()` evaluators.
-
-For example, that template:
-
-    {{#awesome 1}}inner {{.}}{{/awesome}}
-
-With that data:
-
-```go
-    {
-        "awesome": func(h *HelperArg) string {
-            return h.BlockWith(h.Param(0))
-        }
-    }
-```
-
-Produces that erroneous output:
-
-    inner inner 1
-
-Because the block is evaluated two times: first by the function, and then by `raymond` implementation that uses value returned by function to evaluate the block.
-
-As a general rule, you should use a helper instead of a function.
+@todo doc
 
 
 ## Test

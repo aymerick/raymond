@@ -31,15 +31,19 @@ type EvalVisitor struct {
 	blocks []*ast.BlockStatement
 	exprs  []*ast.Expression
 
+	// memoize expressions that were function calls
+	exprFunc map[*ast.Expression]bool
+
 	curNode ast.Node
 }
 
 // Instanciate a new evaluation visitor
 func NewEvalVisitor(tpl *Template, data interface{}) *EvalVisitor {
 	return &EvalVisitor{
-		tpl:  tpl,
-		data: data,
-		ctx:  []reflect.Value{reflect.ValueOf(data)},
+		tpl:      tpl,
+		data:     data,
+		ctx:      []reflect.Value{reflect.ValueOf(data)},
+		exprFunc: make(map[*ast.Expression]bool),
 	}
 }
 
@@ -203,7 +207,7 @@ func (v *EvalVisitor) evalNodeWith(node ast.Node, ctx reflect.Value) string {
 }
 
 // evaluates field in given context
-func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Value {
+func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bool) reflect.Value {
 	result := zero
 
 	ctx, _ = indirect(ctx)
@@ -236,7 +240,8 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Val
 	// check if result is a function
 	result, _ = indirect(result)
 	if result.Kind() == reflect.Func {
-		result = v.evalFunc(result)
+		// in that code path, we know we can't be an expression root
+		result = v.evalFunc(result, exprRoot)
 	}
 
 	if VERBOSE_EVAL {
@@ -247,7 +252,7 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string) reflect.Val
 }
 
 // evaluates a function
-func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
+func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Value {
 	funcType := funcVal.Type()
 
 	// @todo There should be a better way to get the string type
@@ -263,8 +268,20 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
 
 	args := []reflect.Value{}
 	if funcType.NumIn() == 1 {
-		// create helper argument
-		arg := v.HelperArg(v.curExpr())
+		var arg *HelperArg
+
+		if exprRoot {
+			// create function arg with all params/hash
+			expr := v.curExpr()
+			arg = v.HelperArg(expr)
+
+			// ok, that expression was a function call
+			v.exprFunc[expr] = true
+		} else {
+			// we are not at root of expression, so we are a parameter... and we don't like
+			// infinite loops caused by trying to parse ourself forever
+			arg = NewEmptyHelperArg(v)
+		}
 
 		if !reflect.TypeOf(arg).AssignableTo(funcType.In(0)) {
 			v.errorf("Function argument must be a *HelperArg: %q", funcVal)
@@ -281,7 +298,7 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value) reflect.Value {
 }
 
 // evaluates all path parts
-func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string) reflect.Value {
+func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool) reflect.Value {
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
 
@@ -290,7 +307,7 @@ func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string) reflect.Value 
 			part = part[1 : len(part)-1]
 		}
 
-		ctx = v.evalField(ctx, part)
+		ctx = v.evalField(ctx, part, exprRoot)
 		if !ctx.IsValid() {
 			break
 		}
@@ -408,6 +425,16 @@ func (v *EvalVisitor) HelperArg(node *ast.Expression) *HelperArg {
 }
 
 //
+// Functions
+//
+
+// Returns true if given expression was a function call
+func (v *EvalVisitor) wasFuncCall(node *ast.Expression) bool {
+	// check if expression was tagged as a function call
+	return v.exprFunc[node]
+}
+
+//
 // Misc
 //
 
@@ -507,7 +534,8 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	// evaluate expression
 	expr := node.Expression.Accept(v)
 
-	if v.isHelperCall(node.Expression) {
+	if v.isHelperCall(node.Expression) || v.wasFuncCall(node.Expression) {
+		// it is the responsability of the helper/function to evaluate block
 		result, _ = expr.(string)
 	} else {
 		val := reflect.ValueOf(expr)
@@ -575,10 +603,9 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 
 	v.pushExpr(node)
 
-	// check if this is an helper
+	// helper call
 	if helperName := node.HelperName(); helperName != "" {
 		if helper := v.findHelper(helperName); helper != nil {
-			// call helper function
 			result = helper(v.HelperArg(node))
 			done = true
 		}
@@ -587,11 +614,11 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	if !done {
 		// field path
 		if path := node.FieldPath(); path != nil {
-			if val := path.Accept(v); val != nil {
+			// this is an exception to visitor pattern, because we need to pass the info
+			// that this path is at root of current expression
+			if val := v.evalPathExpression(path, true); val != nil {
 				result = val
 			}
-
-			// invalid field path
 			done = true
 		}
 	}
@@ -599,11 +626,9 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	if !done {
 		// literal
 		if literal, ok := node.LiteralStr(); ok {
-			if val := v.evalField(v.curCtx(), literal); val.IsValid() {
+			if val := v.evalField(v.curCtx(), literal, true); val.IsValid() {
 				result = val.Interface()
 			}
-
-			done = true
 		}
 	}
 
@@ -618,7 +643,8 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 	return node.Expression.Accept(v)
 }
 
-func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
+// Evaluate a path exprexxion
+func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	v.at(node)
 
 	var result interface{}
@@ -647,7 +673,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 		var results []interface{}
 
 		for i := 0; i < ctx.Len(); i++ {
-			value := v.evalPath(ctx.Index(i), node.Parts)
+			value := v.evalPath(ctx.Index(i), node.Parts, exprRoot)
 			if value.IsValid() {
 				results = append(results, value.Interface())
 			}
@@ -657,7 +683,7 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 		result = results
 	default:
 		// NOT array context
-		value := v.evalPath(ctx, node.Parts)
+		value := v.evalPath(ctx, node.Parts, exprRoot)
 		if value.IsValid() {
 			result = value.Interface()
 		}
@@ -668,6 +694,10 @@ func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	}
 
 	return result
+}
+
+func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
+	return v.evalPathExpression(node, false)
 }
 
 // Literals

@@ -54,12 +54,11 @@ func NewHelperArg(eval *EvalVisitor, params []interface{}, hash map[string]inter
 	}
 }
 
-// Instanciates a new HelperArg for a function call
-func NewFuncHelperArg(eval *EvalVisitor, ctx interface{}) *HelperArg {
+// Instanciates a new empty HelperArg
+func NewEmptyHelperArg(eval *EvalVisitor) *HelperArg {
 	return &HelperArg{
-		eval:   eval,
-		params: []interface{}{ctx},
-		hash:   make(map[string]interface{}),
+		eval: eval,
+		hash: make(map[string]interface{}),
 	}
 }
 
@@ -99,7 +98,7 @@ func (h *HelperArg) Data() interface{} {
 
 // Returns input data by name
 func (h *HelperArg) DataField(name string) interface{} {
-	value := h.eval.evalField(h.eval.curCtx(), name)
+	value := h.eval.evalField(h.eval.curCtx(), name, false)
 	if !value.IsValid() {
 		return nil
 	}

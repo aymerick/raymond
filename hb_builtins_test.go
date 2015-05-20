@@ -63,21 +63,27 @@ var hbBuiltinsTests = []raymondTest{
 		nil,
 		"GOODBYE cruel world!",
 	},
-
 	// {
 	// 	"#if - if with function shows the contents when function returns true",
 	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
-	// 	map[string]interface{}{},
+	// 	map[string]interface{}{
+	// 		"goodbye": func() bool { return true },
+	// 		"world":   "world",
+	// 	},
 	// 	nil,
 	// 	"GOODBYE cruel world!",
 	// },
-	// {
-	// 	"#if - if with function shows the contents when function returns string",
-	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
-	// 	map[string]interface{}{},
-	// 	nil,
-	// 	"GOODBYE cruel world!",
-	// },
+	{
+		"#if - if with function shows the contents when function returns string",
+		"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
+		map[string]interface{}{
+			"goodbye": func(h *HelperArg) string { return "world" },
+			"world":   "world",
+		},
+		nil,
+		"GOODBYE cruel world!",
+	},
+
 	// {
 	// 	"#if - if with function does not show the contents when returns false",
 	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
