@@ -4,6 +4,7 @@ Handlebars for golang
 
 **WARNING: This is a work in progress, some features are missing.**
 
+
 ## Todo
 
 - [ ] function in data
@@ -14,9 +15,14 @@ Handlebars for golang
 - [ ] `strict` mode
 - [ ] `stringParams` mode
 - [ ] `compat` mode
+- [ ] permits helpers to return safe strings
+- [ ] the `lookup` helper
+- [ ] the `log` helper
+- [ ] `@index` data in `each` helper
 - [ ] pass all handlebars.js tests
 - [ ] pass mustache tests
 - [ ] documentation
+
 
 ## Quick start
 
@@ -68,6 +74,7 @@ Displays:
 ```
 
 Please note that the template will be parsed everytime you call `Render()` function. So you probably want to read the next section.
+
 
 ## Correct usage
 
@@ -138,11 +145,114 @@ Displays:
 </div>
 ```
 
+You can use `MustParse()` and `MustExec()` functions if you don't want to deal with errors:
+
+```go
+    // parse template
+    tpl := raymond.MustParse(source)
+
+    // render template
+    result := tpl.MustExec(data)
+```
+
+
+## HTML escaping
+
+By default, the result of a mustache expression is HTML escaped. Use the triple mustache `{{{` to output unescaped values.
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/aymerick/raymond"
+)
+
+func main() {
+    source := `<div class="entry">
+  <h1>{{title}}</h1>
+  <div class="body">
+    {{{body}}}
+  </div>
+</div>
+`
+
+    data := map[string]string{
+        "title": "All about <p> Tags",
+        "body":  "<p>This is a post about &lt;p&gt; tags</p>",
+    }
+
+    tpl := raymond.MustParse(source)
+    result := tpl.MustExec(data)
+
+    fmt.Print(result)
+}
+
+```
+
+```html
+<div class="entry">
+  <h1>All about &lt;p&gt; Tags</h1>
+  <div class="body">
+    <p>This is a post about &lt;p&gt; tags</p>
+  </div>
+</div>
+```
+
+@todo How a helper can return a safe string ?
+
+
+## Block Expressions
+
+@todo doc
+
+
+## Handlebars Paths
+
+@todo doc
+
+
+## Helpers
+
+@todo doc
+
+
+## Block helpers
+
+@todo doc
+
+
+## Built-In Helpers
+
+### The `if` block helper
+
+@todo doc
+
+### The `unless` block helper
+
+@todo doc
+
+### The `with` block helper
+
+@todo doc
+
+### The `each` block helper
+
+@todo doc
+
+
+## Partials
+
+@todo doc
+
+
 ## Test
 
     $ go test ./...
 
     $ go test -run="HandlebarsBasic"
+
 
 ## References
 
