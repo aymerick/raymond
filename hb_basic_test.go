@@ -235,7 +235,7 @@ var hbBasicTests = []raymondTest{
 		"{{awesome}}",
 		map[string]string{"awesome": "&\"'`\\<>"},
 		nil,
-		"&amp;&#34;&#39;`\\&lt;&gt;",
+		"&amp;&quot;&apos;`\\&lt;&gt;",
 	},
 	{
 		"escaping expressions (9)",

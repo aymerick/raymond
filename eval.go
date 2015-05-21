@@ -3,7 +3,6 @@ package raymond
 import (
 	"bytes"
 	"fmt"
-	"html"
 	"log"
 	"reflect"
 	"strconv"
@@ -519,7 +518,7 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	str := Str(expr)
 	if !node.Unescaped {
 		// escape html
-		str = html.EscapeString(str)
+		str = EscapeString(str)
 	}
 
 	return str

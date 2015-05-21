@@ -145,7 +145,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#list people}}Hello{{^}}{{message}}{{/list}}",
 		map[string]interface{}{"people": []interface{}{}, "message": "Nobody's here"},
 		map[string]Helper{"list": listHelper},
-		`<p>Nobody&#39;s here</p>`,
+		`<p>Nobody&apos;s here</p>`,
 	},
 
 	// @todo "pathed lambas with parameters"

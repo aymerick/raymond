@@ -50,29 +50,29 @@ func testsFromMustacheFile(fileName string) []raymondTest {
 	return result
 }
 
-func TestMustacheComments(t *testing.T) {
-	launchRaymondTests(t, testsFromMustacheFile("comments.yml"))
-}
+// func TestMustacheComments(t *testing.T) {
+// 	launchRaymondTests(t, testsFromMustacheFile("comments.yml"))
+// }
 
-func TestMustacheDelimiters(t *testing.T) {
-	launchRaymondTests(t, testsFromMustacheFile("delimiters.yml"))
-}
+// func TestMustacheDelimiters(t *testing.T) {
+// 	launchRaymondTests(t, testsFromMustacheFile("delimiters.yml"))
+// }
 
 func TestMustacheInterpolation(t *testing.T) {
 	launchRaymondTests(t, testsFromMustacheFile("interpolation.yml"))
 }
 
-func TestMustacheInverted(t *testing.T) {
-	launchRaymondTests(t, testsFromMustacheFile("inverted.yml"))
-}
+// func TestMustacheInverted(t *testing.T) {
+// 	launchRaymondTests(t, testsFromMustacheFile("inverted.yml"))
+// }
 
 // func TestMustachePartials(t *testing.T) {
 // 	launchRaymondTests(t, testsFromMustacheFile("partials.yml"))
 // }
 
-func TestMustacheSections(t *testing.T) {
-	launchRaymondTests(t, testsFromMustacheFile("sections.yml"))
-}
+// func TestMustacheSections(t *testing.T) {
+// 	launchRaymondTests(t, testsFromMustacheFile("sections.yml"))
+// }
 
 // func TestMustacheLambdas(t *testing.T) {
 // 	launchRaymondTests(t, testsFromMustacheFile("~lambdas.yml"))
