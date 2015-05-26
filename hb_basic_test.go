@@ -11,9 +11,6 @@ import (
 //   https://github.com/wycats/handlebars.js/blob/master/spec/data.js
 //   https://github.com/wycats/handlebars.js/blob/master/spec/partials.js
 //   https://github.com/wycats/handlebars.js/blob/master/spec/regressions.js
-//   https://github.com/wycats/handlebars.js/blob/master/spec/whitespace-control.js
-//
-//   https://github.com/wycats/handlebars.js/blob/master/spec/mustache/
 //
 
 //
