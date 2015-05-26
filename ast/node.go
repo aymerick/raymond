@@ -113,6 +113,13 @@ func NewStripForComment(str string) *Strip {
 	}
 }
 
+func NewStripBool(isOpen, isClose bool) *Strip {
+	return &Strip{
+		Open:  isOpen,
+		Close: isClose,
+	}
+}
+
 //
 // Program
 //
@@ -187,7 +194,7 @@ type BlockStatement struct {
 	Expression *Expression
 
 	Program Node // Program
-	Inverse Node // Program
+	Inverse Node // Program | BlockStatement
 
 	OpenStrip    *Strip
 	InverseStrip *Strip

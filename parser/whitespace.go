@@ -71,8 +71,50 @@ func (v *WhitespaceVisitor) VisitMustache(node *ast.MustacheStatement) interface
 }
 
 func (v *WhitespaceVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
-	// @todo
-	return nil
+	if node.Program != nil {
+		node.Program.Accept(v)
+	}
+
+	if node.Inverse != nil {
+		node.Inverse.Accept(v)
+	}
+
+	program := node.Program
+	inverse := node.Inverse
+
+	// @todo Handles chained inverse
+
+	if program == nil {
+		program = node.Inverse
+		inverse = nil
+	}
+
+	p, _ := program.(*ast.Program)
+	i, _ := inverse.(*ast.Program)
+
+	if (program != nil) && (node.OpenStrip != nil) && node.OpenStrip.Close {
+		v.trimLeft(p.Body[0])
+	}
+
+	if inverse != nil {
+		if node.InverseStrip != nil {
+			if node.InverseStrip.Open {
+				v.trimRight(p.Body[len(p.Body)-1])
+			}
+
+			if node.InverseStrip.Close {
+				v.trimLeft(i.Body[0])
+			}
+		}
+
+		if (node.CloseStrip != nil) && node.CloseStrip.Open {
+			v.trimRight(i.Body[len(i.Body)-1])
+		}
+	} else if (node.CloseStrip != nil) && node.CloseStrip.Open {
+		v.trimRight(p.Body[len(p.Body)-1])
+	}
+
+	return ast.NewStripBool((node.OpenStrip != nil) && node.OpenStrip.Open, (node.CloseStrip != nil) && node.CloseStrip.Close)
 }
 
 func (v *WhitespaceVisitor) VisitPartial(node *ast.PartialStatement) interface{} {

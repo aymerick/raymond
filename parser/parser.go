@@ -293,9 +293,7 @@ func (p *Parser) parseBlock() *ast.BlockStatement {
 	// closeBlock
 	p.parseCloseBlock(result)
 
-	// @todo result.OpenStrip
 	// @todo result.InverseStrip
-	// @todo result.CloseStrip
 
 	return result
 }
@@ -394,10 +392,12 @@ func (p *Parser) parseOpenBlock() (*ast.BlockStatement, []string) {
 	result, blockParams := p.parseOpenBlockExpression(tok)
 
 	// CLOSE
-	tok = p.shift()
-	if tok.Kind != lexer.TokenClose {
-		errExpected(lexer.TokenClose, tok)
+	tokClose := p.shift()
+	if tokClose.Kind != lexer.TokenClose {
+		errExpected(lexer.TokenClose, tokClose)
 	}
+
+	result.OpenStrip = ast.NewStrip(tok.Val, tokClose.Val)
 
 	// named returned values
 	return result, blockParams
@@ -425,10 +425,12 @@ func (p *Parser) parseCloseBlock(block *ast.BlockStatement) {
 	}
 
 	// CLOSE
-	tok = p.shift()
-	if tok.Kind != lexer.TokenClose {
-		errExpected(lexer.TokenClose, tok)
+	tokClose := p.shift()
+	if tokClose.Kind != lexer.TokenClose {
+		errExpected(lexer.TokenClose, tokClose)
 	}
+
+	block.CloseStrip = ast.NewStrip(tok.Val, tokClose.Val)
 }
 
 // mustache : OPEN helperName param* hash? CLOSE
