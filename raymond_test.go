@@ -82,7 +82,7 @@ func (stats *raymondStats) failed() {
 }
 
 func (stats *raymondStats) output() {
-	fmt.Printf("[stats] Total: %d (handlebars: %d / mustache: %d) - Failed: %d\n", stats.total, stats.handlebars, stats.mustache, stats.fail)
+	// fmt.Printf("[stats] Total: %d (handlebars: %d / mustache: %d) - Failed: %d\n", stats.total, stats.handlebars, stats.mustache, stats.fail)
 }
 
 //

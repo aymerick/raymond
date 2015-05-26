@@ -1,7 +1,6 @@
 package raymond
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path"
 	"regexp"
@@ -46,7 +45,7 @@ func TestMustache(t *testing.T) {
 
 	for _, fileName := range mustacheTestFiles() {
 		if skipFiles[fileName] {
-			fmt.Printf("Skipped file: %s\n", fileName)
+			// fmt.Printf("Skipped file: %s\n", fileName)
 			continue
 		}
 
@@ -69,7 +68,7 @@ func testsFromMustacheFile(fileName string) []raymondTest {
 
 	for _, mustacheTest := range testFile.Tests {
 		if mustBeSkipped(mustacheTest) {
-			fmt.Printf("Skipped test: %s\n", mustacheTest.Name)
+			// fmt.Printf("Skipped test: %s\n", mustacheTest.Name)
 			continue
 		}
 
