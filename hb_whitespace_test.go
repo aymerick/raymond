@@ -221,7 +221,49 @@ var hbWhitespaceControlTests = []raymondTest{
 	// 	"baz",
 	// },
 
-	// @todo Add remaining tests
+	// {
+	// 	"should strip whitespace around partials (1)",
+	// 	"foo {{~> dude~}} ",
+	// 	nil,
+	// 	nil,
+	// 	"foobar",
+	// },
+	// {
+	// 	"should strip whitespace around partials (2)",
+	// 	"foo {{> dude~}} ",
+	// 	nil,
+	// 	nil,
+	// 	"foo bar",
+	// },
+	// {
+	// 	"should strip whitespace around partials (3)",
+	// 	"foo {{> dude}} ",
+	// 	nil,
+	// 	nil,
+	// 	"foo bar ",
+	// },
+	// {
+	// 	"should strip whitespace around partials (4)",
+	// 	"foo\n {{~> dude}} ",
+	// 	nil,
+	// 	nil,
+	// 	"foobar",
+	// },
+	// {
+	// 	"should strip whitespace around partials (5)",
+	// 	"foo\n {{> dude}} ",
+	// 	nil,
+	// 	nil,
+	// 	"foo\n bar",
+	// },
+
+	{
+		"should only strip whitespace once",
+		" {{~foo~}} {{foo}} {{foo}} ",
+		map[string]string{"foo": "bar"},
+		nil,
+		"barbar bar ",
+	},
 }
 
 func TestHandlebarsWhitespaceControl(t *testing.T) {
