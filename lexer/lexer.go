@@ -14,11 +14,12 @@ import (
 
 const (
 	// mustache detection
-	ESCAPED_ESCAPED_OPEN_MUSTACHE = "\\\\{{"
-	ESCAPED_OPEN_MUSTACHE         = "\\{{"
-	OPEN_MUSTACHE                 = "{{"
-	CLOSE_MUSTACHE                = "}}"
-	CLOSE_STRIP_MUSTACHE          = "~}}"
+	ESCAPED_ESCAPED_OPEN_MUSTACHE  = "\\\\{{"
+	ESCAPED_OPEN_MUSTACHE          = "\\{{"
+	OPEN_MUSTACHE                  = "{{"
+	CLOSE_MUSTACHE                 = "}}"
+	CLOSE_STRIP_MUSTACHE           = "~}}"
+	CLOSE_UNESCAPED_STRIP_MUSTACHE = "}~}}"
 )
 
 const eof = -1
@@ -404,9 +405,7 @@ func lexCloseMustache(l *Lexer) lexFunc {
 // scanning inside mustaches
 func lexExpression(l *Lexer) lexFunc {
 	// search close mustache delimiter
-	if l.isString(CLOSE_MUSTACHE) || l.isString(CLOSE_STRIP_MUSTACHE) {
-		l.emitContent()
-
+	if l.isString(CLOSE_MUSTACHE) || l.isString(CLOSE_STRIP_MUSTACHE) || l.isString(CLOSE_UNESCAPED_STRIP_MUSTACHE) {
 		return lexCloseMustache
 	}
 

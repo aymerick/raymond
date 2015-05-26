@@ -26,8 +26,12 @@ var tokOpen = Token{TokenOpen, "{{", 0, 1}
 var tokOpenAmp = Token{TokenOpen, "{{&", 0, 1}
 var tokOpenPartial = Token{TokenOpenPartial, "{{>", 0, 1}
 var tokClose = Token{TokenClose, "}}", 0, 1}
+var tokOpenStrip = Token{TokenOpen, "{{~", 0, 1}
+var tokCloseStrip = Token{TokenClose, "~}}", 0, 1}
 var tokOpenUnescaped = Token{TokenOpenUnescaped, "{{{", 0, 1}
 var tokCloseUnescaped = Token{TokenCloseUnescaped, "}}}", 0, 1}
+var tokOpenUnescapedStrip = Token{TokenOpenUnescaped, "{{~{", 0, 1}
+var tokCloseUnescapedStrip = Token{TokenCloseUnescaped, "}~}}", 0, 1}
 var tokOpenBlock = Token{TokenOpenBlock, "{{#", 0, 1}
 var tokOpenEndBlock = Token{TokenOpenEndBlock, "{{/", 0, 1}
 var tokOpenInverse = Token{TokenOpenInverse, "{{^", 0, 1}
@@ -74,6 +78,16 @@ var lexTests = []lexTest{
 		`tokenizes escaped mustaches`,
 		"\\{{bar}}",
 		[]Token{tokContent("{{bar}}"), tokEOF},
+	},
+	{
+		`tokenizes strip mustaches`,
+		`{{~ foo ~}}`,
+		[]Token{tokOpenStrip, tokID("foo"), tokCloseStrip, tokEOF},
+	},
+	{
+		`tokenizes unescaped strip mustaches`,
+		`{{~{ foo }~}}`,
+		[]Token{tokOpenUnescapedStrip, tokID("foo"), tokCloseUnescapedStrip, tokEOF},
 	},
 
 	//
