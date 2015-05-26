@@ -93,6 +93,26 @@ func (l Loc) Location() Loc {
 	return l
 }
 
+// Whitespace strip control
+type Strip struct {
+	Open  bool
+	Close bool
+}
+
+func NewStrip(openStr, closeStr string) *Strip {
+	return &Strip{
+		Open:  (len(openStr) > 2) && openStr[2] == '~',
+		Close: (len(closeStr) > 2) && closeStr[len(closeStr)-3] == '~',
+	}
+}
+
+func NewStripForComment(str string) *Strip {
+	return &Strip{
+		Open:  (len(str) > 2) && str[2] == '~',
+		Close: (len(str) > 2) && str[len(str)-3] == '~',
+	}
+}
+
 //
 // Program
 //
@@ -103,6 +123,8 @@ type Program struct {
 
 	Body        []Node // [ Statement ... ]
 	BlockParams []string
+
+	Strip *Strip
 }
 
 func NewProgram(pos int, line int) *Program {
@@ -134,6 +156,8 @@ type MustacheStatement struct {
 
 	Unescaped  bool
 	Expression *Expression
+
+	Strip *Strip
 }
 
 func NewMustacheStatement(pos int, line int, unescaped bool) *MustacheStatement {
@@ -164,6 +188,10 @@ type BlockStatement struct {
 
 	Program Node // Program
 	Inverse Node // Program
+
+	OpenStrip    *Strip
+	InverseStrip *Strip
+	CloseStrip   *Strip
 }
 
 func NewBlockStatement(pos int, line int) *BlockStatement {
@@ -192,6 +220,8 @@ type PartialStatement struct {
 	Name   Node   // PathExpression | SubExpression
 	Params []Node // [ Expression ... ]
 	Hash   *Hash  // Hash
+
+	Strip *Strip
 }
 
 func NewPartialStatement(pos int, line int) *PartialStatement {
@@ -246,6 +276,8 @@ type CommentStatement struct {
 	Loc
 
 	Value string
+
+	Strip *Strip
 }
 
 func NewCommentStatement(pos int, line int, val string) *CommentStatement {

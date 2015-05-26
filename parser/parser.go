@@ -59,6 +59,9 @@ func Parse(input string) (result *ast.Program, err error) {
 		errToken(token, "Syntax error")
 	}
 
+	// fix whitespaces
+	ProcessWhitespaces(result)
+
 	// named returned values
 	return
 }
@@ -178,7 +181,10 @@ func (p *Parser) parseComment() *ast.CommentStatement {
 	value := rOpenComment.ReplaceAllString(tok.Val, "")
 	value = rCloseComment.ReplaceAllString(value, "")
 
-	return ast.NewCommentStatement(tok.Pos, tok.Line, value)
+	result := ast.NewCommentStatement(tok.Pos, tok.Line, value)
+	result.Strip = ast.NewStripForComment(tok.Val)
+
+	return result
 }
 
 // Parses `param* hash?`
@@ -287,6 +293,10 @@ func (p *Parser) parseBlock() *ast.BlockStatement {
 	// closeBlock
 	p.parseCloseBlock(result)
 
+	// @todo result.OpenStrip
+	// @todo result.InverseStrip
+	// @todo result.CloseStrip
+
 	return result
 }
 
@@ -366,7 +376,11 @@ func (p *Parser) parseInverseAndProgram() *ast.Program {
 	p.shift()
 
 	// program
-	return p.ParseProgram()
+	result := p.ParseProgram()
+
+	// @todo result.Strip
+
+	return result
 }
 
 // openBlock : OPEN_BLOCK helperName param* hash? blockParams? CLOSE
@@ -439,10 +453,12 @@ func (p *Parser) parseMustache() *ast.MustacheStatement {
 	result.Expression = p.parseExpression(tok)
 
 	// CLOSE | CLOSE_UNESCAPED
-	tok = p.shift()
-	if tok.Kind != closeToken {
-		errExpected(closeToken, tok)
+	tokClose := p.shift()
+	if tokClose.Kind != closeToken {
+		errExpected(closeToken, tokClose)
 	}
+
+	result.Strip = ast.NewStrip(tok.Val, tokClose.Val)
 
 	return result
 }
@@ -461,10 +477,12 @@ func (p *Parser) parsePartial() *ast.PartialStatement {
 	result.Params, result.Hash = p.parseExpressionParamsHash()
 
 	// CLOSE
-	tok = p.shift()
-	if tok.Kind != lexer.TokenClose {
-		errExpected(lexer.TokenClose, tok)
+	tokClose := p.shift()
+	if tokClose.Kind != lexer.TokenClose {
+		errExpected(lexer.TokenClose, tokClose)
 	}
+
+	result.Strip = ast.NewStrip(tok.Val, tokClose.Val)
 
 	return result
 }
