@@ -165,5 +165,5 @@ var hbSubexpressionsTests = []raymondTest{
 }
 
 func TestHandlebarsSubexpressions(t *testing.T) {
-	launchRaymondTests(t, hbSubexpressionsTests)
+	launchHandlebarsTests(t, hbSubexpressionsTests)
 }

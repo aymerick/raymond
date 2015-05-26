@@ -1,9 +1,11 @@
 package raymond
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path"
 	"regexp"
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v2"
@@ -33,6 +35,25 @@ var (
 	rAltDelim = regexp.MustCompile(regexp.QuoteMeta("{{="))
 )
 
+func TestMustache(t *testing.T) {
+	skipFiles := map[string]bool{
+		"comments.yml": true,
+		"inverted.yml": true,
+		"partials.yml": true,
+		"sections.yml": true,
+		"~lambdas.yml": true,
+	}
+
+	for _, fileName := range mustacheTestFiles() {
+		if skipFiles[fileName] {
+			fmt.Printf("Skipped file: %s\n", fileName)
+			continue
+		}
+
+		launchMustacheTests(t, testsFromMustacheFile(fileName))
+	}
+}
+
 func testsFromMustacheFile(fileName string) []raymondTest {
 	result := []raymondTest{}
 
@@ -48,6 +69,7 @@ func testsFromMustacheFile(fileName string) []raymondTest {
 
 	for _, mustacheTest := range testFile.Tests {
 		if mustBeSkipped(mustacheTest) {
+			fmt.Printf("Skipped test: %s\n", mustacheTest.Name)
 			continue
 		}
 
@@ -87,26 +109,21 @@ func haveAltDelimiter(test mustacheTest) bool {
 	return false
 }
 
-// func TestMustacheComments(t *testing.T) {
-// 	launchRaymondTests(t, testsFromMustacheFile("comments.yml"))
-// }
+func mustacheTestFiles() []string {
+	var result []string
 
-func TestMustacheDelimiters(t *testing.T) {
-	launchRaymondTests(t, testsFromMustacheFile("delimiters.yml"))
+	files, err := ioutil.ReadDir(path.Join("mustache", "specs"))
+	if err != nil {
+		panic(err)
+	}
+
+	for _, file := range files {
+		fileName := file.Name()
+
+		if !file.IsDir() && strings.HasSuffix(fileName, ".yml") {
+			result = append(result, fileName)
+		}
+	}
+
+	return result
 }
-
-func TestMustacheInterpolation(t *testing.T) {
-	launchRaymondTests(t, testsFromMustacheFile("interpolation.yml"))
-}
-
-// func TestMustacheInverted(t *testing.T) {
-// 	launchRaymondTests(t, testsFromMustacheFile("inverted.yml"))
-// }
-
-// func TestMustachePartials(t *testing.T) {
-// 	launchRaymondTests(t, testsFromMustacheFile("partials.yml"))
-// }
-
-// func TestMustacheSections(t *testing.T) {
-// 	launchRaymondTests(t, testsFromMustacheFile("sections.yml"))
-// }

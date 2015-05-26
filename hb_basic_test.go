@@ -571,7 +571,7 @@ var hbBasicTests = []raymondTest{
 }
 
 func TestHandlebarsBasic(t *testing.T) {
-	launchRaymondTests(t, hbBasicTests)
+	launchHandlebarsTests(t, hbBasicTests)
 }
 
 func TestHandlebarsBasicErrors(t *testing.T) {
@@ -586,10 +586,13 @@ func TestHandlebarsBasicErrors(t *testing.T) {
 
 	expectedError := regexp.QuoteMeta("Invalid path: text/this")
 
+	stats.handlebarsTests(len(inputs))
+
 	for _, input := range inputs {
 		_, err = Parse(input)
 		if err == nil {
 			t.Errorf("Test failed - Error expected")
+			stats.failed()
 		}
 
 		match, errMatch := regexp.MatchString(expectedError, fmt.Sprint(err))
@@ -599,6 +602,9 @@ func TestHandlebarsBasicErrors(t *testing.T) {
 
 		if !match {
 			t.Errorf("Test failed - Expected error:\n\t%s\n\nGot:\n\t%s", expectedError, err)
+			stats.failed()
 		}
 	}
+
+	stats.output()
 }

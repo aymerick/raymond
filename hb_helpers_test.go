@@ -162,5 +162,5 @@ var hbHelpersTests = []raymondTest{
 }
 
 func TestHandlebarsHelpers(t *testing.T) {
-	launchRaymondTests(t, hbHelpersTests)
+	launchHandlebarsTests(t, hbHelpersTests)
 }
