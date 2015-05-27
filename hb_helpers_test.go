@@ -52,7 +52,7 @@ var hbHelpersTests = []raymondTest{
 		`<a href="/root/goodbye">Goodbye</a>`,
 	},
 	{
-		// note: The JS implementation returns undefined, we returns empty string
+		// note: The JS implementation returns undefined, we return empty string
 		"helper returning undefined value (1)",
 		" {{nothere}}",
 		map[string]interface{}{},
@@ -62,7 +62,7 @@ var hbHelpersTests = []raymondTest{
 		" ",
 	},
 	{
-		// note: The JS implementation returns undefined, we returns empty string
+		// note: The JS implementation returns undefined, we return empty string
 		"helper returning undefined value (2)",
 		" {{#nothere}}{{/nothere}}",
 		map[string]interface{}{},
