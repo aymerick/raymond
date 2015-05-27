@@ -115,6 +115,11 @@ func isPrevWhitespaceProgram(body []ast.Node, i int, isRoot bool) bool {
 	prev := body[i-1]
 
 	if node, ok := prev.(*ast.ContentStatement); ok {
+		if node.RightStripped {
+			// already stripped, so it may be an empty string not catched by regexp
+			return true
+		}
+
 		r := rPrevWhitespaceStart
 		if (i > 1) || !isRoot {
 			r = rPrevWhitespace
@@ -138,6 +143,11 @@ func isNextWhitespaceProgram(body []ast.Node, i int, isRoot bool) bool {
 	next := body[i+1]
 
 	if node, ok := next.(*ast.ContentStatement); ok {
+		if node.LeftStripped {
+			// already stripped, so it may be an empty string not catched by regexp
+			return true
+		}
+
 		r := rNextWhitespaceEnd
 		if (i+2 >= len(body)) || !isRoot {
 			r = rNextWhitespace
