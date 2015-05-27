@@ -568,9 +568,15 @@ var hbBasicTests = []raymondTest{
 		nil,
 		"bar",
 	},
-
-	// @todo {"pass number literals (5)", "{{12.34 1}}", ...function..., "bar1"},
-
+	{
+		"pass number literals (5)",
+		"{{12.34 1}}",
+		map[string]interface{}{"12.34": func(h *HelperArg) string {
+			return "bar" + h.ParamStr(0)
+		}},
+		nil,
+		"bar1",
+	},
 	{
 		"pass boolean literals (1)",
 		"{{true}}",

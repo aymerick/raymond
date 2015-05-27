@@ -374,10 +374,6 @@ func (node *Expression) FieldPath() *PathExpression {
 
 // returns string representation of literal value, with a boolean set to false if this is not a literal
 func (node *Expression) LiteralStr() (string, bool) {
-	if node.haveParams() {
-		return "", false
-	}
-
 	return LiteralStr(node.Path)
 }
 
