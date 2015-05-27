@@ -236,19 +236,11 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 
 	switch ctx.Kind() {
 	case reflect.Struct:
-		tField, ok := ctx.Type().FieldByName(fieldName)
-		if !ok {
-			v.errorf("%s is not a field of struct type %s", fieldName, ctx.Type())
+		// check if struct have this field and that it is exported
+		if tField, ok := ctx.Type().FieldByName(fieldName); ok && (tField.PkgPath == "") {
+			// struct field
+			result = ctx.FieldByIndex(tField.Index)
 		}
-
-		if tField.PkgPath != "" {
-			// field is unexported
-			v.errorf("%s is an unexported field of struct type %s", fieldName, ctx.Type())
-		}
-
-		// struct field
-		result = ctx.FieldByIndex(tField.Index)
-
 	case reflect.Map:
 		nameVal := reflect.ValueOf(fieldName)
 		if nameVal.Type().AssignableTo(ctx.Type().Key()) {
