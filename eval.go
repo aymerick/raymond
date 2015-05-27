@@ -202,7 +202,9 @@ func (v *EvalVisitor) evalNodeWith(node ast.Node, ctx reflect.Value) string {
 }
 
 // evaluates all path parts
-func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool) reflect.Value {
+func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool) (reflect.Value, bool) {
+	partResolved := false
+
 	for i := 0; i < len(parts); i++ {
 		part := parts[i]
 
@@ -215,9 +217,12 @@ func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool)
 		if !ctx.IsValid() {
 			break
 		}
+
+		// we resolved at least one part of path
+		partResolved = true
 	}
 
-	return ctx
+	return ctx, partResolved
 }
 
 // evaluates field in given context
@@ -243,6 +248,7 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 
 		// struct field
 		result = ctx.FieldByIndex(tField.Index)
+
 	case reflect.Map:
 		nameVal := reflect.ValueOf(fieldName)
 		if nameVal.Type().AssignableTo(ctx.Type().Key()) {
@@ -646,8 +652,9 @@ func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool
 
 	depth := node.Depth
 	ctx := v.ancestorCtx(depth)
+	stopDeep := false
 
-	for ctx.IsValid() && (result == nil) && (depth <= len(v.ctx)) {
+	for (result == nil) && ctx.IsValid() && (depth <= len(v.ctx) && !stopDeep) {
 		if VERBOSE_EVAL {
 			log.Printf("VisitPath(): '%s' with context '%s' (depth: %d)", node.Original, StrValue(ctx), depth)
 		}
@@ -658,19 +665,24 @@ func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool
 			var results []interface{}
 
 			for i := 0; i < ctx.Len(); i++ {
-				value := v.evalPath(ctx.Index(i), node.Parts, exprRoot)
+				value, _ := v.evalPath(ctx.Index(i), node.Parts, exprRoot)
 				if value.IsValid() {
 					results = append(results, value.Interface())
 				}
-				// else raise ?
 			}
 
 			result = results
 		default:
 			// NOT array context
-			value := v.evalPath(ctx, node.Parts, exprRoot)
+			value, partResolved := v.evalPath(ctx, node.Parts, exprRoot)
 			if value.IsValid() {
 				result = value.Interface()
+			}
+
+			if partResolved {
+				// As soon as we find the first part of a path, we must not try to resolve with parent context if result is nil
+				// Reference: "Dotted Names - Context Precedence" mustache test
+				stopDeep = true
 			}
 		}
 
