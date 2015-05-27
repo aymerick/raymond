@@ -137,11 +137,16 @@ var lexTests = []lexTest{
 	{
 		`supports escaped mustaches after escaped escape characters`,
 		"{{foo}} \\\\{{bar}} \\{{baz}}",
+		// NOTE: JS implementation returns:
+		//   ['OPEN', 'ID', 'CLOSE', 'CONTENT', 'OPEN', 'ID', 'CLOSE', 'CONTENT', 'CONTENT', 'CONTENT'],
+		// WTF is the last CONTENT ?
 		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokContent("{{baz}}"), tokEOF},
 	},
 	{
 		`supports escaped escape characters after escaped mustaches`,
 		"{{foo}} \\{{bar}} \\\\{{baz}}",
+		// NOTE: JS implementation returns:
+		//   []Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} "), tokContent("\\"), tokOpen, tokID("baz"), tokClose, tokEOF},
 		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} \\"), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
 	{
@@ -155,9 +160,14 @@ var lexTests = []lexTest{
 		[]Token{tokOpen, tokID("foo"), tokSep("/"), tokID("bar"), tokClose, tokEOF},
 	},
 	{
-		`allows dot notation`,
+		`allows dot notation (1)`,
 		`{{foo.bar}}`,
 		[]Token{tokOpen, tokID("foo"), tokSep("."), tokID("bar"), tokClose, tokEOF},
+	},
+	{
+		`allows dot notation (2)`,
+		`{{foo.bar.baz}}`,
+		[]Token{tokOpen, tokID("foo"), tokSep("."), tokID("bar"), tokSep("."), tokID("baz"), tokClose, tokEOF},
 	},
 	{
 		`allows path literals with []`,
@@ -334,6 +344,7 @@ var lexTests = []lexTest{
 		`{{ foo false }}`,
 		[]Token{tokOpen, tokID("foo"), tokBool("false"), tokClose, tokEOF},
 	},
+	// SKIPPED: 'tokenizes undefined and null'
 	{
 		`tokenizes hash arguments (1)`,
 		`{{ foo bar=baz }}`,
