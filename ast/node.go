@@ -117,6 +117,10 @@ func NewStripForComment(str string) *Strip {
 	}
 }
 
+func (s *Strip) String() string {
+	return fmt.Sprintf("Open: %t, Close: %t, OpenStandalone: %t, CloseStandalone: %t, InlineStandalone: %t", s.Open, s.Close, s.OpenStandalone, s.CloseStandalone, s.InlineStandalone)
+}
+
 //
 // Program
 //
