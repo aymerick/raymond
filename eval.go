@@ -77,11 +77,7 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 
 // returns current context
 func (v *EvalVisitor) curCtx() reflect.Value {
-	if len(v.ctx) == 0 {
-		return zero
-	}
-
-	return v.ctx[len(v.ctx)-1]
+	return v.ancestorCtx(0)
 }
 
 // get ancestor context
@@ -611,22 +607,22 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	}
 
 	if !done {
+		// literal
+		if literal, ok := node.LiteralStr(); ok {
+			if val := v.evalField(v.curCtx(), literal, true); val.IsValid() {
+				result = val.Interface()
+				done = true
+			}
+		}
+	}
+
+	if !done {
 		// field path
 		if path := node.FieldPath(); path != nil {
 			// this is an exception to visitor pattern, because we need to pass the info
 			// that this path is at root of current expression
 			if val := v.evalPathExpression(path, true); val != nil {
 				result = val
-			}
-			done = true
-		}
-	}
-
-	if !done {
-		// literal
-		if literal, ok := node.LiteralStr(); ok {
-			if val := v.evalField(v.curCtx(), literal, true); val.IsValid() {
-				result = val.Interface()
 			}
 		}
 	}
@@ -642,54 +638,51 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 	return node.Expression.Accept(v)
 }
 
-// Evaluate a path exprexxion
+// Evaluate a path expression
 func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	v.at(node)
 
 	var result interface{}
 
-	if node.Depth > len(v.ctx) {
-		return nil
-	}
+	depth := node.Depth
+	ctx := v.ancestorCtx(depth)
 
-	var ctx reflect.Value
+	for ctx.IsValid() && (result == nil) && (depth <= len(v.ctx)) {
+		if VERBOSE_EVAL {
+			log.Printf("VisitPath(): '%s' with context '%s' (depth: %d)", node.Original, StrValue(ctx), depth)
+		}
 
-	if node.Depth > 0 {
-		// get ancestor context
-		ctx = v.ancestorCtx(node.Depth)
-	} else {
-		// get current context
-		ctx = v.curCtx()
-	}
+		switch ctx.Kind() {
+		case reflect.Array, reflect.Slice:
+			// Array context
+			var results []interface{}
 
-	if VERBOSE_EVAL {
-		log.Printf("VisitPath(): '%s' with context '%s'", node.Original, StrValue(ctx))
-	}
-
-	switch ctx.Kind() {
-	case reflect.Array, reflect.Slice:
-		// Array context
-		var results []interface{}
-
-		for i := 0; i < ctx.Len(); i++ {
-			value := v.evalPath(ctx.Index(i), node.Parts, exprRoot)
-			if value.IsValid() {
-				results = append(results, value.Interface())
+			for i := 0; i < ctx.Len(); i++ {
+				value := v.evalPath(ctx.Index(i), node.Parts, exprRoot)
+				if value.IsValid() {
+					results = append(results, value.Interface())
+				}
+				// else raise ?
 			}
-			// else raise ?
+
+			result = results
+		default:
+			// NOT array context
+			value := v.evalPath(ctx, node.Parts, exprRoot)
+			if value.IsValid() {
+				result = value.Interface()
+			}
 		}
 
-		result = results
-	default:
-		// NOT array context
-		value := v.evalPath(ctx, node.Parts, exprRoot)
-		if value.IsValid() {
-			result = value.Interface()
+		if VERBOSE_EVAL {
+			log.Printf("VisitPath(): result => '%s'", Str(result))
 		}
-	}
 
-	if VERBOSE_EVAL {
-		log.Printf("VisitPath(): result => '%s'", Str(result))
+		if result == nil {
+			// check ancestor
+			depth++
+			ctx = v.ancestorCtx(depth)
+		}
 	}
 
 	return result

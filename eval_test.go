@@ -10,6 +10,13 @@ var evalTests = []raymondTest{
 		nil,
 		"this is content",
 	},
+	{
+		"checks path in parent contexts",
+		"{{#a}}{{one}}{{#b}}{{one}}{{two}}{{one}}{{/b}}{{/a}}",
+		map[string]interface{}{"a": map[string]int{"one": 1}, "b": map[string]int{"two": 2}},
+		nil,
+		"1121",
+	},
 	// @todo Test with a struct for data
 
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
