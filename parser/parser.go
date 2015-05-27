@@ -293,9 +293,28 @@ func (p *Parser) parseBlock() *ast.BlockStatement {
 	// closeBlock
 	p.parseCloseBlock(result)
 
-	// @todo result.InverseStrip
+	setBlockInverseStrip(result)
 
 	return result
+}
+
+// @todo This was totally cargo culted ! CHECK THAT !
+//
+// cf. prepareBlock() in:
+//   https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/helper.js
+//
+// Called when parsing `block` (openBlock | openInverse) and `inverseChain`
+func setBlockInverseStrip(block *ast.BlockStatement) {
+	if block.Inverse == nil {
+		return
+	}
+
+	if block.Inverse.Chained {
+		b, _ := block.Inverse.Body[0].(*ast.BlockStatement)
+		b.CloseStrip = block.CloseStrip
+	}
+
+	block.InverseStrip = block.Inverse.Strip
 }
 
 // block : openInverse program inverseAndProgram? closeBlock
@@ -316,6 +335,8 @@ func (p *Parser) parseInverse() *ast.BlockStatement {
 
 	// closeBlock
 	p.parseCloseBlock(result)
+
+	setBlockInverseStrip(result)
 
 	return result
 }
@@ -340,24 +361,31 @@ func (p *Parser) parseOpenBlockExpression(tok *lexer.Token) (*ast.BlockStatement
 
 // inverseChain : openInverseChain program inverseChain?
 //              | inverseAndProgram
-func (p *Parser) parseInverseChain() ast.Node {
+func (p *Parser) parseInverseChain() *ast.Program {
 	if p.isInverse() {
 		// inverseAndProgram
 		return p.parseInverseAndProgram()
 	} else {
+		result := ast.NewProgram(p.lex.Pos(), p.lex.Line())
+
 		// openInverseChain
-		result, blockParams := p.parseOpenBlock()
+		block, blockParams := p.parseOpenBlock()
 
 		// program
 		program := p.ParseProgram()
 
 		program.BlockParams = blockParams
-		result.Program = program
+		block.Program = program
 
 		// inverseChain?
 		if p.isInverseChain() {
-			result.Inverse = p.parseInverseChain()
+			block.Inverse = p.parseInverseChain()
 		}
+
+		setBlockInverseStrip(block)
+
+		result.Chained = true
+		result.AddStatement(block)
 
 		return result
 	}

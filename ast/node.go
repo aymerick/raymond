@@ -97,6 +97,10 @@ func (l Loc) Location() Loc {
 type Strip struct {
 	Open  bool
 	Close bool
+
+	OpenStandalone   bool
+	CloseStandalone  bool
+	InlineStandalone bool
 }
 
 func NewStrip(openStr, closeStr string) *Strip {
@@ -113,13 +117,6 @@ func NewStripForComment(str string) *Strip {
 	}
 }
 
-func NewStripBool(isOpen, isClose bool) *Strip {
-	return &Strip{
-		Open:  isOpen,
-		Close: isClose,
-	}
-}
-
 //
 // Program
 //
@@ -130,7 +127,9 @@ type Program struct {
 
 	Body        []Node // [ Statement ... ]
 	BlockParams []string
+	Chained     bool
 
+	// whitespace management
 	Strip *Strip
 }
 
@@ -164,6 +163,7 @@ type MustacheStatement struct {
 	Unescaped  bool
 	Expression *Expression
 
+	// whitespace management
 	Strip *Strip
 }
 
@@ -193,9 +193,10 @@ type BlockStatement struct {
 
 	Expression *Expression
 
-	Program Node // Program
-	Inverse Node // Program | BlockStatement
+	Program *Program
+	Inverse *Program
 
+	// whitespace management
 	OpenStrip    *Strip
 	InverseStrip *Strip
 	CloseStrip   *Strip
@@ -228,7 +229,9 @@ type PartialStatement struct {
 	Params []Node // [ Expression ... ]
 	Hash   *Hash  // Hash
 
-	Strip *Strip
+	// whitespace management
+	Strip  *Strip
+	Indent string
 }
 
 func NewPartialStatement(pos int, line int) *PartialStatement {
@@ -255,6 +258,10 @@ type ContentStatement struct {
 	Loc
 
 	Value string
+
+	// whitespace management
+	RightStripped bool
+	LeftStripped  bool
 }
 
 func NewContentStatement(pos int, line int, val string) *ContentStatement {
@@ -284,6 +291,7 @@ type CommentStatement struct {
 
 	Value string
 
+	// whitespace management
 	Strip *Strip
 }
 

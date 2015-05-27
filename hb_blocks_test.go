@@ -132,53 +132,47 @@ var hbBlocksTests = []raymondTest{
 		nil,
 		"No people",
 	},
-	// @todo Check the \n issue with original handebars.js test
 	{
 		"block standalone else sections (1)",
-		"{{#people}}{{name}}{{^}}{{none}}{{/people}}",
+		"{{#people}}\n{{name}}\n{{^}}\n{{none}}\n{{/people}}\n",
 		map[string]interface{}{"none": "No people"},
 		nil,
 		"No people",
 	},
-	// @todo Check the \n issue with original handebars.js test
 	{
 		"block standalone else sections (2)",
-		"{{#none}}{{.}}{{^}}{{none}}{{/none}}",
+		"{{#none}}\n{{.}}\n{{^}}\n{{none}}\n{{/none}}\n",
 		map[string]interface{}{"none": "No people"},
 		nil,
 		"No people",
 	},
-	// @todo Check the \n issue with original handebars.js test
 	{
 		"block standalone else sections (3)",
-		"{{#people}}{{name}}{{^}}{{none}}{{/people}}",
+		"{{#people}}\n{{name}}\n{{^}}\n{{none}}\n{{/people}}\n",
 		map[string]interface{}{"none": "No people"},
 		nil,
 		"No people",
 	},
-	// @todo Check the \n issue with original handebars.js test
 	{
 		"block standalone chained else sections (1)",
-		"{{#people}}{{name}}{{else if none}}{{none}}{{/people}}",
+		"{{#people}}\n{{name}}\n{{else if none}}\n{{none}}\n{{/people}}\n",
 		map[string]interface{}{"none": "No people"},
 		nil,
 		"No people",
 	},
-	// @todo Check the \n issue with original handebars.js test
 	{
 		"block standalone chained else sections (2)",
-		"{{#people}}{{name}}{{else if none}}{{none}}{{^}}{{/people}}",
+		"{{#people}}\n{{name}}\n{{else if none}}\n{{none}}\n{{^}}\n{{/people}}\n",
 		map[string]interface{}{"none": "No people"},
 		nil,
 		"No people",
 	},
-	// @todo Check the \n issue with original handebars.js test
 	{
 		"should handle nesting",
-		"{{#data}}{{#if true}}{{.}}{{/if}}{{/data}}OK.",
+		"{{#data}}\n{{#if true}}\n{{.}}\n{{/if}}\n{{/data}}\nOK.",
 		map[string]interface{}{"data": []int{1, 3, 5}},
 		nil,
-		"135OK.",
+		"1\n3\n5\nOK.",
 	},
 	// // @todo compat mode
 	// {

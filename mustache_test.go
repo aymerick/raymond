@@ -36,8 +36,6 @@ var (
 
 func TestMustache(t *testing.T) {
 	skipFiles := map[string]bool{
-		"comments.yml": true,
-		"inverted.yml": true,
 		"partials.yml": true,
 		"sections.yml": true,
 		"~lambdas.yml": true,
