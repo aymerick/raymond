@@ -110,7 +110,7 @@ func NewStrip(openStr, closeStr string) *Strip {
 	}
 }
 
-func NewStripForComment(str string) *Strip {
+func NewStripForStr(str string) *Strip {
 	return &Strip{
 		Open:  (len(str) > 2) && str[2] == '~',
 		Close: (len(str) > 2) && str[len(str)-3] == '~',

@@ -182,7 +182,7 @@ func (p *Parser) parseComment() *ast.CommentStatement {
 	value = rCloseComment.ReplaceAllString(value, "")
 
 	result := ast.NewCommentStatement(tok.Pos, tok.Line, value)
-	result.Strip = ast.NewStripForComment(tok.Val)
+	result.Strip = ast.NewStripForStr(tok.Val)
 
 	return result
 }
@@ -399,12 +399,11 @@ func (p *Parser) isInverseChain() bool {
 // inverseAndProgram : INVERSE program
 func (p *Parser) parseInverseAndProgram() *ast.Program {
 	// INVERSE
-	p.shift()
+	tok := p.shift()
 
 	// program
 	result := p.ParseProgram()
-
-	// @todo result.Strip
+	result.Strip = ast.NewStripForStr(tok.Val)
 
 	return result
 }

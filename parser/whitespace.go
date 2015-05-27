@@ -115,7 +115,7 @@ func isPrevWhitespaceProgram(body []ast.Node, i int, isRoot bool) bool {
 	prev := body[i-1]
 
 	if node, ok := prev.(*ast.ContentStatement); ok {
-		if node.RightStripped {
+		if (node.Value == "") && node.RightStripped {
 			// already stripped, so it may be an empty string not catched by regexp
 			return true
 		}
@@ -143,7 +143,7 @@ func isNextWhitespaceProgram(body []ast.Node, i int, isRoot bool) bool {
 	next := body[i+1]
 
 	if node, ok := next.(*ast.ContentStatement); ok {
-		if node.LeftStripped {
+		if (node.Value == "") && node.LeftStripped {
 			// already stripped, so it may be an empty string not catched by regexp
 			return true
 		}
@@ -275,7 +275,7 @@ func (v *WhitespaceVisitor) VisitBlock(block *ast.BlockStatement) interface{} {
 		CloseStandalone: isPrevWhitespace(closeProg.Body),
 	}
 
-	if (program != nil) && (block.OpenStrip != nil) && block.OpenStrip.Close {
+	if (block.OpenStrip != nil) && block.OpenStrip.Close {
 		omitRightFirst(program.Body, true)
 	}
 
@@ -296,8 +296,10 @@ func (v *WhitespaceVisitor) VisitBlock(block *ast.BlockStatement) interface{} {
 			omitLeftLast(lastInverse.Body, true)
 		}
 
+		// Find standalone else statements
 		if isPrevWhitespace(program.Body) && isNextWhitespace(firstInverse.Body) {
 			omitLeftLast(program.Body, false)
+
 			omitRightFirst(firstInverse.Body, false)
 		}
 	} else if (block.CloseStrip != nil) && block.CloseStrip.Open {
