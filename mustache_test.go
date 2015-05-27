@@ -37,7 +37,6 @@ var (
 func TestMustache(t *testing.T) {
 	skipFiles := map[string]bool{
 		"partials.yml": true,
-		"sections.yml": true,
 		"~lambdas.yml": true,
 	}
 
