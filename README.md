@@ -7,9 +7,7 @@ Handlebars for golang
 
 ## Todo
 
-- [ ] function in data
 - [ ] @data
-- [ ] whitespace control
 - [ ] partials
 - [ ] `strict` mode
 - [ ] `stringParams` mode
