@@ -24,8 +24,7 @@ var (
 
 // Template evaluation visitor
 type EvalVisitor struct {
-	tpl  *Template
-	data interface{}
+	tpl *Template
 
 	ctx    []reflect.Value
 	blocks []*ast.BlockStatement
@@ -34,6 +33,7 @@ type EvalVisitor struct {
 	// memoize expressions that were function calls
 	exprFunc map[*ast.Expression]bool
 
+	// used for info on panic
 	curNode ast.Node
 }
 
@@ -41,7 +41,6 @@ type EvalVisitor struct {
 func NewEvalVisitor(tpl *Template, data interface{}) *EvalVisitor {
 	return &EvalVisitor{
 		tpl:      tpl,
-		data:     data,
 		ctx:      []reflect.Value{reflect.ValueOf(data)},
 		exprFunc: make(map[*ast.Expression]bool),
 	}
