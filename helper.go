@@ -160,10 +160,19 @@ func (h *HelperArg) Inverse() string {
 }
 
 // Evaluate block with given context
-func (h *HelperArg) BlockWith(ctx interface{}) string {
+func (h *HelperArg) BlockWithCtx(ctx interface{}) string {
 	h.PushCtx(ctx)
 	result := h.Block()
 	h.PopCtx()
+
+	return result
+}
+
+// Evaluate block with given context and private data
+func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame) string {
+	h.SetDataFrame(data)
+	result := h.BlockWithCtx(ctx)
+	h.SetDataFrame(data.parent)
 
 	return result
 }
@@ -183,6 +192,15 @@ func (h *HelperArg) PopCtx() interface{} {
 	}
 
 	return value.Interface()
+}
+
+func (h *HelperArg) NewDataFrame() *DataFrame {
+	return h.eval.dataFrame.Copy()
+}
+
+// Set current data frame
+func (h *HelperArg) SetDataFrame(data *DataFrame) {
+	h.eval.dataFrame = data
 }
 
 //
@@ -207,7 +225,7 @@ func unlessHelper(h *HelperArg) string {
 
 func withHelper(h *HelperArg) string {
 	if h.TruthFirstParam() {
-		return h.BlockWith(h.Param(0))
+		return h.BlockWithCtx(h.Param(0))
 	}
 
 	return h.Inverse()
@@ -225,13 +243,37 @@ func eachHelper(h *HelperArg) string {
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
-			result += h.BlockWith(val.Index(i).Interface())
+			// computes private data
+			data := h.NewDataFrame()
+			data.Set("index", i)
+
+			if i == 0 {
+				data.Set("first", true)
+			}
+
+			if i == val.Len()-1 {
+				data.Set("last", true)
+			}
+
+			result += h.BlockWith(val.Index(i).Interface(), data)
 		}
 	case reflect.Map:
 		// note: a go hash is not ordered, so result may vary, this behaviour differs from the JS implementation
 		keys := val.MapKeys()
 		for i := 0; i < len(keys); i++ {
-			result += h.BlockWith(val.MapIndex(keys[i]).Interface())
+			// computes private data
+			data := h.NewDataFrame()
+			data.Set("key", keys[i].Interface())
+
+			if i == 0 {
+				data.Set("first", true)
+			}
+
+			if i == len(keys)-1 {
+				data.Set("last", true)
+			}
+
+			result += h.BlockWith(val.MapIndex(keys[i]).Interface(), data)
 		}
 	case reflect.Struct:
 		// @todo !!!

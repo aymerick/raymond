@@ -178,24 +178,46 @@ var hbBuiltinsTests = []raymondTest{
 		"cruel !",
 	},
 
-	// @todo "#each - each with an object and @key"
-
+	// NOTE: we test with a map instead of an object
+	{
+		"#each - each with an object and @key (map)",
+		"{{#each goodbyes}}{{@key}}. {{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": map[interface{}]map[string]string{"<b>#1</b>": {"text": "goodbye"}, 2: {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		nil,
+		[]string{"&lt;b&gt;#1&lt;/b&gt;. goodbye! 2. GOODBYE! cruel world!", "2. GOODBYE! &lt;b&gt;#1&lt;/b&gt;. goodbye! cruel world!"},
+	},
+	// // NOTE: An additional test with a struct, but without an html stuff for the key, because it is impossible
 	// {
-	// 	"#each - each with @index",
-	// 	"{{#each goodbyes}}{{@index}}. {{text}}! {{/each}}cruel {{world}}!",
-	// 	map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+	// 	"#each - each with an object and @key (struct)",
+	// 	"{{#each goodbyes}}{{@key}}. {{text}}! {{/each}}cruel {{world}}!",
+	// 	map[string]interface{}{
+	// 		"goodbyes": struct {
+	// 			foo string
+	// 			bar int
+	// 		}{"baz", 10},
+	// 		"world": "world",
+	// 	},
 	// 	nil,
 	// 	nil,
-	// 	"0. goodbye! 1. Goodbye! 2. GOODBYE! cruel world!",
+	// 	[]string{"foo. baz! bar. 10! cruel world!", "bar. 10! foo. baz! cruel world!"},
 	// },
-	// {
-	// 	"#each - each with nested @index",
-	// 	"{{#each goodbyes}}{{@index}}. {{text}}! {{#each ../goodbyes}}{{@index}} {{/each}}After {{@index}} {{/each}}{{@index}}cruel {{world}}!",
-	// 	map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
-	// 	nil,
-	// 	nil,
-	// 	"0. goodbye! 0 1 2 After 0 1. Goodbye! 0 1 2 After 1 2. GOODBYE! 0 1 2 After 2 cruel world!",
-	// },
+	{
+		"#each - each with @index",
+		"{{#each goodbyes}}{{@index}}. {{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		nil,
+		"0. goodbye! 1. Goodbye! 2. GOODBYE! cruel world!",
+	},
+	{
+		"#each - each with nested @index",
+		"{{#each goodbyes}}{{@index}}. {{text}}! {{#each ../goodbyes}}{{@index}} {{/each}}After {{@index}} {{/each}}{{@index}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		nil,
+		"0. goodbye! 0 1 2 After 0 1. Goodbye! 0 1 2 After 1 2. GOODBYE! 0 1 2 After 2 cruel world!",
+	},
 
 	// {
 	// 	"#each - each with block params",

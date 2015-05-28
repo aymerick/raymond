@@ -368,7 +368,7 @@ var hbBasicTests = []raymondTest{
 		"block functions with context argument",
 		"{{#awesome 1}}inner {{.}}{{/awesome}}",
 		map[string]interface{}{"awesome": func(h *HelperArg) string {
-			return h.BlockWith(h.Param(0))
+			return h.BlockWithCtx(h.Param(0))
 		}},
 		nil,
 		nil,
@@ -379,7 +379,7 @@ var hbBasicTests = []raymondTest{
 		"{{#with value}}{{#../awesome 1}}inner {{.}}{{/../awesome}}{{/with}}",
 		map[string]interface{}{
 			"awesome": func(h *HelperArg) string {
-				return h.BlockWith(h.Param(0))
+				return h.BlockWithCtx(h.Param(0))
 			},
 			"value": true,
 		},

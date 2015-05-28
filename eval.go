@@ -26,9 +26,10 @@ var (
 type EvalVisitor struct {
 	tpl *Template
 
-	ctx    []reflect.Value
-	blocks []*ast.BlockStatement
-	exprs  []*ast.Expression
+	ctx       []reflect.Value
+	dataFrame *DataFrame
+	blocks    []*ast.BlockStatement
+	exprs     []*ast.Expression
 
 	// memoize expressions that were function calls
 	exprFunc map[*ast.Expression]bool
@@ -40,9 +41,10 @@ type EvalVisitor struct {
 // Instanciate a new evaluation visitor
 func NewEvalVisitor(tpl *Template, data interface{}) *EvalVisitor {
 	return &EvalVisitor{
-		tpl:      tpl,
-		ctx:      []reflect.Value{reflect.ValueOf(data)},
-		exprFunc: make(map[*ast.Expression]bool),
+		tpl:       tpl,
+		ctx:       []reflect.Value{reflect.ValueOf(data)},
+		dataFrame: NewDataFrame(),
+		exprFunc:  make(map[*ast.Expression]bool),
 	}
 }
 
@@ -717,6 +719,7 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	if !done {
 		// field path
 		if path := node.FieldPath(); path != nil {
+			// @todo Find a cleaner way ! Don't break the pattern !
 			// this is an exception to visitor pattern, because we need to pass the info
 			// that this path is at root of current expression
 			if val := v.evalPathExpression(path, true); val != nil {
@@ -738,6 +741,30 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 
 // Evaluate a path expression
 func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
+	if node.Data {
+		// private data
+		return v.evalDataPathExpression(node)
+	}
+
+	return v.evalCtxPathExpression(node, exprRoot)
+}
+
+// Evaluate a private data path expression
+func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression) interface{} {
+	// find data frame
+	frame := v.dataFrame
+	for i := node.Depth; i > 0; i-- {
+		if frame.parent == nil {
+			return nil
+		}
+		frame = frame.parent
+	}
+
+	return frame.Find(node.Parts)
+}
+
+// Evaluate a context path expression
+func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	v.at(node)
 
 	var result interface{}

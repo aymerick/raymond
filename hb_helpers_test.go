@@ -41,7 +41,7 @@ var hbHelpersTests = []raymondTest{
 		map[string]Helper{"goodbyes": func(h *HelperArg) string {
 			out := ""
 			for _, str := range []string{"Goodbye", "goodbye", "GOODBYE"} {
-				out += str + " " + h.BlockWith(str) + "! "
+				out += str + " " + h.BlockWithCtx(str) + "! "
 			}
 			return out
 		}},
@@ -83,7 +83,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#goodbyes}}{{text}}! {{/goodbyes}}cruel {{world}}!",
 		map[string]interface{}{"world": "world"},
 		map[string]Helper{"goodbyes": func(h *HelperArg) string {
-			return h.BlockWith(map[string]string{"text": "GOODBYE"})
+			return h.BlockWithCtx(map[string]string{"text": "GOODBYE"})
 		}},
 		nil,
 		"GOODBYE! cruel world!",

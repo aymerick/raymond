@@ -80,7 +80,7 @@ func formHelper(h *HelperArg) string {
 }
 
 func formCtxHelper(h *HelperArg) string {
-	return "<form>" + h.BlockWith(h.Param(0)) + "</form>"
+	return "<form>" + h.BlockWithCtx(h.Param(0)) + "</form>"
 }
 
 func listHelper(h *HelperArg) string {
@@ -93,7 +93,7 @@ func listHelper(h *HelperArg) string {
 			result := "<ul>"
 			for i := 0; i < val.Len(); i++ {
 				result += "<li>"
-				result += h.BlockWith(val.Index(i).Interface())
+				result += h.BlockWithCtx(val.Index(i).Interface())
 				result += "</li>"
 			}
 			result += "</ul>"
