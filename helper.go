@@ -18,7 +18,7 @@ type HelperArg struct {
 // Helper function
 type Helper func(h *HelperArg) string
 
-// All registered helpers
+// All global helpers
 var helpers map[string]Helper
 
 func init() {
@@ -31,7 +31,7 @@ func init() {
 	RegisterHelper("each", eachHelper)
 }
 
-// Registers a new helper function
+// Registers a new global helper function
 func RegisterHelper(name string, helper Helper) {
 	if helpers[name] != nil {
 		panic(fmt.Errorf("Helper already registered: %s", name))
@@ -40,7 +40,7 @@ func RegisterHelper(name string, helper Helper) {
 	helpers[name] = helper
 }
 
-// Find a registered helper function
+// Find a registered global helper function
 func FindHelper(name string) Helper {
 	return helpers[name]
 }
