@@ -19,6 +19,7 @@ var hbSubexpressionsTests = []raymondTest{
 				return "LOL"
 			},
 		},
+		nil,
 		"LOLLOL!",
 	},
 	{
@@ -29,6 +30,7 @@ var hbSubexpressionsTests = []raymondTest{
 			"blog":  blogHelper,
 			"equal": equalHelper,
 		},
+		nil,
 		"val is true",
 	},
 	{
@@ -41,6 +43,7 @@ var hbSubexpressionsTests = []raymondTest{
 			},
 			"equal": equalHelper,
 		},
+		nil,
 		"val is foo!, true and bar!",
 	},
 	{
@@ -51,6 +54,7 @@ var hbSubexpressionsTests = []raymondTest{
 			"blog":  blogHelper,
 			"equal": equalHelper,
 		},
+		nil,
 		"val is true",
 	},
 
@@ -59,6 +63,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash 'abc' (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		nil,
 		"abc-ab",
 	},
 	{
@@ -66,6 +71,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash d (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		nil,
 		"d-ab",
 	},
 	{
@@ -73,6 +79,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash c.c (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		nil,
 		"c-ab",
 	},
 	{
@@ -80,6 +87,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash (concat a b) c.c}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		nil,
 		"ab-c",
 	},
 	{
@@ -87,6 +95,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash (concat a e.e) c.c}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		nil,
 		"ae-c",
 	},
 
@@ -98,6 +107,7 @@ var hbSubexpressionsTests = []raymondTest{
 		map[string]Helper{
 			"equal": equalHelper,
 		},
+		nil,
 		"true",
 	},
 	{
@@ -108,6 +118,7 @@ var hbSubexpressionsTests = []raymondTest{
 			"blog":  blogHelper,
 			"equal": equalHelper,
 		},
+		nil,
 		"val is true",
 	},
 	{
@@ -120,6 +131,7 @@ var hbSubexpressionsTests = []raymondTest{
 			},
 			"equal": equalHelper,
 		},
+		nil,
 		"val is true",
 	},
 	{
@@ -137,6 +149,7 @@ var hbSubexpressionsTests = []raymondTest{
 				return h.ParamStr(0)
 			},
 		},
+		nil,
 		`<input aria-label="Name" placeholder="Example User" />`,
 	},
 	{
@@ -154,6 +167,7 @@ var hbSubexpressionsTests = []raymondTest{
 				return h.ParamStr(0)
 			},
 		},
+		nil,
 		`<input aria-label="Name" placeholder="Example User" />`,
 	},
 

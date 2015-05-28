@@ -90,11 +90,12 @@ func (stats *raymondStats) output() {
 //
 
 type raymondTest struct {
-	name    string
-	input   string
-	data    interface{}
-	helpers map[string]Helper
-	output  interface{}
+	name     string
+	input    string
+	data     interface{}
+	helpers  map[string]Helper
+	partials map[string]string
+	output   interface{}
 }
 
 // launch an array of tests
@@ -119,6 +120,11 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 				tpl.RegisterHelpers(test.helpers)
 			}
 
+			if len(test.partials) > 0 {
+				// register partials
+				tpl.RegisterPartials(test.partials)
+			}
+
 			// render template
 			output, err := tpl.Exec(test.data)
 			if err != nil {
@@ -138,7 +144,7 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 					}
 
 					if !match {
-						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), expectedArr, output, tpl.PrintAST())
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), Str(test.partials), expectedArr, output, tpl.PrintAST())
 						stats.failed()
 					}
 				} else {
@@ -148,7 +154,7 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 					}
 
 					if expectedStr != output {
-						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), expectedStr, output, tpl.PrintAST())
+						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), Str(test.partials), expectedStr, output, tpl.PrintAST())
 						stats.failed()
 					}
 				}
@@ -193,6 +199,11 @@ func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
 			if len(test.helpers) > 0 {
 				// register helpers
 				tpl.RegisterHelpers(test.helpers)
+			}
+
+			if len(test.partials) > 0 {
+				// register partials
+				tpl.RegisterPartials(test.partials)
 			}
 
 			// render template

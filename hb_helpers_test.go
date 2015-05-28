@@ -15,6 +15,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#goodbyes}}{{{link ../prefix}}}{{/goodbyes}}",
 		map[string]interface{}{"prefix": "/root", "goodbyes": []map[string]string{{"text": "Goodbye", "url": "goodbye"}}},
 		map[string]Helper{"link": linkHelper},
+		nil,
 		`<a href="/root/goodbye">Goodbye</a>`,
 	},
 	{
@@ -22,6 +23,7 @@ var hbHelpersTests = []raymondTest{
 		"{{{{raw}}}} {{test}} {{{{/raw}}}}",
 		map[string]interface{}{"test": "hello"},
 		map[string]Helper{"raw": rawHelper},
+		nil,
 		" {{test}} ",
 	},
 	{
@@ -29,6 +31,7 @@ var hbHelpersTests = []raymondTest{
 		"{{{{raw 1 2 3}}}} {{test}} {{{{/raw}}}}",
 		map[string]interface{}{"test": "hello"},
 		map[string]Helper{"raw": rawHelper},
+		nil,
 		" {{test}} 123",
 	},
 	{
@@ -42,6 +45,7 @@ var hbHelpersTests = []raymondTest{
 			}
 			return out
 		}},
+		nil,
 		"Goodbye Alan! goodbye Alan! GOODBYE Alan! ",
 	},
 	{
@@ -49,6 +53,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#goodbyes}}{{#link ../prefix}}{{text}}{{/link}}{{/goodbyes}}",
 		map[string]interface{}{"prefix": "/root", "goodbyes": []map[string]string{{"text": "Goodbye", "url": "goodbye"}}},
 		map[string]Helper{"link": linkHelper},
+		nil,
 		`<a href="/root/goodbye">Goodbye</a>`,
 	},
 	{
@@ -59,6 +64,7 @@ var hbHelpersTests = []raymondTest{
 		map[string]Helper{"nothere": func(h *HelperArg) string {
 			return ""
 		}},
+		nil,
 		" ",
 	},
 	{
@@ -69,6 +75,7 @@ var hbHelpersTests = []raymondTest{
 		map[string]Helper{"nothere": func(h *HelperArg) string {
 			return ""
 		}},
+		nil,
 		" ",
 	},
 	{
@@ -78,6 +85,7 @@ var hbHelpersTests = []raymondTest{
 		map[string]Helper{"goodbyes": func(h *HelperArg) string {
 			return h.BlockWith(map[string]string{"text": "GOODBYE"})
 		}},
+		nil,
 		"GOODBYE! cruel world!",
 	},
 	{
@@ -85,6 +93,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#form}}<p>{{name}}</p>{{/form}}",
 		map[string]interface{}{"name": "Yehuda"},
 		map[string]Helper{"form": formHelper},
+		nil,
 		"<form><p>Yehuda</p></form>",
 	},
 	{
@@ -94,11 +103,13 @@ var hbHelpersTests = []raymondTest{
 		map[string]Helper{"link": func(h *HelperArg) string {
 			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", h.DataStr("id"), h.Block())
 		}},
+		nil,
 		`<ul><li><a href="/people/1">Alan</a></li><li><a href="/people/2">Yehuda</a></li></ul>`,
 	},
 	{
 		"block helper for undefined value",
 		"{{#empty}}shouldn't render{{/empty}}",
+		nil,
 		nil,
 		nil,
 		"",
@@ -108,6 +119,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#form yehuda}}<p>{{name}}</p>{{/form}}",
 		map[string]map[string]string{"yehuda": {"name": "Yehuda"}},
 		map[string]Helper{"form": formCtxHelper},
+		nil,
 		"<form><p>Yehuda</p></form>",
 	},
 	{
@@ -115,6 +127,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#form yehuda/cat}}<p>{{name}}</p>{{/form}}",
 		map[string]map[string]interface{}{"yehuda": {"name": "Yehuda", "cat": map[string]string{"name": "Harold"}}},
 		map[string]Helper{"form": formCtxHelper},
+		nil,
 		"<form><p>Harold</p></form>",
 	},
 	{
@@ -124,6 +137,7 @@ var hbHelpersTests = []raymondTest{
 		map[string]Helper{"link": func(h *HelperArg) string {
 			return fmt.Sprintf("<a href=\"%s\">%s</a>", h.DataStr("name"), h.Block())
 		}, "form": formCtxHelper},
+		nil,
 		`<form><p>Yehuda</p><a href="Yehuda">Hello</a></form>`,
 	},
 	{
@@ -131,6 +145,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#list people}}{{name}}{{^}}<em>Nobody's here</em>{{/list}}",
 		map[string][]map[string]string{"people": {{"name": "Alan"}, {"name": "Yehuda"}}},
 		map[string]Helper{"list": listHelper},
+		nil,
 		`<ul><li>Alan</li><li>Yehuda</li></ul>`,
 	},
 	{
@@ -138,6 +153,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#list people}}{{name}}{{^}}<em>Nobody's here</em>{{/list}}",
 		map[string][]map[string]string{"people": {}},
 		map[string]Helper{"list": listHelper},
+		nil,
 		`<p><em>Nobody's here</em></p>`,
 	},
 	{
@@ -145,6 +161,7 @@ var hbHelpersTests = []raymondTest{
 		"{{#list people}}Hello{{^}}{{message}}{{/list}}",
 		map[string]interface{}{"people": []interface{}{}, "message": "Nobody's here"},
 		map[string]Helper{"list": listHelper},
+		nil,
 		`<p>Nobody&apos;s here</p>`,
 	},
 
@@ -154,6 +171,7 @@ var hbHelpersTests = []raymondTest{
 	// 	"",
 	// 	"",
 	// 	map[string]interface{}{},
+	// 	nil,
 	// 	nil,
 	// 	"",
 	// },

@@ -131,6 +131,7 @@ var helperTests = []raymondTest{
 		`{{foo}}`,
 		nil,
 		map[string]Helper{"foo": barHelper},
+		nil,
 		`bar`,
 	},
 	{
@@ -138,6 +139,7 @@ var helperTests = []raymondTest{
 		`{{echo "foo"}}`,
 		nil,
 		map[string]Helper{"echo": echoHelper},
+		nil,
 		`foo`,
 	},
 	{
@@ -145,6 +147,7 @@ var helperTests = []raymondTest{
 		`{{echo foo}}`,
 		map[string]interface{}{"foo": "bar"},
 		map[string]Helper{"echo": echoHelper},
+		nil,
 		`bar`,
 	},
 	{
@@ -152,6 +155,7 @@ var helperTests = []raymondTest{
 		`{{bool true}}`,
 		nil,
 		map[string]Helper{"bool": boolHelper},
+		nil,
 		`yes it is`,
 	},
 	{
@@ -159,6 +163,7 @@ var helperTests = []raymondTest{
 		`{{bool false}}`,
 		nil,
 		map[string]Helper{"bool": boolHelper},
+		nil,
 		`absolutely not`,
 	},
 	{
@@ -166,6 +171,7 @@ var helperTests = []raymondTest{
 		`{{gnak 5}}`,
 		nil,
 		map[string]Helper{"gnak": gnakHelper},
+		nil,
 		`GnAK!GnAK!GnAK!GnAK!GnAK!`,
 	},
 	{
@@ -173,11 +179,13 @@ var helperTests = []raymondTest{
 		`{{echo "GnAK!" 3}}`,
 		nil,
 		map[string]Helper{"echo": echoHelper},
+		nil,
 		`GnAK!GnAK!GnAK!`,
 	},
 	{
 		"#if helper with true literal",
 		`{{#if true}}YES MAN{{/if}}`,
+		nil,
 		nil,
 		nil,
 		`YES MAN`,
@@ -187,12 +195,14 @@ var helperTests = []raymondTest{
 		`{{#if false}}YES MAN{{/if}}`,
 		nil,
 		nil,
+		nil,
 		``,
 	},
 	{
 		"#if helper with truthy identifier",
 		`{{#if ok}}YES MAN{{/if}}`,
 		map[string]interface{}{"ok": true},
+		nil,
 		nil,
 		`YES MAN`,
 	},
@@ -201,11 +211,13 @@ var helperTests = []raymondTest{
 		`{{#if ok}}YES MAN{{/if}}`,
 		map[string]interface{}{"ok": false},
 		nil,
+		nil,
 		``,
 	},
 	{
 		"#unless helper with true literal",
 		`{{#unless true}}YES MAN{{/unless}}`,
+		nil,
 		nil,
 		nil,
 		``,
@@ -215,6 +227,7 @@ var helperTests = []raymondTest{
 		`{{#unless false}}YES MAN{{/unless}}`,
 		nil,
 		nil,
+		nil,
 		`YES MAN`,
 	},
 	{
@@ -222,12 +235,14 @@ var helperTests = []raymondTest{
 		`{{#unless ok}}YES MAN{{/unless}}`,
 		map[string]interface{}{"ok": true},
 		nil,
+		nil,
 		``,
 	},
 	{
 		"#unless helper with falsy identifier",
 		`{{#unless ok}}YES MAN{{/unless}}`,
 		map[string]interface{}{"ok": false},
+		nil,
 		nil,
 		`YES MAN`,
 	},
