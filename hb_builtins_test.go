@@ -187,21 +187,21 @@ var hbBuiltinsTests = []raymondTest{
 		nil,
 		[]string{"&lt;b&gt;#1&lt;/b&gt;. goodbye! 2. GOODBYE! cruel world!", "2. GOODBYE! &lt;b&gt;#1&lt;/b&gt;. goodbye! cruel world!"},
 	},
-	// // NOTE: An additional test with a struct, but without an html stuff for the key, because it is impossible
-	// {
-	// 	"#each - each with an object and @key (struct)",
-	// 	"{{#each goodbyes}}{{@key}}. {{text}}! {{/each}}cruel {{world}}!",
-	// 	map[string]interface{}{
-	// 		"goodbyes": struct {
-	// 			foo string
-	// 			bar int
-	// 		}{"baz", 10},
-	// 		"world": "world",
-	// 	},
-	// 	nil,
-	// 	nil,
-	// 	[]string{"foo. baz! bar. 10! cruel world!", "bar. 10! foo. baz! cruel world!"},
-	// },
+	// NOTE: An additional test with a struct, but without an html stuff for the key, because it is impossible
+	{
+		"#each - each with an object and @key (struct)",
+		"{{#each goodbyes}}{{@key}}. {{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{
+			"goodbyes": struct {
+				Foo map[string]string
+				Bar map[string]int
+			}{map[string]string{"text": "baz"}, map[string]int{"text": 10}},
+			"world": "world",
+		},
+		nil,
+		nil,
+		[]string{"Foo. baz! Bar. 10! cruel world!", "Bar. 10! Foo. baz! cruel world!"},
+	},
 	{
 		"#each - each with @index",
 		"{{#each goodbyes}}{{@index}}. {{text}}! {{/each}}cruel {{world}}!",

@@ -276,7 +276,30 @@ func eachHelper(h *HelperArg) string {
 			result += h.BlockWith(val.MapIndex(keys[i]).Interface(), data)
 		}
 	case reflect.Struct:
-		// @todo !!!
+		var exportedFields []int
+
+		// collect exported fields only
+		for i := 0; i < val.NumField(); i++ {
+			if tField := val.Type().Field(i); tField.PkgPath == "" {
+				exportedFields = append(exportedFields, i)
+			}
+		}
+
+		for i, fieldIndex := range exportedFields {
+			// computes private data
+			data := h.NewDataFrame()
+			data.Set("key", val.Type().Field(fieldIndex).Name)
+
+			if i == 0 {
+				data.Set("first", true)
+			}
+
+			if i == len(exportedFields)-1 {
+				data.Set("last", true)
+			}
+
+			result += h.BlockWith(val.Field(fieldIndex).Interface(), data)
+		}
 	}
 
 	return result
