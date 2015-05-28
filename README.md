@@ -7,7 +7,6 @@ Handlebars for golang
 
 ## Todo
 
-- [ ] @data
 - [ ] `strict` mode
 - [ ] `stringParams` mode
 - [ ] `compat` mode
@@ -15,7 +14,6 @@ Handlebars for golang
 - [ ] permits helpers to return safe strings
 - [ ] the `lookup` helper
 - [ ] the `log` helper
-- [ ] `@index` data in `each` helper
 - [ ] pass all handlebars.js tests
 - [ ] documentation
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
