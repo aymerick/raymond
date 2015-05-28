@@ -16,7 +16,6 @@ Handlebars for golang
 - [ ] the `log` helper
 - [ ] `@index` data in `each` helper
 - [ ] pass all handlebars.js tests
-- [ ] pass mustache tests
 - [ ] documentation
 
 
