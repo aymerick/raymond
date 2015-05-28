@@ -10,9 +10,10 @@ import (
 
 // Template
 type Template struct {
-	source  string
-	program *ast.Program
-	helpers map[string]Helper
+	source   string
+	program  *ast.Program
+	helpers  map[string]Helper
+	partials map[string]*Partial
 }
 
 // Instanciate a template an parse it
@@ -39,8 +40,9 @@ func MustParse(source string) *Template {
 // Instanciate a new template
 func NewTemplate(source string) *Template {
 	return &Template{
-		source:  source,
-		helpers: make(map[string]Helper),
+		source:   source,
+		helpers:  make(map[string]Helper),
+		partials: make(map[string]*Partial),
 	}
 }
 
@@ -72,6 +74,22 @@ func (tpl *Template) RegisterHelper(name string, helper Helper) {
 	}
 
 	tpl.helpers[name] = helper
+}
+
+// Register several partials
+func (tpl *Template) RegisterPartials(partials map[string]string) {
+	for name, partial := range partials {
+		tpl.RegisterPartial(name, partial)
+	}
+}
+
+// Register a partial
+func (tpl *Template) RegisterPartial(name string, partial string) {
+	if tpl.partials[name] != nil {
+		panic(fmt.Sprintf("Partial %s already registered", name))
+	}
+
+	tpl.partials[name] = NewPartial(name, partial)
 }
 
 // Renders a template with input data

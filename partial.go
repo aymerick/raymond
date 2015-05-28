@@ -6,9 +6,10 @@ import "fmt"
 type Partial struct {
 	name   string
 	source string
+	tpl    *Template
 }
 
-// All registered partials
+// All global partials
 var partials map[string]*Partial
 
 func init() {
@@ -23,11 +24,30 @@ func NewPartial(name string, source string) *Partial {
 	}
 }
 
-// Registers a new partial
+// Registers a new global partial
 func RegisterPartial(name string, source string) {
 	if partials[name] != nil {
 		panic(fmt.Errorf("Partial already registered: %s", name))
 	}
 
 	partials[name] = NewPartial(name, source)
+}
+
+// Find a registered global partial
+func FindPartial(name string) *Partial {
+	return partials[name]
+}
+
+// Return partial templae
+func (p *Partial) Template() (*Template, error) {
+	if p.tpl == nil {
+		var err error
+
+		p.tpl, err = Parse(p.source)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return p.tpl, nil
 }

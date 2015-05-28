@@ -418,6 +418,37 @@ func (v *EvalVisitor) helperArg(node *ast.Expression) *HelperArg {
 }
 
 //
+// Partials
+//
+
+// Finds given partial
+func (v *EvalVisitor) findPartial(name string) *Partial {
+	// check template partials
+	if v.tpl.partials[name] != nil {
+		return v.tpl.partials[name]
+	}
+
+	// check global partials
+	return FindPartial(name)
+}
+
+// Evaluates a partial
+func (v *EvalVisitor) evalPartial(partial *Partial) string {
+	// @todo Extract params and push them to ctx
+
+	// get partial template
+	partialTpl, err := partial.Template()
+	if err != nil {
+		v.errPanic(err)
+	}
+
+	// evaluate partial template
+	result, _ := partialTpl.program.Accept(v).(string)
+
+	return result
+}
+
+//
 // Functions
 //
 
@@ -568,8 +599,24 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 func (v *EvalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 	v.at(node)
 
-	// @todo
-	return nil
+	// partialName: helperName | sexpr
+	name, ok := ast.HelperNameStr(node.Name)
+	if !ok {
+		if subExpr, ok := node.Name.(*ast.SubExpression); ok {
+			name, _ = subExpr.Accept(v).(string)
+		}
+	}
+
+	if name == "" {
+		v.errorf("Unexpected partial name: %q", node.Name)
+	}
+
+	partial := v.findPartial(name)
+	if partial == nil {
+		v.errorf("Partial not found: %s", name)
+	}
+
+	return v.evalPartial(partial)
 }
 
 func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
@@ -672,7 +719,7 @@ func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool
 			}
 
 			if partResolved {
-				// As soon as we find the first part of a path, we must not try to resolve with parent context if result is nil
+				// As soon as we find the first part of a path, we must not try to resolve with parent context if result is finally `nil`
 				// Reference: "Dotted Names - Context Precedence" mustache test
 				stopDeep = true
 			}
