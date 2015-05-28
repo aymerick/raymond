@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/aymerick/raymond/ast"
 )
@@ -433,7 +434,7 @@ func (v *EvalVisitor) findPartial(name string) *Partial {
 }
 
 // Evaluates a partial
-func (v *EvalVisitor) evalPartial(partial *Partial) string {
+func (v *EvalVisitor) evalPartial(partial *Partial, indent string) string {
 	// @todo Extract params and push them to ctx
 
 	// get partial template
@@ -444,6 +445,18 @@ func (v *EvalVisitor) evalPartial(partial *Partial) string {
 
 	// evaluate partial template
 	result, _ := partialTpl.program.Accept(v).(string)
+
+	if indent != "" {
+		var indented []string
+
+		// indent all lines
+		lines := strings.Split(result, "\n")
+		for _, line := range lines {
+			indented = append(indented, indent+line)
+		}
+
+		result = strings.Join(indented, "\n")
+	}
 
 	return result
 }
@@ -616,7 +629,7 @@ func (v *EvalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 		v.errorf("Partial not found: %s", name)
 	}
 
-	return v.evalPartial(partial)
+	return v.evalPartial(partial, node.Indent)
 }
 
 func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {

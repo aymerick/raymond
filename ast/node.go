@@ -261,7 +261,8 @@ type ContentStatement struct {
 	NodeType
 	Loc
 
-	Value string
+	Value    string
+	Original string
 
 	// whitespace management
 	RightStripped bool
@@ -273,7 +274,8 @@ func NewContentStatement(pos int, line int, val string) *ContentStatement {
 		NodeType: NodeContent,
 		Loc:      Loc{pos, line},
 
-		Value: val,
+		Value:    val,
+		Original: val,
 	}
 }
 

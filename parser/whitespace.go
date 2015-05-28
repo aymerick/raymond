@@ -27,6 +27,8 @@ var (
 
 	rNextWhitespace    = regexp.MustCompile(`^\s*?\r?\n`)
 	rNextWhitespaceEnd = regexp.MustCompile(`^\s*?(\r?\n|$)`)
+
+	rPartialIndent = regexp.MustCompile(`([ \t]+$)`)
 )
 
 func NewWhitespaceVisitor() *WhitespaceVisitor {
@@ -149,7 +151,7 @@ func isNextWhitespaceProgram(body []ast.Node, i int, isRoot bool) bool {
 		}
 
 		r := rNextWhitespaceEnd
-		if (i+2 >= len(body)) || !isRoot {
+		if (i+2 > len(body)) || !isRoot {
 			r = rNextWhitespace
 		}
 
@@ -194,9 +196,13 @@ func (v *WhitespaceVisitor) VisitProgram(program *ast.Program) interface{} {
 
 			if omitLeft(body, i, false) {
 				// If we are on a standalone node, save the indent info for partials
-				if _, ok := current.(*ast.PartialStatement); ok {
+				if partial, ok := current.(*ast.PartialStatement); ok {
 					// Pull out the whitespace from the final line
-					// @todo partial.Indent = (/([ \t]+$)/).exec(body[i - 1].original)[1];
+					if i > 0 {
+						if prevContent, ok := body[i-1].(*ast.ContentStatement); ok {
+							partial.Indent = rPartialIndent.FindString(prevContent.Original)
+						}
+					}
 				}
 			}
 		}
