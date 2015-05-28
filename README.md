@@ -11,6 +11,7 @@ Handlebars for golang
 - [ ] `strict` mode
 - [ ] `stringParams` mode
 - [ ] `compat` mode
+- [ ] `preventIndent` mode
 - [ ] permits helpers to return safe strings
 - [ ] the `lookup` helper
 - [ ] the `log` helper

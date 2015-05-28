@@ -161,7 +161,7 @@ var hbPartialsTests = []raymondTest{
 		"Dudes:\n  Yehuda\n   http://yehuda!\n  Alan\n   http://alan!\n",
 	},
 
-	// @todo OMG I don't know how I will handle that :(
+	// // @todo preventIndent option
 	// {
 	// 	"standalone partials (3) - prevent nested indented partials",
 	// 	"Dudes:\n{{#dudes}}\n  {{>dude}}\n{{/dudes}}",
