@@ -12,7 +12,7 @@ import (
 
 //
 // Note that, as the JS implementation, we do not support:
-//   - support alternative delimeters
+//   - alternative delimeters
 //   - the mustache lambda spec
 //
 
@@ -36,7 +36,7 @@ var (
 
 func TestMustache(t *testing.T) {
 	skipFiles := map[string]bool{
-		"partials.yml": true,
+		// mustache lambdas differ from handlebars lambdas
 		"~lambdas.yml": true,
 	}
 
@@ -64,16 +64,17 @@ func testsFromMustacheFile(fileName string) []raymondTest {
 	}
 
 	for _, mustacheTest := range testFile.Tests {
-		if mustBeSkipped(mustacheTest) {
+		if mustBeSkipped(mustacheTest, fileName) {
 			// fmt.Printf("Skipped test: %s\n", mustacheTest.Name)
 			continue
 		}
 
 		test := raymondTest{
-			name:   mustacheTest.Name,
-			input:  mustacheTest.Template,
-			data:   mustacheTest.Data,
-			output: mustacheTest.Expected,
+			name:     mustacheTest.Name,
+			input:    mustacheTest.Template,
+			data:     mustacheTest.Data,
+			partials: mustacheTest.Partials,
+			output:   mustacheTest.Expected,
 		}
 
 		result = append(result, test)
@@ -83,9 +84,11 @@ func testsFromMustacheFile(fileName string) []raymondTest {
 }
 
 // returns true if test must be skipped
-func mustBeSkipped(test mustacheTest) bool {
-	// @todo Skip partials tests "Failed Lookup" and "Standalone Indentation"
-	return haveAltDelimiter(test)
+func mustBeSkipped(test mustacheTest, fileName string) bool {
+	// handlebars does not support alternative delimiters
+	return haveAltDelimiter(test) ||
+		// the JS implementation skips those tests
+		fileName == "partials.yml" && (test.Name == "Failed Lookup" || test.Name == "Standalone Indentation")
 }
 
 // returns true if test have alternative delimeter in template or in partials
