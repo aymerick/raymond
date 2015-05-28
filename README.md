@@ -17,6 +17,7 @@ Handlebars for golang
 - [ ] `@index` data in `each` helper
 - [ ] pass all handlebars.js tests
 - [ ] documentation
+- [ ] test with <https://github.com/dvyukov/go-fuzz>
 
 
 ## Quick start
