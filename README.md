@@ -8,7 +8,6 @@ Handlebars for golang
 ## Todo
 
 - [ ] @data
-- [ ] partials
 - [ ] `strict` mode
 - [ ] `stringParams` mode
 - [ ] `compat` mode

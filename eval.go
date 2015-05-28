@@ -433,32 +433,73 @@ func (v *EvalVisitor) findPartial(name string) *Partial {
 	return FindPartial(name)
 }
 
-// Evaluates a partial
-func (v *EvalVisitor) evalPartial(partial *Partial, indent string) string {
-	// @todo Extract params and push them to ctx
+// Computes partial context
+func (v *EvalVisitor) partialContext(node *ast.PartialStatement) reflect.Value {
+	if nb := len(node.Params); nb > 1 {
+		v.errorf("Unsupported number of partial arguments: %d", nb)
+	}
 
+	if (len(node.Params) > 0) && (node.Hash != nil) {
+		v.errorf("Passing both context and named parameters to a partial is not allowed")
+	}
+
+	if len(node.Params) == 1 {
+		return reflect.ValueOf(node.Params[0].Accept(v))
+	}
+
+	if node.Hash != nil {
+		hash, _ := node.Hash.Accept(v).(map[string]interface{})
+		return reflect.ValueOf(hash)
+	}
+
+	return zero
+}
+
+// Evaluates a partial
+func (v *EvalVisitor) evalPartial(partial *Partial, node *ast.PartialStatement) string {
 	// get partial template
 	partialTpl, err := partial.Template()
 	if err != nil {
 		v.errPanic(err)
 	}
 
+	// push partial context
+	ctx := v.partialContext(node)
+	if ctx.IsValid() {
+		v.pushCtx(ctx)
+	}
+
 	// evaluate partial template
 	result, _ := partialTpl.program.Accept(v).(string)
 
-	if indent != "" {
-		var indented []string
+	// ident partial
+	result = v.indentLines(result, node.Indent)
 
-		// indent all lines
-		lines := strings.Split(result, "\n")
-		for _, line := range lines {
-			indented = append(indented, indent+line)
-		}
-
-		result = strings.Join(indented, "\n")
+	if ctx.IsValid() {
+		v.popCtx()
 	}
 
 	return result
+}
+
+func (v *EvalVisitor) indentLines(str string, indent string) string {
+	if indent == "" {
+		return str
+	}
+
+	var indented []string
+
+	lines := strings.Split(str, "\n")
+	for i, line := range lines {
+		if (i == (len(lines) - 1)) && (line == "") {
+			// input string ends with a new line
+			indented = append(indented, line)
+		} else {
+			indented = append(indented, indent+line)
+		}
+	}
+
+	return strings.Join(indented, "\n")
 }
 
 //
@@ -629,7 +670,7 @@ func (v *EvalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 		v.errorf("Partial not found: %s", name)
 	}
 
-	return v.evalPartial(partial, node.Indent)
+	return v.evalPartial(partial, node)
 }
 
 func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {

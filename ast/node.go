@@ -408,7 +408,14 @@ func HelperNameStr(node Node) (string, bool) {
 // returns string representation of path expression value, with a boolean set to false if this is not a path expression
 func PathExpressionStr(node Node) (string, bool) {
 	if path, ok := node.(*PathExpression); ok {
-		return path.Original, true
+		result := path.Original
+
+		// "[foo bar]"" => "foo bar"
+		if (len(result) >= 2) && (result[0] == '[') && (result[len(result)-1] == ']') {
+			result = result[1 : len(result)-1]
+		}
+
+		return result, true
 	}
 
 	return "", false
