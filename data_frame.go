@@ -31,21 +31,10 @@ func (p *DataFrame) Copy() *DataFrame {
 func (p *DataFrame) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
 	result := p.Copy()
 
-	if key != nil {
-		// map or struct
-		result.Set("key", key)
-	} else {
-		// array
-		result.Set("index", i)
-	}
-
-	if i == 0 {
-		result.Set("first", true)
-	}
-
-	if i == length-1 {
-		result.Set("last", true)
-	}
+	result.Set("index", i)
+	result.Set("key", key)
+	result.Set("first", i == 0)
+	result.Set("last", i == length-1)
 
 	return result
 }

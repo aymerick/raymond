@@ -103,6 +103,28 @@ func (v *EvalVisitor) ancestorCtx(depth int) reflect.Value {
 }
 
 //
+// Private data frame
+//
+
+// set new data frame
+func (v *EvalVisitor) setDataFrame(frame *DataFrame) {
+	if VERBOSE_EVAL {
+		log.Printf("Set data frame: %s", Str(frame.data))
+	}
+
+	v.dataFrame = frame
+}
+
+// set back parent data frame
+func (v *EvalVisitor) popDataFrame() {
+	v.dataFrame = v.dataFrame.parent
+
+	if VERBOSE_EVAL {
+		log.Printf("Pop data frame, current is: %s", Str(v.dataFrame.data))
+	}
+}
+
+//
 // Block Parameters stack
 //
 
@@ -142,10 +164,6 @@ func (v *EvalVisitor) blockParam(name string) interface{} {
 
 // push new block statement
 func (v *EvalVisitor) pushBlock(block *ast.BlockStatement) {
-	if VERBOSE_EVAL {
-		log.Printf("Push block: %s", Str(block))
-	}
-
 	v.blocks = append(v.blocks, block)
 }
 
@@ -157,10 +175,6 @@ func (v *EvalVisitor) popBlock() *ast.BlockStatement {
 
 	var result *ast.BlockStatement
 	result, v.blocks = v.blocks[len(v.blocks)-1], v.blocks[:len(v.blocks)-1]
-
-	if VERBOSE_EVAL {
-		log.Printf("Pop block, current is: %s", Str(v.curBlock()))
-	}
 
 	return result
 }
@@ -180,10 +194,6 @@ func (v *EvalVisitor) curBlock() *ast.BlockStatement {
 
 // push new expression
 func (v *EvalVisitor) pushExpr(expression *ast.Expression) {
-	if VERBOSE_EVAL {
-		log.Printf("Push expression: %s", Str(expression))
-	}
-
 	v.exprs = append(v.exprs, expression)
 }
 
@@ -195,10 +205,6 @@ func (v *EvalVisitor) popExpr() *ast.Expression {
 
 	var result *ast.Expression
 	result, v.exprs = v.exprs[len(v.exprs)-1], v.exprs[:len(v.exprs)-1]
-
-	if VERBOSE_EVAL {
-		log.Printf("Pop expression, current is: %s", Str(v.curExpr()))
-	}
 
 	return result
 }
@@ -263,7 +269,7 @@ func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, data *D
 	}
 
 	if data != nil {
-		v.dataFrame = data
+		v.setDataFrame(data)
 	}
 
 	// evaluate program
@@ -271,7 +277,7 @@ func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, data *D
 
 	// pop contexts
 	if data != nil {
-		v.dataFrame = v.dataFrame.parent
+		v.popDataFrame()
 	}
 
 	if ctxVal.IsValid() {
@@ -338,10 +344,6 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 	if result.Kind() == reflect.Func {
 		// in that code path, we know we can't be an expression root
 		result = v.evalFunc(result, exprRoot)
-	}
-
-	if VERBOSE_EVAL {
-		log.Printf("evalField(): '%s' with context %s => %s | Kind: %s", fieldName, StrValue(ctx), StrValue(result), result.Kind())
 	}
 
 	return result
@@ -673,6 +675,10 @@ func (v *EvalVisitor) VisitProgram(node *ast.Program) interface{} {
 func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	v.at(node)
 
+	if VERBOSE_EVAL {
+		log.Printf("=========== MUSTACHE ===========")
+	}
+
 	// evaluate expression
 	expr := node.Expression.Accept(v)
 
@@ -688,6 +694,11 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 
 func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.at(node)
+
+	if VERBOSE_EVAL {
+		log.Printf("=========== BLOCK ===========")
+	}
+
 	v.pushBlock(node)
 
 	result := ""
@@ -698,6 +709,10 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	if v.isHelperCall(node.Expression) || v.wasFuncCall(node.Expression) {
 		// it is the responsability of the helper/function to evaluate block
 		result, _ = expr.(string)
+
+		if VERBOSE_EVAL {
+			log.Printf("VisitBlock(): Helper of Func call returned: %q", Str(result))
+		}
 	} else {
 		val := reflect.ValueOf(expr)
 

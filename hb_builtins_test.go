@@ -226,6 +226,23 @@ var hbBuiltinsTests = []raymondTest{
 		nil,
 		"0. goodbye!  0 0 0 1 After 0 1. Goodbye!  1 0 1 1 After 1 cruel world!",
 	},
+	// @note: That test differs from JS impl because maps are not ordered in go
+	{
+		"#each - each object with @index",
+		"{{#each goodbyes}}{{@index}}. {{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": map[string]map[string]string{"a": {"text": "goodbye"}, "b": {"text": "Goodbye"}}, "world": "world"},
+		nil,
+		nil,
+		[]string{"0. goodbye! 1. Goodbye! cruel world!", "0. Goodbye! 1. goodbye! cruel world!"},
+	},
+	{
+		"#each - each with nested @first",
+		"{{#each goodbyes}}({{#if @first}}{{text}}! {{/if}}{{#each ../goodbyes}}{{#if @first}}{{text}}!{{/if}}{{/each}}{{#if @first}} {{text}}!{{/if}}) {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		nil,
+		"(goodbye! goodbye! goodbye!) (goodbye!) (goodbye!) cruel world!",
+	},
 
 	// @todo Add remaining tests
 }

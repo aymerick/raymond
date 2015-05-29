@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 )
 
@@ -199,7 +200,12 @@ func (h *HelperArg) NewIterDataFrame(length int, i int, key interface{}) *DataFr
 
 // Set current data frame
 func (h *HelperArg) SetDataFrame(data *DataFrame) {
-	h.eval.dataFrame = data
+	h.eval.setDataFrame(data)
+}
+
+// Set back parent data frame
+func (h *HelperArg) PopDataFrame() {
+	h.eval.popDataFrame()
 }
 
 //
@@ -208,7 +214,15 @@ func (h *HelperArg) SetDataFrame(data *DataFrame) {
 
 func ifHelper(h *HelperArg) string {
 	if h.IsIncludableZero() || h.TruthFirstParam() {
+		if VERBOSE_EVAL {
+			log.Printf("ifHelper is true => evaluating block")
+		}
+
 		return h.Block()
+	}
+
+	if VERBOSE_EVAL {
+		log.Printf("ifHelper is false => evaluating inverse")
 	}
 
 	return h.Inverse()
@@ -232,8 +246,16 @@ func withHelper(h *HelperArg) string {
 
 func eachHelper(h *HelperArg) string {
 	if !h.TruthFirstParam() {
+		if VERBOSE_EVAL {
+			log.Printf("eachHelper is false => evaluating inverse")
+		}
+
 		h.Inverse()
 		return ""
+	}
+
+	if VERBOSE_EVAL {
+		log.Printf("eachHelper => iterating on elements")
 	}
 
 	result := ""
