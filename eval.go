@@ -32,6 +32,9 @@ type EvalVisitor struct {
 	// current data frame (chained with parent)
 	dataFrame *DataFrame
 
+	// block parameters stack
+	blockParams []map[string]interface{}
+
 	// block statements stack
 	blocks []*ast.BlockStatement
 
@@ -98,6 +101,55 @@ func (v *EvalVisitor) ancestorCtx(depth int) reflect.Value {
 
 	return v.ctx[index]
 }
+
+//
+// Block Parameters stack
+//
+
+// push new block params
+func (v *EvalVisitor) pushBlockParams(params map[string]interface{}) {
+	v.blockParams = append(v.blockParams, params)
+}
+
+// pop last block params
+func (v *EvalVisitor) popBlockParams() map[string]interface{} {
+	var result map[string]interface{}
+
+	if len(v.blockParams) == 0 {
+		return result
+	}
+
+	result, v.blockParams = v.blockParams[len(v.blockParams)-1], v.blockParams[:len(v.blockParams)-1]
+	return result
+}
+
+// // returns current block params
+// func (v *EvalVisitor) curBlockParams() map[string]interface{} {
+// 	return v.ancestorBlockParams(0)
+// }
+
+// find block parameter value
+func (v *EvalVisitor) findBlockParam(name string) interface{} {
+	for i := len(v.blockParams) - 1; i >= 0; i-- {
+		for k, v := range v.blockParams[i] {
+			if name == k {
+				return v
+			}
+		}
+	}
+
+	return nil
+}
+
+// // get ancestor block params
+// func (v *EvalVisitor) ancestorBlockParams(depth int) map[string]interface{} {
+// 	index := len(v.blockParams) - 1 - depth
+// 	if index < 0 {
+// 		return map[string]interface{}{}
+// 	}
+
+// 	return v.blockParams[index]
+// }
 
 //
 // Blocks stack
@@ -203,10 +255,33 @@ func (v *EvalVisitor) at(node ast.Node) {
 //
 
 // Evaluate program with given context and returns string result
-func (v *EvalVisitor) evalProgramWith(program *ast.Program, ctx reflect.Value) string {
+func (v *EvalVisitor) evalProgramWith(program *ast.Program, ctx reflect.Value, index int) string {
+	blockParams := make(map[string]interface{})
+
+	// compute block params
+	if len(program.BlockParams) > 0 {
+		blockParams[program.BlockParams[0]] = ctx.Interface()
+	}
+
+	if (len(program.BlockParams) > 1) && (index >= 0) {
+		blockParams[program.BlockParams[1]] = index
+	}
+
+	// evaluate program
+	if len(blockParams) > 0 {
+		v.pushBlockParams(blockParams)
+	}
+
 	v.pushCtx(ctx)
+
 	result, _ := program.Accept(v).(string)
+
 	v.popCtx()
+
+	if len(blockParams) > 0 {
+		v.popBlockParams()
+	}
+
 	return result
 }
 
@@ -637,11 +712,12 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 				case reflect.Array, reflect.Slice:
 					// Array context
 					for i := 0; i < val.Len(); i++ {
-						result += v.evalProgramWith(node.Program, val.Index(i))
+						// Evaluate program
+						result += v.evalProgramWith(node.Program, val.Index(i), i)
 					}
 				default:
 					// NOT array
-					result = v.evalProgramWith(node.Program, val)
+					result = v.evalProgramWith(node.Program, val, -1)
 				}
 			}
 		} else if node.Inverse != nil {
@@ -748,7 +824,10 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 
 // Evaluate a path expression
 func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
-	if node.Data {
+	if value := v.findBlockParam(node.Str()); value != nil {
+		// block parameter value
+		return value
+	} else if node.Data {
 		// private data
 		return v.evalDataPathExpression(node)
 	}

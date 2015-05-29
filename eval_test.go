@@ -19,8 +19,32 @@ var evalTests = []raymondTest{
 		nil,
 		"1121",
 	},
-	// @todo Test with a struct for data
+	{
+		"block params",
+		"{{#foo as |bar|}}{{bar}}{{/foo}}{{bar}}",
+		map[string]string{"foo": "baz", "bar": "bat"},
+		nil,
+		nil,
+		"bazbat",
+	},
+	{
+		"block params on array",
+		"{{#foo as |bar i|}}{{i}}.{{bar}} {{/foo}}",
+		map[string][]string{"foo": {"baz", "bar", "bat"}},
+		nil,
+		nil,
+		"0.baz 1.bar 2.bat ",
+	},
+	{
+		"nested block params",
+		"{{#foos as |foo iFoo|}}{{#wats as |wat iWat|}}{{iFoo}}.{{iWat}}.{{foo}}-{{wat}} {{/wats}}{{/foos}}",
+		map[string][]string{"foos": {"baz", "bar"}, "wats": {"the", "phoque"}},
+		nil,
+		nil,
+		"0.0.baz-the 0.1.baz-phoque 1.0.bar-the 1.1.bar-phoque ",
+	},
 
+	// @todo Test with a struct for data
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
 }
 
