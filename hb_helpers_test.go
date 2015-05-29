@@ -14,6 +14,7 @@ var hbHelpersTests = []raymondTest{
 		"helper with complex lookup",
 		"{{#goodbyes}}{{{link ../prefix}}}{{/goodbyes}}",
 		map[string]interface{}{"prefix": "/root", "goodbyes": []map[string]string{{"text": "Goodbye", "url": "goodbye"}}},
+		nil,
 		map[string]Helper{"link": linkHelper},
 		nil,
 		`<a href="/root/goodbye">Goodbye</a>`,
@@ -22,6 +23,7 @@ var hbHelpersTests = []raymondTest{
 		"helper for raw block gets raw content",
 		"{{{{raw}}}} {{test}} {{{{/raw}}}}",
 		map[string]interface{}{"test": "hello"},
+		nil,
 		map[string]Helper{"raw": rawHelper},
 		nil,
 		" {{test}} ",
@@ -30,6 +32,7 @@ var hbHelpersTests = []raymondTest{
 		"helper for raw block gets parameters",
 		"{{{{raw 1 2 3}}}} {{test}} {{{{/raw}}}}",
 		map[string]interface{}{"test": "hello"},
+		nil,
 		map[string]Helper{"raw": rawHelper},
 		nil,
 		" {{test}} 123",
@@ -38,6 +41,7 @@ var hbHelpersTests = []raymondTest{
 		"helper block with complex lookup expression",
 		"{{#goodbyes}}{{../name}}{{/goodbyes}}",
 		map[string]interface{}{"name": "Alan"},
+		nil,
 		map[string]Helper{"goodbyes": func(h *HelperArg) string {
 			out := ""
 			for _, str := range []string{"Goodbye", "goodbye", "GOODBYE"} {
@@ -52,6 +56,7 @@ var hbHelpersTests = []raymondTest{
 		"helper with complex lookup and nested template",
 		"{{#goodbyes}}{{#link ../prefix}}{{text}}{{/link}}{{/goodbyes}}",
 		map[string]interface{}{"prefix": "/root", "goodbyes": []map[string]string{{"text": "Goodbye", "url": "goodbye"}}},
+		nil,
 		map[string]Helper{"link": linkHelper},
 		nil,
 		`<a href="/root/goodbye">Goodbye</a>`,
@@ -61,6 +66,7 @@ var hbHelpersTests = []raymondTest{
 		"helper returning undefined value (1)",
 		" {{nothere}}",
 		map[string]interface{}{},
+		nil,
 		map[string]Helper{"nothere": func(h *HelperArg) string {
 			return ""
 		}},
@@ -72,6 +78,7 @@ var hbHelpersTests = []raymondTest{
 		"helper returning undefined value (2)",
 		" {{#nothere}}{{/nothere}}",
 		map[string]interface{}{},
+		nil,
 		map[string]Helper{"nothere": func(h *HelperArg) string {
 			return ""
 		}},
@@ -82,6 +89,7 @@ var hbHelpersTests = []raymondTest{
 		"block helper",
 		"{{#goodbyes}}{{text}}! {{/goodbyes}}cruel {{world}}!",
 		map[string]interface{}{"world": "world"},
+		nil,
 		map[string]Helper{"goodbyes": func(h *HelperArg) string {
 			return h.BlockWithCtx(map[string]string{"text": "GOODBYE"})
 		}},
@@ -92,6 +100,7 @@ var hbHelpersTests = []raymondTest{
 		"block helper staying in the same context",
 		"{{#form}}<p>{{name}}</p>{{/form}}",
 		map[string]interface{}{"name": "Yehuda"},
+		nil,
 		map[string]Helper{"form": formHelper},
 		nil,
 		"<form><p>Yehuda</p></form>",
@@ -100,6 +109,7 @@ var hbHelpersTests = []raymondTest{
 		"block helper should have context in this",
 		"<ul>{{#people}}<li>{{#link}}{{name}}{{/link}}</li>{{/people}}</ul>",
 		map[string]interface{}{"people": []map[string]interface{}{{"name": "Alan", "id": 1}, {"name": "Yehuda", "id": 2}}},
+		nil,
 		map[string]Helper{"link": func(h *HelperArg) string {
 			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", h.DataStr("id"), h.Block())
 		}},
@@ -109,15 +119,14 @@ var hbHelpersTests = []raymondTest{
 	{
 		"block helper for undefined value",
 		"{{#empty}}shouldn't render{{/empty}}",
-		nil,
-		nil,
-		nil,
+		nil, nil, nil, nil,
 		"",
 	},
 	{
 		"block helper passing a new context",
 		"{{#form yehuda}}<p>{{name}}</p>{{/form}}",
 		map[string]map[string]string{"yehuda": {"name": "Yehuda"}},
+		nil,
 		map[string]Helper{"form": formCtxHelper},
 		nil,
 		"<form><p>Yehuda</p></form>",
@@ -126,6 +135,7 @@ var hbHelpersTests = []raymondTest{
 		"block helper passing a complex path context",
 		"{{#form yehuda/cat}}<p>{{name}}</p>{{/form}}",
 		map[string]map[string]interface{}{"yehuda": {"name": "Yehuda", "cat": map[string]string{"name": "Harold"}}},
+		nil,
 		map[string]Helper{"form": formCtxHelper},
 		nil,
 		"<form><p>Harold</p></form>",
@@ -134,6 +144,7 @@ var hbHelpersTests = []raymondTest{
 		"nested block helpers",
 		"{{#form yehuda}}<p>{{name}}</p>{{#link}}Hello{{/link}}{{/form}}",
 		map[string]map[string]string{"yehuda": {"name": "Yehuda"}},
+		nil,
 		map[string]Helper{"link": func(h *HelperArg) string {
 			return fmt.Sprintf("<a href=\"%s\">%s</a>", h.DataStr("name"), h.Block())
 		}, "form": formCtxHelper},
@@ -144,6 +155,7 @@ var hbHelpersTests = []raymondTest{
 		"block helper inverted sections (1) - an inverse wrapper is passed in as a new context",
 		"{{#list people}}{{name}}{{^}}<em>Nobody's here</em>{{/list}}",
 		map[string][]map[string]string{"people": {{"name": "Alan"}, {"name": "Yehuda"}}},
+		nil,
 		map[string]Helper{"list": listHelper},
 		nil,
 		`<ul><li>Alan</li><li>Yehuda</li></ul>`,
@@ -152,6 +164,7 @@ var hbHelpersTests = []raymondTest{
 		"block helper inverted sections (2) - an inverse wrapper can be optionally called",
 		"{{#list people}}{{name}}{{^}}<em>Nobody's here</em>{{/list}}",
 		map[string][]map[string]string{"people": {}},
+		nil,
 		map[string]Helper{"list": listHelper},
 		nil,
 		`<p><em>Nobody's here</em></p>`,
@@ -160,6 +173,7 @@ var hbHelpersTests = []raymondTest{
 		"block helper inverted sections (3) - the context of an inverse is the parent of the block",
 		"{{#list people}}Hello{{^}}{{message}}{{/list}}",
 		map[string]interface{}{"people": []interface{}{}, "message": "Nobody's here"},
+		nil,
 		map[string]Helper{"list": listHelper},
 		nil,
 		`<p>Nobody&apos;s here</p>`,
@@ -171,6 +185,7 @@ var hbHelpersTests = []raymondTest{
 	// 	"",
 	// 	"",
 	// 	map[string]interface{}{},
+	//	nil,
 	// 	nil,
 	// 	nil,
 	// 	"",

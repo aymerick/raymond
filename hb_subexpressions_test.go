@@ -11,6 +11,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"arg-less helper",
 		"{{foo (bar)}}!",
 		map[string]interface{}{},
+		nil,
 		map[string]Helper{
 			"foo": func(h *HelperArg) string {
 				return h.ParamStr(0) + h.ParamStr(0)
@@ -26,6 +27,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"helper w args",
 		"{{blog (equal a b)}}",
 		map[string]interface{}{"bar": "LOL"},
+		nil,
 		map[string]Helper{
 			"blog":  blogHelper,
 			"equal": equalHelper,
@@ -37,6 +39,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"mixed paths and helpers",
 		"{{blog baz.bat (equal a b) baz.bar}}",
 		map[string]interface{}{"bar": "LOL", "baz": map[string]string{"bat": "foo!", "bar": "bar!"}},
+		nil,
 		map[string]Helper{
 			"blog": func(h *HelperArg) string {
 				return "val is " + h.ParamStr(0) + ", " + h.ParamStr(1) + " and " + h.ParamStr(2)
@@ -50,6 +53,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"supports much nesting",
 		"{{blog (equal (equal true true) true)}}",
 		map[string]interface{}{"bar": "LOL"},
+		nil,
 		map[string]Helper{
 			"blog":  blogHelper,
 			"equal": equalHelper,
@@ -62,6 +66,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"GH-800 : Complex subexpressions (1)",
 		"{{dash 'abc' (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
+		nil,
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"abc-ab",
@@ -70,6 +75,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"GH-800 : Complex subexpressions (2)",
 		"{{dash d (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
+		nil,
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"d-ab",
@@ -78,6 +84,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"GH-800 : Complex subexpressions (3)",
 		"{{dash c.c (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
+		nil,
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"c-ab",
@@ -86,6 +93,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"GH-800 : Complex subexpressions (4)",
 		"{{dash (concat a b) c.c}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
+		nil,
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"ab-c",
@@ -94,6 +102,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"GH-800 : Complex subexpressions (5)",
 		"{{dash (concat a e.e) c.c}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
+		nil,
 		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"ae-c",
@@ -104,6 +113,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"provides each nested helper invocation its own options hash",
 		"{{equal (equal true true) true}}",
 		map[string]interface{}{},
+		nil,
 		map[string]Helper{
 			"equal": equalHelper,
 		},
@@ -114,6 +124,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"with hashes",
 		"{{blog (equal (equal true true) true fun='yes')}}",
 		map[string]interface{}{"bar": "LOL"},
+		nil,
 		map[string]Helper{
 			"blog":  blogHelper,
 			"equal": equalHelper,
@@ -125,6 +136,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"as hashes",
 		"{{blog fun=(equal (blog fun=1) 'val is 1')}}",
 		map[string]interface{}{},
+		nil,
 		map[string]Helper{
 			"blog": func(h *HelperArg) string {
 				return "val is " + h.OptionStr("fun")
@@ -139,6 +151,7 @@ var hbSubexpressionsTests = []raymondTest{
 		// @todo Do not use unescaping mustaches
 		`{{{input aria-label=(t "Name") placeholder=(t "Example User")}}}`,
 		map[string]interface{}{},
+		nil,
 		map[string]Helper{
 			"input": func(h *HelperArg) string {
 				// @todo Escape values and return a SafeString
@@ -157,6 +170,7 @@ var hbSubexpressionsTests = []raymondTest{
 		// @todo Do not use unescaping mustaches
 		`{{{input aria-label=(t item.field) placeholder=(t item.placeholder)}}}`,
 		map[string]map[string]string{"item": {"field": "Name", "placeholder": "Example User"}},
+		nil,
 		map[string]Helper{
 			"input": func(h *HelperArg) string {
 				// @todo Escape values and return a SafeString

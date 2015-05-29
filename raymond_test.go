@@ -93,6 +93,7 @@ type raymondTest struct {
 	name     string
 	input    string
 	data     interface{}
+	privData map[string]interface{}
 	helpers  map[string]Helper
 	partials map[string]string
 	output   interface{}
@@ -125,8 +126,17 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 				tpl.RegisterPartials(test.partials)
 			}
 
+			// setup private data frame
+			var privData *DataFrame
+			if test.privData != nil {
+				privData = NewDataFrame()
+				for k, v := range test.privData {
+					privData.Set(k, v)
+				}
+			}
+
 			// render template
-			output, err := tpl.Exec(test.data)
+			output, err := tpl.ExecWith(test.data, privData)
 			if err != nil {
 				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, Str(test.data), err, tpl.PrintAST())
 				stats.failed()
@@ -180,6 +190,7 @@ func launchMustacheTests(t *testing.T, tests []raymondTest) {
 }
 
 // launch an array of error tests
+// @todo Factorize with launchRaymondTests()
 func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
 	stats.tests(len(tests))
 
@@ -206,8 +217,17 @@ func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
 				tpl.RegisterPartials(test.partials)
 			}
 
+			// setup private data frame
+			var privData *DataFrame
+			if test.privData != nil {
+				privData := NewDataFrame()
+				for k, v := range test.privData {
+					privData.Set(k, v)
+				}
+			}
+
 			// render template
-			output, err := tpl.Exec(test.data)
+			output, err := tpl.ExecWith(test.data, privData)
 			if err == nil {
 				t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\nAST:\n%q", test.name, test.input, output, tpl.PrintAST())
 				stats.failed()
