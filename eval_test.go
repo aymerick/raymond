@@ -43,6 +43,14 @@ var evalTests = []raymondTest{
 		nil,
 		"0.0.baz-the 0.1.baz-phoque 1.0.bar-the 1.1.bar-phoque ",
 	},
+	{
+		"block params with path reference",
+		"{{#foo as |bar|}}{{bar.baz}}{{/foo}}",
+		map[string]map[string]string{"foo": {"baz": "bat"}},
+		nil,
+		nil,
+		"bat",
+	},
 
 	// @todo Test with a struct for data
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1

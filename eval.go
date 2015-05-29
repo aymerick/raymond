@@ -124,7 +124,7 @@ func (v *EvalVisitor) popBlockParams() map[string]interface{} {
 }
 
 // find block parameter value
-func (v *EvalVisitor) findBlockParam(name string) interface{} {
+func (v *EvalVisitor) blockParam(name string) interface{} {
 	for i := len(v.blockParams) - 1; i >= 0; i-- {
 		for k, v := range v.blockParams[i] {
 			if name == k {
@@ -135,6 +135,10 @@ func (v *EvalVisitor) findBlockParam(name string) interface{} {
 
 	return nil
 }
+
+//
+// Blocks stack
+//
 
 // push new block statement
 func (v *EvalVisitor) pushBlock(block *ast.BlockStatement) {
@@ -810,16 +814,44 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 	return node.Expression.Accept(v)
 }
 
+func (v *EvalVisitor) findBlockParam(node *ast.PathExpression) (string, interface{}) {
+	if len(node.Parts) > 0 {
+		name := node.Parts[0]
+		if value := v.blockParam(name); value != nil {
+			return name, value
+		}
+	}
+
+	return "", nil
+}
+
 // Evaluate a path expression
 func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
-	if value := v.findBlockParam(node.Str()); value != nil {
+	if name, value := v.findBlockParam(node); value != nil {
 		// block parameter value
-		return value
+
+		// We push a new context so we can evaluate the path expression (note: this may be a bad idea).
+		//
+		// Example:
+		//   {{#foo as |bar|}}
+		//     {{bar.baz}}
+		//   {{/foo}}
+		//
+		// With data:
+		//   {"foo": {"baz": "bat"}}
+		newCtx := map[string]interface{}{name: value}
+
+		v.pushCtx(reflect.ValueOf(newCtx))
+		result := v.evalCtxPathExpression(node, exprRoot)
+		v.popCtx()
+
+		return result
 	} else if node.Data {
 		// private data
 		return v.evalDataPathExpression(node)
 	}
 
+	// basic path
 	return v.evalCtxPathExpression(node, exprRoot)
 }
 

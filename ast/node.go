@@ -501,11 +501,6 @@ func (node *PathExpression) Accept(visitor Visitor) interface{} {
 	return visitor.VisitPath(node)
 }
 
-func (node *PathExpression) Str() string {
-	result, _ := PathExpressionStr(node)
-	return result
-}
-
 // Adds path part
 func (node *PathExpression) Part(part string) {
 	node.Original += part
