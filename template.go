@@ -92,27 +92,9 @@ func (tpl *Template) RegisterPartial(name string, partial string) {
 	tpl.partials[name] = NewPartial(name, partial)
 }
 
-// Renders a template with input data
+// Renders a template
 func (tpl *Template) Exec(data interface{}) (result string, err error) {
-	defer errRecover(&err)
-
-	// parses template if necessary
-	err = tpl.Parse()
-	if err != nil {
-		return
-	}
-
-	// setup visitor
-	v := NewEvalVisitor(tpl, data)
-
-	// visit AST
-	resEval := tpl.program.Accept(v)
-
-	// get result
-	result, _ = resEval.(string)
-
-	// named return values
-	return
+	return tpl.ExecWith(data, nil)
 }
 
 // Renders a template with input data. Panics on error.
@@ -122,6 +104,26 @@ func (tpl *Template) MustExec(data interface{}) string {
 		panic(err)
 	}
 	return result
+}
+
+// Renders a template with given private data frame
+func (tpl *Template) ExecWith(data interface{}, privData *DataFrame) (result string, err error) {
+	defer errRecover(&err)
+
+	// parses template if necessary
+	err = tpl.Parse()
+	if err != nil {
+		return
+	}
+
+	// setup visitor
+	v := NewEvalVisitor(tpl, data, privData)
+
+	// visit AST
+	result, _ = tpl.program.Accept(v).(string)
+
+	// named return values
+	return
 }
 
 // recovers exec panic
