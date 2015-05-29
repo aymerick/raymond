@@ -28,6 +28,28 @@ func (p *DataFrame) Copy() *DataFrame {
 	return result
 }
 
+func (p *DataFrame) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
+	result := p.Copy()
+
+	if key != nil {
+		// map or struct
+		result.Set("key", key)
+	} else {
+		// array
+		result.Set("index", i)
+	}
+
+	if i == 0 {
+		result.Set("first", true)
+	}
+
+	if i == length-1 {
+		result.Set("last", true)
+	}
+
+	return result
+}
+
 // Set a data value
 func (p *DataFrame) Set(key string, val interface{}) {
 	p.data[key] = val

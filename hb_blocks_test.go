@@ -31,14 +31,14 @@ var hbBlocksTests = []raymondTest{
 		nil,
 		"goodbyeGoodbyeGOODBYE goodbyeGoodbyeGOODBYE",
 	},
-	// {
-	// 	"array with @index - The @index variable is used",
-	// 	"{{#goodbyes}}{{@index}}. {{text}}! {{/goodbyes}}cruel {{world}}!",
-	// 	map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
-	// 	nil,
-	// 	nil,
-	// 	"0. goodbye! 1. Goodbye! 2. GOODBYE! cruel world!",
-	// },
+	{
+		"array with @index - The @index variable is used",
+		"{{#goodbyes}}{{@index}}. {{text}}! {{/goodbyes}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		nil,
+		"0. goodbye! 1. Goodbye! 2. GOODBYE! cruel world!",
+	},
 	{
 		"empty block (1) - Arrays iterate over the contents when not empty",
 		"{{#goodbyes}}{{/goodbyes}}cruel {{world}}!",

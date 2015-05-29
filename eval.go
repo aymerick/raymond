@@ -240,7 +240,7 @@ func (v *EvalVisitor) at(node ast.Node) {
 //
 
 // Evaluate program with given context and returns string result
-func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, key interface{}) string {
+func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, data *DataFrame, key interface{}) string {
 	blockParams := make(map[string]interface{})
 
 	// compute block params
@@ -262,10 +262,18 @@ func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, key int
 		v.pushCtx(ctxVal)
 	}
 
+	if data != nil {
+		v.dataFrame = data
+	}
+
 	// evaluate program
 	result, _ := program.Accept(v).(string)
 
 	// pop contexts
+	if data != nil {
+		v.dataFrame = v.dataFrame.parent
+	}
+
 	if ctxVal.IsValid() {
 		v.popCtx()
 	}
@@ -704,12 +712,15 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 				case reflect.Array, reflect.Slice:
 					// Array context
 					for i := 0; i < val.Len(); i++ {
+						// Computes new private data frame
+						frame := v.dataFrame.NewIterDataFrame(val.Len(), i, nil)
+
 						// Evaluate program
-						result += v.evalProgram(node.Program, val.Index(i).Interface(), i)
+						result += v.evalProgram(node.Program, val.Index(i).Interface(), frame, i)
 					}
 				default:
 					// NOT array
-					result = v.evalProgram(node.Program, expr, nil)
+					result = v.evalProgram(node.Program, expr, nil, nil)
 				}
 			}
 		} else if node.Inverse != nil {

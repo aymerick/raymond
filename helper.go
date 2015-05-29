@@ -143,18 +143,8 @@ func (h *HelperArg) IsIncludableZero() bool {
 func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame, key interface{}) string {
 	result := ""
 
-	// push private data frame
-	if data != nil {
-		h.SetDataFrame(data)
-	}
-
 	if block := h.eval.curBlock(); (block != nil) && (block.Program != nil) {
-		result = h.eval.evalProgram(block.Program, ctx, key)
-	}
-
-	// pop private data frame
-	if data != nil {
-		h.SetDataFrame(data.parent)
+		result = h.eval.evalProgram(block.Program, ctx, data, key)
 	}
 
 	return result
@@ -197,8 +187,14 @@ func (h *HelperArg) PopCtx() interface{} {
 	return value.Interface()
 }
 
+// Instanciates a new data frame that is a copy of current one
 func (h *HelperArg) NewDataFrame() *DataFrame {
 	return h.eval.dataFrame.Copy()
+}
+
+// Instanciates a new data frame and set iteration specific vars
+func (h *HelperArg) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
+	return h.eval.dataFrame.NewIterDataFrame(length, i, key)
 }
 
 // Set current data frame
@@ -247,17 +243,9 @@ func eachHelper(h *HelperArg) string {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
 			// computes private data
-			data := h.NewDataFrame()
-			data.Set("index", i)
+			data := h.NewIterDataFrame(val.Len(), i, nil)
 
-			if i == 0 {
-				data.Set("first", true)
-			}
-
-			if i == val.Len()-1 {
-				data.Set("last", true)
-			}
-
+			// evaluates block
 			result += h.BlockWith(val.Index(i).Interface(), data, i)
 		}
 	case reflect.Map:
@@ -265,20 +253,13 @@ func eachHelper(h *HelperArg) string {
 		keys := val.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			key := keys[i].Interface()
+			ctx := val.MapIndex(keys[i]).Interface()
 
 			// computes private data
-			data := h.NewDataFrame()
-			data.Set("key", key)
+			data := h.NewIterDataFrame(len(keys), i, key)
 
-			if i == 0 {
-				data.Set("first", true)
-			}
-
-			if i == len(keys)-1 {
-				data.Set("last", true)
-			}
-
-			result += h.BlockWith(val.MapIndex(keys[i]).Interface(), data, key)
+			// evaluates block
+			result += h.BlockWith(ctx, data, key)
 		}
 	case reflect.Struct:
 		var exportedFields []int
@@ -292,20 +273,13 @@ func eachHelper(h *HelperArg) string {
 
 		for i, fieldIndex := range exportedFields {
 			key := val.Type().Field(fieldIndex).Name
+			ctx := val.Field(fieldIndex).Interface()
 
 			// computes private data
-			data := h.NewDataFrame()
-			data.Set("key", key)
+			data := h.NewIterDataFrame(len(exportedFields), i, key)
 
-			if i == 0 {
-				data.Set("first", true)
-			}
-
-			if i == len(exportedFields)-1 {
-				data.Set("last", true)
-			}
-
-			result += h.BlockWith(val.Field(fieldIndex).Interface(), data, key)
+			// evaluates block
+			result += h.BlockWith(ctx, data, key)
 		}
 	}
 
