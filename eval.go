@@ -26,10 +26,17 @@ var (
 type EvalVisitor struct {
 	tpl *Template
 
-	ctx       []reflect.Value
+	// contexts stack
+	ctx []reflect.Value
+
+	// current data frame (chained with parent)
 	dataFrame *DataFrame
-	blocks    []*ast.BlockStatement
-	exprs     []*ast.Expression
+
+	// block statements stack
+	blocks []*ast.BlockStatement
+
+	// expressions stack
+	exprs []*ast.Expression
 
 	// memoize expressions that were function calls
 	exprFunc map[*ast.Expression]bool
@@ -195,10 +202,10 @@ func (v *EvalVisitor) at(node ast.Node) {
 // Evaluation
 //
 
-// Evaluate node with given context and returns string result
-func (v *EvalVisitor) evalNodeWith(node ast.Node, ctx reflect.Value) string {
+// Evaluate program with given context and returns string result
+func (v *EvalVisitor) evalProgramWith(program *ast.Program, ctx reflect.Value) string {
 	v.pushCtx(ctx)
-	result, _ := node.Accept(v).(string)
+	result, _ := program.Accept(v).(string)
 	v.popCtx()
 	return result
 }
@@ -630,11 +637,11 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 				case reflect.Array, reflect.Slice:
 					// Array context
 					for i := 0; i < val.Len(); i++ {
-						result += v.evalNodeWith(node.Program, val.Index(i))
+						result += v.evalProgramWith(node.Program, val.Index(i))
 					}
 				default:
 					// NOT array
-					result = v.evalNodeWith(node.Program, val)
+					result = v.evalProgramWith(node.Program, val)
 				}
 			}
 		} else if node.Inverse != nil {
