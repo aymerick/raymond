@@ -123,11 +123,6 @@ func (v *EvalVisitor) popBlockParams() map[string]interface{} {
 	return result
 }
 
-// // returns current block params
-// func (v *EvalVisitor) curBlockParams() map[string]interface{} {
-// 	return v.ancestorBlockParams(0)
-// }
-
 // find block parameter value
 func (v *EvalVisitor) findBlockParam(name string) interface{} {
 	for i := len(v.blockParams) - 1; i >= 0; i-- {
@@ -140,20 +135,6 @@ func (v *EvalVisitor) findBlockParam(name string) interface{} {
 
 	return nil
 }
-
-// // get ancestor block params
-// func (v *EvalVisitor) ancestorBlockParams(depth int) map[string]interface{} {
-// 	index := len(v.blockParams) - 1 - depth
-// 	if index < 0 {
-// 		return map[string]interface{}{}
-// 	}
-
-// 	return v.blockParams[index]
-// }
-
-//
-// Blocks stack
-//
 
 // push new block statement
 func (v *EvalVisitor) pushBlock(block *ast.BlockStatement) {
