@@ -270,15 +270,15 @@ var hbBuiltinsTests = []raymondTest{
 		nil, nil, nil,
 		"cruel world!",
 	},
-	// {
-	// 	"#each - data passed to helpers",
-	// 	"{{#each letters}}{{this}}{{detectDataInsideEach}}{{/each}}",
-	// 	map[string][]string{"letters": {"a", "b", "c"}},
-	// 	map[string]interface{}{"exclaim": "!"},
-	// 	map[string]Helper{"detectDataInsideEach": detectDataHelper},
-	// 	nil,
-	// 	"a!b!c!",
-	// },
+	{
+		"#each - data passed to helpers",
+		"{{#each letters}}{{this}}{{detectDataInsideEach}}{{/each}}",
+		map[string][]string{"letters": {"a", "b", "c"}},
+		map[string]interface{}{"exclaim": "!"},
+		map[string]Helper{"detectDataInsideEach": detectDataHelper},
+		nil,
+		"a!b!c!",
+	},
 
 	// @todo Add remaining tests
 }

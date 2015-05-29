@@ -121,6 +121,14 @@ func concatHelper(h *HelperArg) string {
 	return h.ParamStr(0) + h.ParamStr(1)
 }
 
+func detectDataHelper(h *HelperArg) string {
+	if val, ok := h.DataFrame().Get("exclaim").(string); ok {
+		return val
+	}
+
+	return ""
+}
+
 //
 // Tests
 //

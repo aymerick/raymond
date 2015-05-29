@@ -188,6 +188,11 @@ func (h *HelperArg) PopCtx() interface{} {
 	return value.Interface()
 }
 
+// Get current private data frame
+func (h *HelperArg) DataFrame() *DataFrame {
+	return h.eval.dataFrame
+}
+
 // Instanciates a new data frame that is a copy of current one
 func (h *HelperArg) NewDataFrame() *DataFrame {
 	return h.eval.dataFrame.Copy()
