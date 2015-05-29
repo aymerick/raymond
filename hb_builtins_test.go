@@ -280,7 +280,11 @@ var hbBuiltinsTests = []raymondTest{
 		"a!b!c!",
 	},
 
-	// @todo Add remaining tests
+	// @todo "each on implicit context"
+
+	// @todo #log tests
+
+	// @todo #lookup tests
 }
 
 func TestHandlebarsBuiltins(t *testing.T) {

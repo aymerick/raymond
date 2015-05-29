@@ -179,17 +179,32 @@ var hbHelpersTests = []raymondTest{
 		`<p>Nobody&apos;s here</p>`,
 	},
 
-	// @todo "pathed lambas with parameters"
-
-	// {
-	// 	"",
-	// 	"",
-	// 	map[string]interface{}{},
-	//	nil,
-	// 	nil,
-	// 	nil,
-	// 	"",
-	// },
+	{
+		"pathed lambdas with parameters (1)",
+		"{{./helper 1}}",
+		map[string]interface{}{
+			"helper": func() string { return "winning" },
+			"hash": map[string]interface{}{
+				"helper": func() string { return "winning" },
+			}},
+		nil,
+		map[string]Helper{"./helper": func(h *HelperArg) string { return "fail" }},
+		nil,
+		"winning",
+	},
+	{
+		"pathed lambdas with parameters (2)",
+		"{{hash/helper 1}}",
+		map[string]interface{}{
+			"helper": func() string { return "winning" },
+			"hash": map[string]interface{}{
+				"helper": func() string { return "winning" },
+			}},
+		nil,
+		map[string]Helper{"./helper": func(h *HelperArg) string { return "fail" }},
+		nil,
+		"winning",
+	},
 
 	// @todo Add remaining tests
 }
