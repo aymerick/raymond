@@ -17,6 +17,7 @@ Handlebars for golang
 - [ ] pass all handlebars.js tests
 - [ ] documentation
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
+- [ ] check performances
 
 
 ## Quick start
