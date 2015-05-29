@@ -353,11 +353,8 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Value {
 	funcType := funcVal.Type()
 
-	// @todo There should be a better way to get the string type
-	strType := reflect.TypeOf("")
-
-	if (funcType.NumOut() != 1) || !strType.AssignableTo(funcType.Out(0)) {
-		v.errorf("Function must return a uniq string value: %q", funcVal)
+	if funcType.NumOut() != 1 {
+		v.errorf("Function must return a uniq value: %q", funcVal)
 	}
 
 	if funcType.NumIn() > 1 {

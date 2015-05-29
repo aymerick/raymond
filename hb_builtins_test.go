@@ -226,7 +226,7 @@ var hbBuiltinsTests = []raymondTest{
 		nil,
 		"0. goodbye!  0 0 0 1 After 0 1. Goodbye!  1 0 1 1 After 1 cruel world!",
 	},
-	// @note: That test differs from JS impl because maps are not ordered in go
+	// @note: That test differs from JS impl because maps and structs are not ordered in go
 	{
 		"#each - each object with @index",
 		"{{#each goodbyes}}{{@index}}. {{text}}! {{/each}}cruel {{world}}!",
@@ -243,6 +243,67 @@ var hbBuiltinsTests = []raymondTest{
 		nil,
 		"(goodbye! goodbye! goodbye!) (goodbye!) (goodbye!) cruel world!",
 	},
+	// @note: That test differs from JS impl because maps and structs are not ordered in go
+	{
+		"#each - each object with @first",
+		"{{#each goodbyes}}{{#if @first}}{{text}}! {{/if}}{{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": map[string]map[string]string{"foo": {"text": "goodbye"}, "bar": {"text": "Goodbye"}}, "world": "world"},
+		nil,
+		nil,
+		[]string{"goodbye! cruel world!", "Goodbye! cruel world!"},
+	},
+	{
+		"#each - each with @last",
+		"{{#each goodbyes}}{{#if @last}}{{text}}! {{/if}}{{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		nil,
+		"GOODBYE! cruel world!",
+	},
+	// @note: That test differs from JS impl because maps and structs are not ordered in go
+	{
+		"#each - each object with @last",
+		"{{#each goodbyes}}{{#if @last}}{{text}}! {{/if}}{{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": map[string]map[string]string{"foo": {"text": "goodbye"}, "bar": {"text": "Goodbye"}}, "world": "world"},
+		nil,
+		nil,
+		[]string{"goodbye! cruel world!", "Goodbye! cruel world!"},
+	},
+	{
+		"#each - each with nested @last",
+		"{{#each goodbyes}}({{#if @last}}{{text}}! {{/if}}{{#each ../goodbyes}}{{#if @last}}{{text}}!{{/if}}{{/each}}{{#if @last}} {{text}}!{{/if}}) {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}, "world": "world"},
+		nil,
+		nil,
+		"(GOODBYE!) (GOODBYE!) (GOODBYE! GOODBYE! GOODBYE!) cruel world!",
+	},
+
+	{
+		"#each - each with function argument (1)",
+		"{{#each goodbyes}}{{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": func() []map[string]string {
+			return []map[string]string{{"text": "goodbye"}, {"text": "Goodbye"}, {"text": "GOODBYE"}}
+		}, "world": "world"},
+		nil,
+		nil,
+		"goodbye! Goodbye! GOODBYE! cruel world!",
+	},
+	{
+		"#each - each with function argument (2)",
+		"{{#each goodbyes}}{{text}}! {{/each}}cruel {{world}}!",
+		map[string]interface{}{"goodbyes": []map[string]string{}, "world": "world"},
+		nil,
+		nil,
+		"cruel world!",
+	},
+	// {
+	// 	"#each - data passed to helpers",
+	// 	"{{#each letters}}{{this}}{{detectDataInsideEach}}{{/each}}",
+	// 	map[string][]string{"letters": {"a", "b", "c"}},
+	// 	map[string]interface{}{"exclaim": "!"},
+	// 	nil,
+	// 	"a!b!c!",
+	// },
 
 	// @todo Add remaining tests
 }

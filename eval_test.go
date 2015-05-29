@@ -83,15 +83,7 @@ var evalErrors = []raymondTest{
 		map[string]interface{}{"foo": func() (string, string) { return "foo", "bar" }},
 		nil,
 		nil,
-		"Function must return a uniq string value",
-	},
-	{
-		"functions with wrong returned value type",
-		"{{foo}}",
-		map[string]interface{}{"foo": func() bool { return true }},
-		nil,
-		nil,
-		"Function must return a uniq string value",
+		"Function must return a uniq value",
 	},
 }
 
