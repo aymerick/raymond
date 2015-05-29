@@ -255,28 +255,35 @@ func (v *EvalVisitor) at(node ast.Node) {
 //
 
 // Evaluate program with given context and returns string result
-func (v *EvalVisitor) evalProgramWith(program *ast.Program, ctx reflect.Value, index int) string {
+func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, key interface{}) string {
 	blockParams := make(map[string]interface{})
 
 	// compute block params
 	if len(program.BlockParams) > 0 {
-		blockParams[program.BlockParams[0]] = ctx.Interface()
+		blockParams[program.BlockParams[0]] = ctx
 	}
 
-	if (len(program.BlockParams) > 1) && (index >= 0) {
-		blockParams[program.BlockParams[1]] = index
+	if (len(program.BlockParams) > 1) && (key != nil) {
+		blockParams[program.BlockParams[1]] = key
 	}
 
-	// evaluate program
+	// push contexts
 	if len(blockParams) > 0 {
 		v.pushBlockParams(blockParams)
 	}
 
-	v.pushCtx(ctx)
+	ctxVal := reflect.ValueOf(ctx)
+	if ctxVal.IsValid() {
+		v.pushCtx(ctxVal)
+	}
 
+	// evaluate program
 	result, _ := program.Accept(v).(string)
 
-	v.popCtx()
+	// pop contexts
+	if ctxVal.IsValid() {
+		v.popCtx()
+	}
 
 	if len(blockParams) > 0 {
 		v.popBlockParams()
@@ -713,11 +720,11 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 					// Array context
 					for i := 0; i < val.Len(); i++ {
 						// Evaluate program
-						result += v.evalProgramWith(node.Program, val.Index(i), i)
+						result += v.evalProgram(node.Program, val.Index(i).Interface(), i)
 					}
 				default:
 					// NOT array
-					result = v.evalProgramWith(node.Program, val, -1)
+					result = v.evalProgram(node.Program, expr, nil)
 				}
 			}
 		} else if node.Inverse != nil {

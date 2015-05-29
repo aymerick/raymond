@@ -139,14 +139,35 @@ func (h *HelperArg) IsIncludableZero() bool {
 	return false
 }
 
-// Evaluate block
-func (h *HelperArg) Block() string {
+// Evaluate block with given context, private data and iteration key
+func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame, key interface{}) string {
 	result := ""
+
+	// push private data frame
+	if data != nil {
+		h.SetDataFrame(data)
+	}
+
 	if block := h.eval.curBlock(); (block != nil) && (block.Program != nil) {
-		result, _ = block.Program.Accept(h.eval).(string)
+		result = h.eval.evalProgram(block.Program, ctx, key)
+	}
+
+	// pop private data frame
+	if data != nil {
+		h.SetDataFrame(data.parent)
 	}
 
 	return result
+}
+
+// Evaluate block with given context
+func (h *HelperArg) BlockWithCtx(ctx interface{}) string {
+	return h.BlockWith(ctx, nil, nil)
+}
+
+// Evaluate block
+func (h *HelperArg) Block() string {
+	return h.BlockWith(nil, nil, nil)
 }
 
 // Evaluate inverse
@@ -155,24 +176,6 @@ func (h *HelperArg) Inverse() string {
 	if block := h.eval.curBlock(); (block != nil) && (block.Inverse != nil) {
 		result, _ = block.Inverse.Accept(h.eval).(string)
 	}
-
-	return result
-}
-
-// Evaluate block with given context
-func (h *HelperArg) BlockWithCtx(ctx interface{}) string {
-	h.PushCtx(ctx)
-	result := h.Block()
-	h.PopCtx()
-
-	return result
-}
-
-// Evaluate block with given context and private data
-func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame) string {
-	h.SetDataFrame(data)
-	result := h.BlockWithCtx(ctx)
-	h.SetDataFrame(data.parent)
 
 	return result
 }
@@ -255,15 +258,17 @@ func eachHelper(h *HelperArg) string {
 				data.Set("last", true)
 			}
 
-			result += h.BlockWith(val.Index(i).Interface(), data)
+			result += h.BlockWith(val.Index(i).Interface(), data, i)
 		}
 	case reflect.Map:
 		// note: a go hash is not ordered, so result may vary, this behaviour differs from the JS implementation
 		keys := val.MapKeys()
 		for i := 0; i < len(keys); i++ {
+			key := keys[i].Interface()
+
 			// computes private data
 			data := h.NewDataFrame()
-			data.Set("key", keys[i].Interface())
+			data.Set("key", key)
 
 			if i == 0 {
 				data.Set("first", true)
@@ -273,7 +278,7 @@ func eachHelper(h *HelperArg) string {
 				data.Set("last", true)
 			}
 
-			result += h.BlockWith(val.MapIndex(keys[i]).Interface(), data)
+			result += h.BlockWith(val.MapIndex(keys[i]).Interface(), data, key)
 		}
 	case reflect.Struct:
 		var exportedFields []int
@@ -286,9 +291,11 @@ func eachHelper(h *HelperArg) string {
 		}
 
 		for i, fieldIndex := range exportedFields {
+			key := val.Type().Field(fieldIndex).Name
+
 			// computes private data
 			data := h.NewDataFrame()
-			data.Set("key", val.Type().Field(fieldIndex).Name)
+			data.Set("key", key)
 
 			if i == 0 {
 				data.Set("first", true)
@@ -298,7 +305,7 @@ func eachHelper(h *HelperArg) string {
 				data.Set("last", true)
 			}
 
-			result += h.BlockWith(val.Field(fieldIndex).Interface(), data)
+			result += h.BlockWith(val.Field(fieldIndex).Interface(), data, key)
 		}
 	}
 
