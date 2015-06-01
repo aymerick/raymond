@@ -50,7 +50,6 @@ type EvalVisitor struct {
 
 // Instanciate a new evaluation visitor
 func NewEvalVisitor(tpl *Template, data interface{}, privData *DataFrame) *EvalVisitor {
-	log.Printf("privData: %q", privData)
 	frame := privData
 	if frame == nil {
 		frame = NewDataFrame()
