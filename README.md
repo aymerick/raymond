@@ -8,12 +8,14 @@ Handlebars for golang
 ## Todo
 
 - [ ] `strict` mode
-- [ ] `stringParams` mode
+- [ ] `stringParams` mode: resolve a parameter to it's name if the value isn't present in the context stack
 - [ ] `compat` mode
 - [ ] `preventIndent` mode
+- [ ] track ids
 - [ ] permits helpers to return safe strings
 - [ ] the `lookup` helper
 - [ ] the `log` helper
+
 - [ ] pass all handlebars.js tests
 - [ ] documentation
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
