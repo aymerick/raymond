@@ -344,7 +344,7 @@ var lexTests = []lexTest{
 		`{{ foo false }}`,
 		[]Token{tokOpen, tokID("foo"), tokBool("false"), tokClose, tokEOF},
 	},
-	// SKIPPED: 'tokenizes undefined and null'
+	// SKIP: 'tokenizes undefined and null'
 	{
 		`tokenizes hash arguments (1)`,
 		`{{ foo bar=baz }}`,

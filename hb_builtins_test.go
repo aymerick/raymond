@@ -281,11 +281,11 @@ var hbBuiltinsTests = []raymondTest{
 
 	// @todo "each on implicit context" should throw error
 
-	// SKIPPED: #log - "should call logger at default level"
-	// SKIPPED: #log - "should call logger at data level"
-	// SKIPPED: #log - "should output to info"
-	// SKIPPED: #log - "should log at data level"
-	// SKIPPED: #log - "should handle missing logger"
+	// SKIP: #log - "should call logger at default level"
+	// SKIP: #log - "should call logger at data level"
+	// SKIP: #log - "should output to info"
+	// SKIP: #log - "should log at data level"
+	// SKIP: #log - "should handle missing logger"
 
 	// @note Test added
 	// @todo Check log output

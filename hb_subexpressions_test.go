@@ -185,11 +185,24 @@ var hbSubexpressionsTests = []raymondTest{
 		`<input aria-label="Name" placeholder="Example User" />`,
 	},
 
-	// @todo "in string params mode" if relevant
-	// @todo "as hashes in string params mode" if relevant
+	// @todo "in string params mode"
+	// @todo "as hashes in string params mode"
 
-	// @todo "subexpression functions on the context"
-	// @todo "subexpressions can't just be property lookups"
+	{
+		"subexpression functions on the context",
+		"{{foo (bar)}}!",
+		map[string]interface{}{"bar": func() string { return "LOL" }},
+		nil,
+		map[string]Helper{
+			"foo": func(h *HelperArg) string {
+				return h.ParamStr(0) + h.ParamStr(0)
+			},
+		},
+		nil,
+		"LOLLOL!",
+	},
+
+	// @todo "subexpressions can't just be property lookups" should raise error
 }
 
 func TestHandlebarsSubexpressions(t *testing.T) {
