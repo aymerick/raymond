@@ -63,18 +63,18 @@ var hbBuiltinsTests = []raymondTest{
 		nil, nil, nil,
 		"GOODBYE cruel world!",
 	},
-	// {
-	// 	"#if - if with function shows the contents when function returns true",
-	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
-	// 	map[string]interface{}{
-	// 		"goodbye": func() bool { return true },
-	// 		"world":   "world",
-	// 	},
-	// 	nil,
-	// 	nil,
-	//  nil,
-	// 	"GOODBYE cruel world!",
-	// },
+	{
+		"#if - if with function shows the contents when function returns true",
+		"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
+		map[string]interface{}{
+			"goodbye": func() bool { return true },
+			"world":   "world",
+		},
+		nil,
+		nil,
+		nil,
+		"GOODBYE cruel world!",
+	},
 	{
 		"#if - if with function shows the contents when function returns string",
 		"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
@@ -85,26 +85,26 @@ var hbBuiltinsTests = []raymondTest{
 		nil, nil, nil,
 		"GOODBYE cruel world!",
 	},
-
-	// {
-	// 	"#if - if with function does not show the contents when returns false",
-	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
-	// 	map[string]interface{}{},
-	// 	nil,
-	// 	nil,
-	//  nil,
-	// 	"cruel world!",
-	// },
-	// {
-	// 	"#if - if with function does not show the contents when returns undefined",
-	// 	"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
-	// 	map[string]interface{}{},
-	// 	nil,
-	// 	nil,
-	//  nil,
-	// 	"cruel world!",
-	// },
-
+	{
+		"#if - if with function does not show the contents when returns false",
+		"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
+		map[string]interface{}{
+			"goodbye": func() bool { return false },
+			"world":   "world",
+		},
+		nil, nil, nil,
+		"cruel world!",
+	},
+	{
+		"#if - if with function does not show the contents when returns undefined",
+		"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
+		map[string]interface{}{
+			"goodbye": func() interface{} { return nil },
+			"world":   "world",
+		},
+		nil, nil, nil,
+		"cruel world!",
+	},
 	{
 		"#with",
 		"{{#with person}}{{first}} {{last}}{{/with}}",
@@ -112,15 +112,14 @@ var hbBuiltinsTests = []raymondTest{
 		nil, nil, nil,
 		"Alan Johnson",
 	},
-	// {
-	// 	"#with - with with function argument",
-	// 	"{{#with person}}{{first}} {{last}}{{/with}}",
-	// 	map[string]interface{}{},
-	// 	nil,
-	// 	nil,
-	//  nil,
-	// 	"Alan Johnson",
-	// },
+	{
+		"#with - with with function argument",
+		"{{#with person}}{{first}} {{last}}{{/with}}",
+		map[string]interface{}{
+			"person": func() map[string]string { return map[string]string{"first": "Alan", "last": "Johnson"} },
+		}, nil, nil, nil,
+		"Alan Johnson",
+	},
 	{
 		"#with - with with else",
 		"{{#with person}}Person is present{{else}}Person is not present{{/with}}",
@@ -280,7 +279,7 @@ var hbBuiltinsTests = []raymondTest{
 		"a!b!c!",
 	},
 
-	// @todo "each on implicit context"
+	// @todo "each on implicit context" should throw error
 
 	// @todo #log tests
 
