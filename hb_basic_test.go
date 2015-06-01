@@ -429,15 +429,18 @@ var hbBasicTests = []raymondTest{
 		nil, nil, nil,
 		"Goodbye beautiful world!",
 	},
-	// {
-	// 	"that current context path ({{.}}) doesn't hit helpers",
-	// 	"test: {{.}}",
-	// 	map[string]string{"helper": "awesome"},
-	// 	nil,
-	// 	nil,
-	// 	nil,
-	// 	"test: ",
-	// },
+	// @note MMm ok, well... no... I don't see the purpose of that test
+	{
+		"that current context path ({{.}}) doesn't hit helpers",
+		"test: {{.}}",
+		nil, nil,
+		map[string]Helper{"helper": func(h *HelperArg) string {
+			panic("fail")
+			return ""
+		}},
+		nil,
+		"test: ",
+	},
 	{
 		"complex but empty paths (1)",
 		"{{person/name}}",
