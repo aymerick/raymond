@@ -111,7 +111,7 @@ var hbHelpersTests = []raymondTest{
 		map[string]interface{}{"people": []map[string]interface{}{{"name": "Alan", "id": 1}, {"name": "Yehuda", "id": 2}}},
 		nil,
 		map[string]Helper{"link": func(h *HelperArg) string {
-			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", h.DataStr("id"), h.Block())
+			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", h.FieldStr("id"), h.Block())
 		}},
 		nil,
 		`<ul><li><a href="/people/1">Alan</a></li><li><a href="/people/2">Yehuda</a></li></ul>`,
@@ -146,7 +146,7 @@ var hbHelpersTests = []raymondTest{
 		map[string]map[string]string{"yehuda": {"name": "Yehuda"}},
 		nil,
 		map[string]Helper{"link": func(h *HelperArg) string {
-			return fmt.Sprintf("<a href=\"%s\">%s</a>", h.DataStr("name"), h.Block())
+			return fmt.Sprintf("<a href=\"%s\">%s</a>", h.FieldStr("name"), h.Block())
 		}, "form": formCtxHelper},
 		nil,
 		`<form><p>Yehuda</p><a href="Yehuda">Hello</a></form>`,

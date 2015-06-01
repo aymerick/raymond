@@ -62,7 +62,7 @@ func gnakHelper(h *HelperArg) string {
 func linkHelper(h *HelperArg) string {
 	prefix, _ := h.Param(0).(string)
 
-	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, h.DataStr("url"), h.DataStr("text"))
+	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, h.FieldStr("url"), h.FieldStr("text"))
 }
 
 func rawHelper(h *HelperArg) string {

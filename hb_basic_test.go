@@ -280,7 +280,7 @@ var hbBasicTests = []raymondTest{
 		"functions (2)",
 		"{{awesome}}",
 		map[string]interface{}{"awesome": func(h *HelperArg) string {
-			return h.DataStr("more")
+			return h.FieldStr("more")
 		}, "more": "More awesome"},
 		nil, nil, nil,
 		"More awesome",
@@ -344,35 +344,33 @@ var hbBasicTests = []raymondTest{
 		nil, nil, nil,
 		"inner",
 	},
-	// @note I don't even understand how this test passes with the JS implementation
+	// // @note I don't even understand why this test passes with the JS implementation... it should be
+	// //       the responsability of the function to evaluate the block
 	// {
 	// 	"pathed block functions without context argument",
 	// 	"{{#foo.awesome}}inner{{/foo.awesome}}",
 	// 	map[string]map[string]interface{}{
 	// 		"foo": {
-	// 			"awesome": func(h *HelperArg) string {
-	// 				return h.Data()
+	// 			"awesome": func(h *HelperArg) interface{} {
+	// 				return h.Ctx()
 	// 			},
 	// 		},
 	// 	},
-	// 	nil,
-	// 	nil,
-	// 	nil,
+	// 	nil, nil, nil,
 	// 	"inner",
 	// },
-	// @note I don't even understand how this test passes with the JS implementation
+	// // @note I don't even understand why this test passes with the JS implementation... it should be
+	// //       the responsability of the function to evaluate the block
 	// {
 	// 	"depthed block functions without context argument",
 	// 	"{{#with value}}{{#../awesome}}inner{{/../awesome}}{{/with}}",
 	// 	map[string]interface{}{
 	// 		"value": true,
-	// 		"awesome": func(h *HelperArg) string {
-	// 			return h.Data()
+	// 		"awesome": func(h *HelperArg) interface{} {
+	// 			return h.Ctx()
 	// 		},
 	// 	},
-	// 	nil,
-	// 	nil,
-	// 	nil,
+	// 	nil, nil, nil,
 	// 	"inner",
 	// },
 	{

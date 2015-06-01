@@ -94,13 +94,13 @@ func (h *HelperArg) OptionStr(name string) string {
 	return Str(h.hash[name])
 }
 
-// Returns input data
-func (h *HelperArg) Data() interface{} {
+// Returns current evaluation context
+func (h *HelperArg) Ctx() interface{} {
 	return h.eval.curCtx()
 }
 
-// Returns input data by name
-func (h *HelperArg) DataField(name string) interface{} {
+// Returns current context field value
+func (h *HelperArg) Field(name string) interface{} {
 	value := h.eval.evalField(h.eval.curCtx(), name, false)
 	if !value.IsValid() {
 		return nil
@@ -110,8 +110,8 @@ func (h *HelperArg) DataField(name string) interface{} {
 }
 
 // Get string representation of input data by name
-func (h *HelperArg) DataStr(name string) string {
-	return Str(h.DataField(name))
+func (h *HelperArg) FieldStr(name string) string {
+	return Str(h.Field(name))
 }
 
 // Returns true if first param is truthy
