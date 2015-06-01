@@ -30,6 +30,8 @@ func init() {
 	RegisterHelper("unless", unlessHelper)
 	RegisterHelper("with", withHelper)
 	RegisterHelper("each", eachHelper)
+	RegisterHelper("log", logHelper)
+	RegisterHelper("lookup", lookupHelper)
 }
 
 // Registers a new global helper function
@@ -169,6 +171,24 @@ func (h *HelperArg) Inverse() string {
 	}
 
 	return result
+}
+
+// Evaluate field for given context
+func (h *HelperArg) Eval(ctx interface{}, field string) interface{} {
+	if ctx == nil {
+		return nil
+	}
+
+	if field == "" {
+		return nil
+	}
+
+	val := h.eval.evalField(reflect.ValueOf(ctx), field, false)
+	if !val.IsValid() {
+		return nil
+	}
+
+	return val.Interface()
 }
 
 // Push context
@@ -311,4 +331,13 @@ func eachHelper(h *HelperArg) string {
 	}
 
 	return result
+}
+
+func logHelper(h *HelperArg) string {
+	log.Print(h.ParamStr(0))
+	return ""
+}
+
+func lookupHelper(h *HelperArg) string {
+	return Str(h.Eval(h.Param(0), h.ParamStr(1)))
 }

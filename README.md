@@ -13,8 +13,8 @@ Handlebars for golang
 - [ ] `preventIndent` mode
 - [ ] track ids
 - [ ] permits helpers to return safe strings
-- [ ] the `lookup` helper
-- [ ] the `log` helper
+- [ ] the `blockHelperMissing` helper
+- [ ] the `helperMissing` helper
 
 - [ ] pass all handlebars.js tests
 - [ ] documentation

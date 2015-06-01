@@ -281,9 +281,61 @@ var hbBuiltinsTests = []raymondTest{
 
 	// @todo "each on implicit context" should throw error
 
-	// @todo #log tests
+	// SKIPPED: #log - "should call logger at default level"
+	// SKIPPED: #log - "should call logger at data level"
+	// SKIPPED: #log - "should output to info"
+	// SKIPPED: #log - "should log at data level"
+	// SKIPPED: #log - "should handle missing logger"
 
-	// @todo #lookup tests
+	// @note Test added
+	// @todo Check log output
+	{
+		"#log",
+		"{{log blah}}",
+		map[string]string{"blah": "whee"},
+		nil, nil, nil,
+		"",
+	},
+
+	// @note Test added
+	{
+		"#lookup - should lookup array element",
+		"{{#each goodbyes}}{{lookup ../data @index}}{{/each}}",
+		map[string]interface{}{"goodbyes": []int{0, 1}, "data": []string{"foo", "bar"}},
+		nil, nil, nil,
+		"foobar",
+	},
+	{
+		"#lookup - should lookup map element",
+		"{{#each goodbyes}}{{lookup ../data .}}{{/each}}",
+		map[string]interface{}{"goodbyes": []string{"foo", "bar"}, "data": map[string]string{"foo": "baz", "bar": "bat"}},
+		nil, nil, nil,
+		"bazbat",
+	},
+	{
+		"#lookup - should lookup struct field",
+		"{{#each goodbyes}}{{lookup ../data .}}{{/each}}",
+		map[string]interface{}{"goodbyes": []string{"Foo", "Bar"}, "data": struct {
+			Foo string
+			Bar string
+		}{"baz", "bat"}},
+		nil, nil, nil,
+		"bazbat",
+	},
+	{
+		"#lookup - should lookup arbitrary content",
+		"{{#each goodbyes}}{{lookup ../data .}}{{/each}}",
+		map[string]interface{}{"goodbyes": []int{0, 1}, "data": []string{"foo", "bar"}},
+		nil, nil, nil,
+		"foobar",
+	},
+	{
+		"#lookup - should not fail on undefined value",
+		"{{#each goodbyes}}{{lookup ../bar .}}{{/each}}",
+		map[string]interface{}{"goodbyes": []int{0, 1}, "data": []string{"foo", "bar"}},
+		nil, nil, nil,
+		"",
+	},
 }
 
 func TestHandlebarsBuiltins(t *testing.T) {

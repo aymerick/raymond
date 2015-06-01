@@ -342,6 +342,10 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 			// map key
 			result = ctx.MapIndex(nameVal)
 		}
+	case reflect.Array, reflect.Slice:
+		if i, err := strconv.Atoi(fieldName); (err == nil) && (i < ctx.Len()) {
+			result = ctx.Index(i)
+		}
 	}
 
 	// check if result is a function
@@ -713,7 +717,7 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 		result, _ = expr.(string)
 
 		if VERBOSE_EVAL {
-			log.Printf("VisitBlock(): Helper of Func call returned: %q", Str(result))
+			log.Printf("VisitBlock(): Helper or Func call returned: %q", Str(result))
 		}
 	} else {
 		val := reflect.ValueOf(expr)
