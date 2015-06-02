@@ -139,7 +139,7 @@ var hbSubexpressionsTests = []raymondTest{
 		nil,
 		map[string]Helper{
 			"blog": func(h *HelperArg) string {
-				return "val is " + h.OptionStr("fun")
+				return "val is " + h.HashStr("fun")
 			},
 			"equal": equalHelper,
 		},
@@ -155,7 +155,7 @@ var hbSubexpressionsTests = []raymondTest{
 		map[string]Helper{
 			"input": func(h *HelperArg) string {
 				// @todo Escape values and return a SafeString
-				return `<input aria-label="` + h.OptionStr("aria-label") + `" placeholder="` + h.OptionStr("placeholder") + `" />`
+				return `<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`
 			},
 			"t": func(h *HelperArg) string {
 				// @todo Return a SafeString
@@ -174,7 +174,7 @@ var hbSubexpressionsTests = []raymondTest{
 		map[string]Helper{
 			"input": func(h *HelperArg) string {
 				// @todo Escape values and return a SafeString
-				return `<input aria-label="` + h.OptionStr("aria-label") + `" placeholder="` + h.OptionStr("placeholder") + `" />`
+				return `<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`
 			},
 			"t": func(h *HelperArg) string {
 				// @todo Return a SafeString

@@ -85,12 +85,12 @@ func (h *HelperArg) ParamStr(pos int) string {
 }
 
 // Returns hash value by name
-func (h *HelperArg) Option(name string) interface{} {
+func (h *HelperArg) Hash(name string) interface{} {
 	return h.hash[name]
 }
 
 // Returns string representation of hash value by name
-func (h *HelperArg) OptionStr(name string) string {
+func (h *HelperArg) HashStr(name string) string {
 	return Str(h.hash[name])
 }
 
@@ -131,7 +131,7 @@ func (h *HelperArg) TruthFirstParam() bool {
 
 // Returns true if 'includeZero' option is set and first param is the number 0
 func (h *HelperArg) IsIncludableZero() bool {
-	b, ok := h.Option("includeZero").(bool)
+	b, ok := h.Hash("includeZero").(bool)
 	if ok && b {
 		nb, ok := h.Param(0).(int)
 		if ok && nb == 0 {
