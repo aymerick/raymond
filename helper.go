@@ -65,6 +65,10 @@ func NewEmptyHelperArg(eval *EvalVisitor) *HelperArg {
 	}
 }
 
+//
+// Getters
+//
+
 // Returns all parameters
 func (h *HelperArg) Params() []interface{} {
 	return h.params
@@ -109,38 +113,43 @@ func (h *HelperArg) Field(name string) interface{} {
 	return value.Interface()
 }
 
-// Get string representation of input data by name
+// Get string representation of current context field value
 func (h *HelperArg) FieldStr(name string) string {
 	return Str(h.Field(name))
 }
 
-// Returns true if first param is truthy
-func (h *HelperArg) TruthFirstParam() bool {
-	val := h.Param(0)
-	if val == nil {
-		return false
-	}
+//
+// Private data frame
+//
 
-	thruth, ok := IsTruth(reflect.ValueOf(val))
-	if !ok {
-		return false
-	}
-
-	return thruth
+// Get current private data frame
+func (h *HelperArg) DataFrame() *DataFrame {
+	return h.eval.dataFrame
 }
 
-// Returns true if 'includeZero' option is set and first param is the number 0
-func (h *HelperArg) IsIncludableZero() bool {
-	b, ok := h.Hash("includeZero").(bool)
-	if ok && b {
-		nb, ok := h.Param(0).(int)
-		if ok && nb == 0 {
-			return true
-		}
-	}
-
-	return false
+// Instanciates a new data frame that is a copy of current one
+func (h *HelperArg) NewDataFrame() *DataFrame {
+	return h.eval.dataFrame.Copy()
 }
+
+// Instanciates a new data frame and set iteration specific vars
+func (h *HelperArg) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
+	return h.eval.dataFrame.NewIterDataFrame(length, i, key)
+}
+
+// Set current data frame
+func (h *HelperArg) SetDataFrame(data *DataFrame) {
+	h.eval.setDataFrame(data)
+}
+
+// Set back parent data frame
+func (h *HelperArg) PopDataFrame() {
+	h.eval.popDataFrame()
+}
+
+//
+// Evaluation
+//
 
 // Evaluate block with given context, private data and iteration key
 func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame, key interface{}) string {
@@ -191,46 +200,36 @@ func (h *HelperArg) Eval(ctx interface{}, field string) interface{} {
 	return val.Interface()
 }
 
-// Push context
-func (h *HelperArg) PushCtx(ctx interface{}) {
-	h.eval.pushCtx(reflect.ValueOf(ctx))
-}
+//
+// Misc
+//
 
-// Pop context
-func (h *HelperArg) PopCtx() interface{} {
-	var value reflect.Value
-
-	value = h.eval.popCtx()
-	if !value.IsValid() {
-		return value
+// Returns true if first param is truthy
+func (h *HelperArg) TruthFirstParam() bool {
+	val := h.Param(0)
+	if val == nil {
+		return false
 	}
 
-	return value.Interface()
+	thruth, ok := IsTruth(reflect.ValueOf(val))
+	if !ok {
+		return false
+	}
+
+	return thruth
 }
 
-// Get current private data frame
-func (h *HelperArg) DataFrame() *DataFrame {
-	return h.eval.dataFrame
-}
+// Returns true if 'includeZero' option is set and first param is the number 0
+func (h *HelperArg) IsIncludableZero() bool {
+	b, ok := h.Hash("includeZero").(bool)
+	if ok && b {
+		nb, ok := h.Param(0).(int)
+		if ok && nb == 0 {
+			return true
+		}
+	}
 
-// Instanciates a new data frame that is a copy of current one
-func (h *HelperArg) NewDataFrame() *DataFrame {
-	return h.eval.dataFrame.Copy()
-}
-
-// Instanciates a new data frame and set iteration specific vars
-func (h *HelperArg) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
-	return h.eval.dataFrame.NewIterDataFrame(length, i, key)
-}
-
-// Set current data frame
-func (h *HelperArg) SetDataFrame(data *DataFrame) {
-	h.eval.setDataFrame(data)
-}
-
-// Set back parent data frame
-func (h *HelperArg) PopDataFrame() {
-	h.eval.popDataFrame()
+	return false
 }
 
 //
