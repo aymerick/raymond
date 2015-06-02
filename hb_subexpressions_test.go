@@ -13,10 +13,10 @@ var hbSubexpressionsTests = []raymondTest{
 		map[string]interface{}{},
 		nil,
 		map[string]Helper{
-			"foo": func(h *HelperArg) string {
+			"foo": func(h *HelperArg) interface{} {
 				return h.ParamStr(0) + h.ParamStr(0)
 			},
-			"bar": func(h *HelperArg) string {
+			"bar": func(h *HelperArg) interface{} {
 				return "LOL"
 			},
 		},
@@ -41,7 +41,7 @@ var hbSubexpressionsTests = []raymondTest{
 		map[string]interface{}{"bar": "LOL", "baz": map[string]string{"bat": "foo!", "bar": "bar!"}},
 		nil,
 		map[string]Helper{
-			"blog": func(h *HelperArg) string {
+			"blog": func(h *HelperArg) interface{} {
 				return "val is " + h.ParamStr(0) + ", " + h.ParamStr(1) + " and " + h.ParamStr(2)
 			},
 			"equal": equalHelper,
@@ -138,7 +138,7 @@ var hbSubexpressionsTests = []raymondTest{
 		map[string]interface{}{},
 		nil,
 		map[string]Helper{
-			"blog": func(h *HelperArg) string {
+			"blog": func(h *HelperArg) interface{} {
 				return "val is " + h.HashStr("fun")
 			},
 			"equal": equalHelper,
@@ -148,18 +148,15 @@ var hbSubexpressionsTests = []raymondTest{
 	},
 	{
 		"multiple subexpressions in a hash",
-		// @todo Do not use unescaping mustaches
-		`{{{input aria-label=(t "Name") placeholder=(t "Example User")}}}`,
+		`{{input aria-label=(t "Name") placeholder=(t "Example User")}}`,
 		map[string]interface{}{},
 		nil,
 		map[string]Helper{
-			"input": func(h *HelperArg) string {
-				// @todo Escape values and return a SafeString
-				return `<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`
+			"input": func(h *HelperArg) interface{} {
+				return SafeString(`<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`)
 			},
-			"t": func(h *HelperArg) string {
-				// @todo Return a SafeString
-				return h.ParamStr(0)
+			"t": func(h *HelperArg) interface{} {
+				return SafeString(h.ParamStr(0))
 			},
 		},
 		nil,
@@ -167,18 +164,15 @@ var hbSubexpressionsTests = []raymondTest{
 	},
 	{
 		"multiple subexpressions in a hash with context",
-		// @todo Do not use unescaping mustaches
-		`{{{input aria-label=(t item.field) placeholder=(t item.placeholder)}}}`,
+		`{{input aria-label=(t item.field) placeholder=(t item.placeholder)}}`,
 		map[string]map[string]string{"item": {"field": "Name", "placeholder": "Example User"}},
 		nil,
 		map[string]Helper{
-			"input": func(h *HelperArg) string {
-				// @todo Escape values and return a SafeString
-				return `<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`
+			"input": func(h *HelperArg) interface{} {
+				return SafeString(`<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`)
 			},
-			"t": func(h *HelperArg) string {
-				// @todo Return a SafeString
-				return h.ParamStr(0)
+			"t": func(h *HelperArg) interface{} {
+				return SafeString(h.ParamStr(0))
 			},
 		},
 		nil,
@@ -195,7 +189,7 @@ var hbSubexpressionsTests = []raymondTest{
 		map[string]interface{}{"bar": func() string { return "LOL" }},
 		nil,
 		map[string]Helper{
-			"foo": func(h *HelperArg) string {
+			"foo": func(h *HelperArg) interface{} {
 				return h.ParamStr(0) + h.ParamStr(0)
 			},
 		},

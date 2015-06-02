@@ -266,14 +266,13 @@ var hbBasicTests = []raymondTest{
 		nil, nil, nil,
 		"Escaped, &lt;b&gt; looks like: &amp;lt;b&amp;gt;",
 	},
-	// // @todo SafeString
-	// {
-	// 	"functions returning safestrings shouldn't be escaped",
-	// 	"{{awesome}}",
-	// 	map[string]interface{}{"awesome": func() (string, bool) { return "&'\\<>", true }},
-	// 	nil, nil, nil,
-	// 	"&'\\<>",
-	// },
+	{
+		"functions returning safestrings shouldn't be escaped",
+		"{{awesome}}",
+		map[string]interface{}{"awesome": func() interface{} { return SafeString("&'\\<>") }},
+		nil, nil, nil,
+		"&'\\<>",
+	},
 	{
 		"functions (1)",
 		"{{awesome}}",
@@ -439,7 +438,7 @@ var hbBasicTests = []raymondTest{
 		"that current context path ({{.}}) doesn't hit helpers",
 		"test: {{.}}",
 		nil, nil,
-		map[string]Helper{"helper": func(h *HelperArg) string {
+		map[string]Helper{"helper": func(h *HelperArg) interface{} {
 			panic("fail")
 			return ""
 		}},
@@ -612,7 +611,7 @@ var hbBasicTests = []raymondTest{
 		"{{foo (false)}}",
 		map[string]interface{}{"false": func() string { return "bar" }},
 		nil,
-		map[string]Helper{"foo": func(h *HelperArg) string {
+		map[string]Helper{"foo": func(h *HelperArg) interface{} {
 			return h.ParamStr(0)
 		}},
 		nil,

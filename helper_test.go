@@ -14,14 +14,14 @@ const (
 // Helpers
 //
 
-func barHelper(h *HelperArg) string { return "bar" }
+func barHelper(h *HelperArg) interface{} { return "bar" }
 
-func barSuffixHelper(h *HelperArg) string {
+func barSuffixHelper(h *HelperArg) interface{} {
 	str, _ := h.Param(0).(string)
 	return "bar " + str
 }
 
-func echoHelper(h *HelperArg) string {
+func echoHelper(h *HelperArg) interface{} {
 	str, _ := h.Param(0).(string)
 	nb, ok := h.Param(1).(int)
 	if !ok {
@@ -36,7 +36,7 @@ func echoHelper(h *HelperArg) string {
 	return result
 }
 
-func boolHelper(h *HelperArg) string {
+func boolHelper(h *HelperArg) interface{} {
 	b, _ := h.Param(0).(bool)
 	if b {
 		return "yes it is"
@@ -45,7 +45,7 @@ func boolHelper(h *HelperArg) string {
 	return "absolutely not"
 }
 
-func gnakHelper(h *HelperArg) string {
+func gnakHelper(h *HelperArg) interface{} {
 	nb, ok := h.Param(0).(int)
 	if !ok {
 		nb = 1
@@ -59,13 +59,13 @@ func gnakHelper(h *HelperArg) string {
 	return result
 }
 
-func linkHelper(h *HelperArg) string {
+func linkHelper(h *HelperArg) interface{} {
 	prefix, _ := h.Param(0).(string)
 
 	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, h.FieldStr("url"), h.FieldStr("text"))
 }
 
-func rawHelper(h *HelperArg) string {
+func rawHelper(h *HelperArg) interface{} {
 	result := h.Block()
 
 	for _, param := range h.Params() {
@@ -75,15 +75,15 @@ func rawHelper(h *HelperArg) string {
 	return result
 }
 
-func formHelper(h *HelperArg) string {
+func formHelper(h *HelperArg) interface{} {
 	return "<form>" + h.Block() + "</form>"
 }
 
-func formCtxHelper(h *HelperArg) string {
+func formCtxHelper(h *HelperArg) interface{} {
 	return "<form>" + h.BlockWithCtx(h.Param(0)) + "</form>"
 }
 
-func listHelper(h *HelperArg) string {
+func listHelper(h *HelperArg) interface{} {
 	ctx := h.Param(0)
 
 	val := reflect.ValueOf(ctx)
@@ -105,23 +105,23 @@ func listHelper(h *HelperArg) string {
 	return "<p>" + h.Inverse() + "</p>"
 }
 
-func blogHelper(h *HelperArg) string {
+func blogHelper(h *HelperArg) interface{} {
 	return "val is " + h.ParamStr(0)
 }
 
-func equalHelper(h *HelperArg) string {
+func equalHelper(h *HelperArg) interface{} {
 	return Str(h.ParamStr(0) == h.ParamStr(1))
 }
 
-func dashHelper(h *HelperArg) string {
+func dashHelper(h *HelperArg) interface{} {
 	return h.ParamStr(0) + "-" + h.ParamStr(1)
 }
 
-func concatHelper(h *HelperArg) string {
+func concatHelper(h *HelperArg) interface{} {
 	return h.ParamStr(0) + h.ParamStr(1)
 }
 
-func detectDataHelper(h *HelperArg) string {
+func detectDataHelper(h *HelperArg) interface{} {
 	if val, ok := h.DataFrame().Get("exclaim").(string); ok {
 		return val
 	}

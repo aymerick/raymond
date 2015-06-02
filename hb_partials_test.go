@@ -20,7 +20,7 @@ var hbPartialsTests = []raymondTest{
 		"Dudes: {{#dudes}}{{> (partial)}}{{/dudes}}",
 		map[string]interface{}{"dudes": []map[string]string{{"name": "Yehuda", "url": "http://yehuda"}, {"name": "Alan", "url": "http://alan"}}},
 		nil,
-		map[string]Helper{"partial": func(h *HelperArg) string {
+		map[string]Helper{"partial": func(h *HelperArg) interface{} {
 			return "dude"
 		}},
 		map[string]string{"dude": "{{name}} ({{url}}) "},

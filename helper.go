@@ -16,8 +16,8 @@ type HelperArg struct {
 	hash   map[string]interface{}
 }
 
-// Helper function
-type Helper func(h *HelperArg) string
+// Helper function: can return a string or a SafeString
+type Helper func(h *HelperArg) interface{}
 
 // All global helpers
 var helpers map[string]Helper
@@ -237,7 +237,7 @@ func (h *HelperArg) PopDataFrame() {
 // Builtin helpers
 //
 
-func ifHelper(h *HelperArg) string {
+func ifHelper(h *HelperArg) interface{} {
 	if h.IsIncludableZero() || h.TruthFirstParam() {
 		return h.Block()
 	}
@@ -245,7 +245,7 @@ func ifHelper(h *HelperArg) string {
 	return h.Inverse()
 }
 
-func unlessHelper(h *HelperArg) string {
+func unlessHelper(h *HelperArg) interface{} {
 	if h.IsIncludableZero() || h.TruthFirstParam() {
 		return h.Inverse()
 	}
@@ -253,7 +253,7 @@ func unlessHelper(h *HelperArg) string {
 	return h.Block()
 }
 
-func withHelper(h *HelperArg) string {
+func withHelper(h *HelperArg) interface{} {
 	if h.TruthFirstParam() {
 		return h.BlockWithCtx(h.Param(0))
 	}
@@ -261,7 +261,7 @@ func withHelper(h *HelperArg) string {
 	return h.Inverse()
 }
 
-func eachHelper(h *HelperArg) string {
+func eachHelper(h *HelperArg) interface{} {
 	if !h.TruthFirstParam() {
 		h.Inverse()
 		return ""
@@ -317,11 +317,11 @@ func eachHelper(h *HelperArg) string {
 	return result
 }
 
-func logHelper(h *HelperArg) string {
+func logHelper(h *HelperArg) interface{} {
 	log.Print(h.ParamStr(0))
 	return ""
 }
 
-func lookupHelper(h *HelperArg) string {
+func lookupHelper(h *HelperArg) interface{} {
 	return Str(h.Eval(h.Param(0), h.ParamStr(1)))
 }

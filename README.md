@@ -13,7 +13,6 @@ Handlebars for golang
 - [ ] `preventIndent` mode
 - [ ] `knownHelpers` / `knownHelpersOnly` modes
 - [ ] track ids
-- [ ] permits helpers to return safe strings
 - [ ] the `blockHelperMissing` helper
 - [ ] the `helperMissing` helper
 
