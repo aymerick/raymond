@@ -11,6 +11,7 @@ Handlebars for golang
 - [ ] `stringParams` mode: resolve a parameter to it's name if the value isn't present in the context stack
 - [ ] `compat` mode
 - [ ] `preventIndent` mode
+- [ ] `knownHelpers` / `knownHelpersOnly` modes
 - [ ] track ids
 - [ ] permits helpers to return safe strings
 - [ ] the `blockHelperMissing` helper
