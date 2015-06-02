@@ -205,7 +205,7 @@ func (h *HelperArg) Eval(ctx interface{}, field string) interface{} {
 //
 
 // Returns true if first param is truthy
-func (h *HelperArg) TruthFirstParam() bool {
+func (h *HelperArg) truthFirstParam() bool {
 	val := h.Param(0)
 	if val == nil {
 		return false
@@ -220,7 +220,7 @@ func (h *HelperArg) TruthFirstParam() bool {
 }
 
 // Returns true if 'includeZero' option is set and first param is the number 0
-func (h *HelperArg) IsIncludableZero() bool {
+func (h *HelperArg) isIncludableZero() bool {
 	b, ok := h.Hash("includeZero").(bool)
 	if ok && b {
 		nb, ok := h.Param(0).(int)
@@ -237,7 +237,7 @@ func (h *HelperArg) IsIncludableZero() bool {
 //
 
 func ifHelper(h *HelperArg) interface{} {
-	if h.IsIncludableZero() || h.TruthFirstParam() {
+	if h.isIncludableZero() || h.truthFirstParam() {
 		return h.Block()
 	}
 
@@ -245,7 +245,7 @@ func ifHelper(h *HelperArg) interface{} {
 }
 
 func unlessHelper(h *HelperArg) interface{} {
-	if h.IsIncludableZero() || h.TruthFirstParam() {
+	if h.isIncludableZero() || h.truthFirstParam() {
 		return h.Inverse()
 	}
 
@@ -253,7 +253,7 @@ func unlessHelper(h *HelperArg) interface{} {
 }
 
 func withHelper(h *HelperArg) interface{} {
-	if h.TruthFirstParam() {
+	if h.truthFirstParam() {
 		return h.BlockWithCtx(h.Param(0))
 	}
 
@@ -261,7 +261,7 @@ func withHelper(h *HelperArg) interface{} {
 }
 
 func eachHelper(h *HelperArg) interface{} {
-	if !h.TruthFirstParam() {
+	if !h.truthFirstParam() {
 		h.Inverse()
 		return ""
 	}
