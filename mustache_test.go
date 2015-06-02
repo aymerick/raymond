@@ -11,9 +11,9 @@ import (
 )
 
 //
-// Note that, as the JS implementation, we do not support:
-//   - alternative delimeters
-//   - the mustache lambda spec
+// Note, as the JS implementation, the divergences from mustache spec:
+//   - we don't support alternative delimeters
+//   - the mustache lambda spec differs
 //
 
 type mustacheTest struct {
@@ -32,6 +32,10 @@ type mustacheTestFile struct {
 
 var (
 	rAltDelim = regexp.MustCompile(regexp.QuoteMeta("{{="))
+)
+
+var (
+	musTestLambdaInterMult = 0
 )
 
 func TestMustache(t *testing.T) {
@@ -125,4 +129,104 @@ func mustacheTestFiles() []string {
 	}
 
 	return result
+}
+
+//
+// Following tests come fron ~lambdas.yml
+//
+
+var mustacheLambdasTests = []raymondTest{
+	{
+		"Interpolation",
+		"Hello, {{lambda}}!",
+		map[string]interface{}{"lambda": func() string { return "world" }},
+		nil, nil, nil,
+		"Hello, world!",
+	},
+
+	// // SKIP: lambda return value is not parsed
+	// {
+	// 	"Interpolation - Expansion",
+	// 	"Hello, {{lambda}}!",
+	// 	map[string]interface{}{"lambda": func() string { return "{{planet}}" }},
+	// 	nil, nil, nil,
+	// 	"Hello, world!",
+	// },
+
+	// SKIP "Interpolation - Alternate Delimiters"
+
+	{
+		"Interpolation - Multiple Calls",
+		"{{lambda}} == {{{lambda}}} == {{lambda}}",
+		map[string]interface{}{"lambda": func() string {
+			musTestLambdaInterMult += 1
+			return Str(musTestLambdaInterMult)
+		}},
+		nil, nil, nil,
+		"1 == 2 == 3",
+	},
+
+	{
+		"Escaping",
+		"<{{lambda}}{{{lambda}}}",
+		map[string]interface{}{"lambda": func() string { return ">" }},
+		nil, nil, nil,
+		"<&gt;>",
+	},
+
+	// // SKIP: "Lambdas used for sections should receive the raw section string."
+	// {
+	// 	"Section",
+	// 	"<{{#lambda}}{{x}}{{/lambda}}>",
+	// 	map[string]interface{}{"lambda": func(h *HelperArg) string {
+	// 		if h.ParamStr(0) == "{{x}}" {
+	// 			return "yes"
+	// 		}
+
+	// 		return "false"
+	// 	}, "x": "Error!"},
+	// 	nil, nil, nil,
+	// 	"<yes>",
+	// },
+
+	// // SKIP: lambda return value is not parsed
+	// {
+	// 	"Section - Expansion",
+	// 	"<{{#lambda}}-{{/lambda}}>",
+	// 	map[string]interface{}{"lambda": func(h *HelperArg) string {
+	// 		return h.ParamStr(0) + "{{planet}}" + h.ParamStr(0)
+	// 	}, "planet": "Earth"},
+	// 	nil, nil, nil,
+	// 	"<-Earth->",
+	// },
+
+	// SKIP: "Section - Alternate Delimiters"
+
+	{
+		"Section - Multiple Calls",
+		"{{#lambda}}FILE{{/lambda}} != {{#lambda}}LINE{{/lambda}}",
+		map[string]interface{}{"lambda": func(h *HelperArg) string {
+			return "__" + h.Block() + "__"
+		}},
+		nil, nil, nil,
+		"__FILE__ != __LINE__",
+	},
+
+	// // SKIP: "Lambdas used for inverted sections should be considered truthy."
+	// {
+	// 	"Inverted Section",
+	// 	"<{{^lambda}}{{static}}{{/lambda}}>",
+	// 	map[string]interface{}{
+	// 		"lambda": func() interface{} {
+	// 			return false
+	// 		},
+	// 		"static": "static",
+	// 	},
+	// 	nil, nil, nil,
+	// 	"<>",
+	// },
+}
+
+func TestMustacheLambdas(t *testing.T) {
+	launchMustacheTests(t, mustacheLambdasTests)
 }
