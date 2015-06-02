@@ -3,7 +3,6 @@ package raymond
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -17,9 +16,6 @@ var (
 	fmtStringerType = reflect.TypeOf((*fmt.Stringer)(nil)).Elem()
 
 	zero reflect.Value
-
-	// @todo remove that debug stuff once all tests pass
-	VERBOSE_EVAL = false
 )
 
 // Template evaluation visitor
@@ -69,10 +65,6 @@ func NewEvalVisitor(tpl *Template, data interface{}, privData *DataFrame) *EvalV
 
 // push new context
 func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
-	if VERBOSE_EVAL {
-		log.Printf("Push context: %s", StrValue(ctx))
-	}
-
 	v.ctx = append(v.ctx, ctx)
 }
 
@@ -84,10 +76,6 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 
 	var result reflect.Value
 	result, v.ctx = v.ctx[len(v.ctx)-1], v.ctx[:len(v.ctx)-1]
-
-	if VERBOSE_EVAL {
-		log.Printf("Pop context, current is: %s", StrValue(v.curCtx()))
-	}
 
 	return result
 }
@@ -113,20 +101,12 @@ func (v *EvalVisitor) ancestorCtx(depth int) reflect.Value {
 
 // set new data frame
 func (v *EvalVisitor) setDataFrame(frame *DataFrame) {
-	if VERBOSE_EVAL {
-		log.Printf("Set data frame: %s", Str(frame.data))
-	}
-
 	v.dataFrame = frame
 }
 
 // set back parent data frame
 func (v *EvalVisitor) popDataFrame() {
 	v.dataFrame = v.dataFrame.parent
-
-	if VERBOSE_EVAL {
-		log.Printf("Pop data frame, current is: %s", Str(v.dataFrame.data))
-	}
 }
 
 //
@@ -239,10 +219,6 @@ func (v *EvalVisitor) errorf(format string, args ...interface{}) {
 
 // set current node
 func (v *EvalVisitor) at(node ast.Node) {
-	if VERBOSE_EVAL {
-		log.Printf("at node: %s", node)
-	}
-
 	v.curNode = node
 }
 
@@ -681,10 +657,6 @@ func (v *EvalVisitor) VisitProgram(node *ast.Program) interface{} {
 func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	v.at(node)
 
-	if VERBOSE_EVAL {
-		log.Printf("=========== MUSTACHE ===========")
-	}
-
 	// evaluate expression
 	expr := node.Expression.Accept(v)
 
@@ -701,10 +673,6 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.at(node)
 
-	if VERBOSE_EVAL {
-		log.Printf("=========== BLOCK ===========")
-	}
-
 	v.pushBlock(node)
 
 	result := ""
@@ -715,20 +683,12 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	if v.isHelperCall(node.Expression) || v.wasFuncCall(node.Expression) {
 		// it is the responsability of the helper/function to evaluate block
 		result, _ = expr.(string)
-
-		if VERBOSE_EVAL {
-			log.Printf("VisitBlock(): Helper or Func call returned: %q", Str(result))
-		}
 	} else {
 		val := reflect.ValueOf(expr)
 
 		truth, _ := IsTruth(val)
 		if truth {
 			if node.Program != nil {
-				if VERBOSE_EVAL {
-					log.Printf("VisitBlock(): Truthy, visiting Program")
-				}
-
 				switch val.Kind() {
 				case reflect.Array, reflect.Slice:
 					// Array context
@@ -745,10 +705,6 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 				}
 			}
 		} else if node.Inverse != nil {
-			if VERBOSE_EVAL {
-				log.Printf("VisitBlock(): Falsy, visiting Inverse")
-			}
-
 			result, _ = node.Inverse.Accept(v).(string)
 		}
 	}
@@ -912,10 +868,6 @@ func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot b
 	stopDeep := false
 
 	for (result == nil) && ctx.IsValid() && (depth <= len(v.ctx) && !stopDeep) {
-		if VERBOSE_EVAL {
-			log.Printf("VisitPath(): '%s' with context '%s' (depth: %d)", node.Original, StrValue(ctx), depth)
-		}
-
 		switch ctx.Kind() {
 		case reflect.Array, reflect.Slice:
 			// Array context
@@ -941,10 +893,6 @@ func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot b
 				// Reference: "Dotted Names - Context Precedence" mustache test
 				stopDeep = true
 			}
-		}
-
-		if VERBOSE_EVAL {
-			log.Printf("VisitPath(): result => '%s'", Str(result))
 		}
 
 		if result == nil {

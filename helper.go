@@ -239,15 +239,7 @@ func (h *HelperArg) PopDataFrame() {
 
 func ifHelper(h *HelperArg) string {
 	if h.IsIncludableZero() || h.TruthFirstParam() {
-		if VERBOSE_EVAL {
-			log.Printf("ifHelper is true => evaluating block")
-		}
-
 		return h.Block()
-	}
-
-	if VERBOSE_EVAL {
-		log.Printf("ifHelper is false => evaluating inverse")
 	}
 
 	return h.Inverse()
@@ -271,16 +263,8 @@ func withHelper(h *HelperArg) string {
 
 func eachHelper(h *HelperArg) string {
 	if !h.TruthFirstParam() {
-		if VERBOSE_EVAL {
-			log.Printf("eachHelper is false => evaluating inverse")
-		}
-
 		h.Inverse()
 		return ""
-	}
-
-	if VERBOSE_EVAL {
-		log.Printf("eachHelper => iterating on elements")
 	}
 
 	result := ""
