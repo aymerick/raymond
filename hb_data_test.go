@@ -257,8 +257,40 @@ var hbDataTests = []raymondTest{
 		nil,
 		"sad world?",
 	},
+	{
+		"@root - the root context can be looked up via @root",
+		`{{@root.foo}}`,
+		map[string]interface{}{"foo": "hello"},
+		nil, nil, nil,
+		"hello",
+	},
+	{
+		"@root - passed root values take priority",
+		`{{@root.foo}}`,
+		nil,
+		map[string]interface{}{"root": map[string]string{"foo": "hello"}},
+		nil, nil,
+		"hello",
+	},
+	{
+		"nesting - the root context can be looked up via @root",
+		`{{#helper}}{{#helper}}{{@./depth}} {{@../depth}} {{@../../depth}}{{/helper}}{{/helper}}`,
+		map[string]interface{}{"foo": "hello"},
+		map[string]interface{}{"depth": 0},
+		map[string]Helper{
+			"helper": func(h *HelperArg) interface{} {
+				data := h.NewDataFrame()
 
-	// @todo Add remaining tests
+				if depth, ok := h.Data("depth").(int); ok {
+					data.Set("depth", depth+1)
+				}
+
+				return h.BlockWithData(data)
+			},
+		},
+		nil,
+		"2 1 0",
+	},
 }
 
 func TestHandlebarsData(t *testing.T) {

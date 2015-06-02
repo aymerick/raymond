@@ -522,6 +522,11 @@ func (node *PathExpression) Sep(separator string) {
 	node.Original += separator
 }
 
+// Is it `@root` ?
+func (node *PathExpression) IsDataRoot() bool {
+	return node.Data && (node.Parts[0] == "root")
+}
+
 //
 // String Literal
 //

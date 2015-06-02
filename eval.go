@@ -80,6 +80,11 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 	return result
 }
 
+// returns root context
+func (v *EvalVisitor) rootCtx() reflect.Value {
+	return v.ctx[0]
+}
+
 // returns current context
 func (v *EvalVisitor) curCtx() reflect.Value {
 	return v.ancestorCtx(0)
@@ -375,6 +380,151 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Val
 
 	// we already checked that func returns only one value
 	return resArr[0]
+}
+
+func (v *EvalVisitor) findBlockParam(node *ast.PathExpression) (string, interface{}) {
+	if len(node.Parts) > 0 {
+		name := node.Parts[0]
+		if value := v.blockParam(name); value != nil {
+			return name, value
+		}
+	}
+
+	return "", nil
+}
+
+// Evaluate a path expression
+func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
+	var result interface{}
+
+	if name, value := v.findBlockParam(node); value != nil {
+		// block parameter value
+
+		// We push a new context so we can evaluate the path expression (note: this may be a bad idea).
+		//
+		// Example:
+		//   {{#foo as |bar|}}
+		//     {{bar.baz}}
+		//   {{/foo}}
+		//
+		// With data:
+		//   {"foo": {"baz": "bat"}}
+		newCtx := map[string]interface{}{name: value}
+
+		v.pushCtx(reflect.ValueOf(newCtx))
+		result = v.evalCtxPathExpression(node, exprRoot)
+		v.popCtx()
+	} else {
+		ctxTried := false
+
+		if node.IsDataRoot() {
+			// context path
+			result = v.evalCtxPathExpression(node, exprRoot)
+
+			ctxTried = true
+		}
+
+		if (result == nil) && node.Data {
+			// if it is @root, then we tried to evaluate with root context but nothing was found
+			// so let's try with private data
+
+			// private data
+			result = v.evalDataPathExpression(node)
+		}
+
+		if (result == nil) && !ctxTried {
+			// context path
+			result = v.evalCtxPathExpression(node, exprRoot)
+		}
+	}
+
+	return result
+}
+
+// Evaluate a private data path expression
+func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression) interface{} {
+	// find data frame
+	frame := v.dataFrame
+	for i := node.Depth; i > 0; i-- {
+		if frame.parent == nil {
+			return nil
+		}
+		frame = frame.parent
+	}
+
+	return frame.Find(node.Parts)
+}
+
+// Evaluate a context path expression
+func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
+	v.at(node)
+
+	depth := node.Depth
+	ctx := v.ancestorCtx(depth)
+	parts := node.Parts
+
+	// `@root`
+	if node.IsDataRoot() {
+		ctx = v.rootCtx()
+		parts = parts[1:len(parts)]
+	}
+
+	return v.evalCtxPathDeep(ctx, parts, depth, exprRoot)
+}
+
+// Iterate on contexts until we find one resolving the path
+func (v *EvalVisitor) evalCtxPathDeep(ctx reflect.Value, parts []string, depth int, exprRoot bool) interface{} {
+	var result interface{}
+	partResolved := false
+
+	stopDeep := false
+	for (result == nil) && ctx.IsValid() && (depth <= len(v.ctx) && !stopDeep) {
+		result, partResolved = v.evalCtxPath(ctx, parts, exprRoot)
+		if partResolved {
+			// As soon as we find the first part of a path, we must not try to resolve with parent context if result is finally `nil`
+			// Reference: "Dotted Names - Context Precedence" mustache test
+			stopDeep = true
+		} else {
+			if result == nil {
+				// check ancestor
+				depth++
+				ctx = v.ancestorCtx(depth)
+			}
+		}
+	}
+
+	return result
+}
+
+// Evaluate path parts
+func (v *EvalVisitor) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bool) (interface{}, bool) {
+	var result interface{}
+	partResolved := false
+
+	switch ctx.Kind() {
+	case reflect.Array, reflect.Slice:
+		// Array context
+		var results []interface{}
+
+		for i := 0; i < ctx.Len(); i++ {
+			value, _ := v.evalPath(ctx.Index(i), parts, exprRoot)
+			if value.IsValid() {
+				results = append(results, value.Interface())
+			}
+		}
+
+		result = results
+	default:
+		// NOT array context
+		var value reflect.Value
+
+		value, partResolved = v.evalPath(ctx, parts, exprRoot)
+		if value.IsValid() {
+			result = value.Interface()
+		}
+	}
+
+	return result, partResolved
 }
 
 //
@@ -735,109 +885,6 @@ func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 	v.at(node)
 
 	return node.Expression.Accept(v)
-}
-
-func (v *EvalVisitor) findBlockParam(node *ast.PathExpression) (string, interface{}) {
-	if len(node.Parts) > 0 {
-		name := node.Parts[0]
-		if value := v.blockParam(name); value != nil {
-			return name, value
-		}
-	}
-
-	return "", nil
-}
-
-// Evaluate a path expression
-func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
-	if name, value := v.findBlockParam(node); value != nil {
-		// block parameter value
-
-		// We push a new context so we can evaluate the path expression (note: this may be a bad idea).
-		//
-		// Example:
-		//   {{#foo as |bar|}}
-		//     {{bar.baz}}
-		//   {{/foo}}
-		//
-		// With data:
-		//   {"foo": {"baz": "bat"}}
-		newCtx := map[string]interface{}{name: value}
-
-		v.pushCtx(reflect.ValueOf(newCtx))
-		result := v.evalCtxPathExpression(node, exprRoot)
-		v.popCtx()
-
-		return result
-	} else if node.Data {
-		// private data
-		return v.evalDataPathExpression(node)
-	}
-
-	// basic path
-	return v.evalCtxPathExpression(node, exprRoot)
-}
-
-// Evaluate a private data path expression
-func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression) interface{} {
-	// find data frame
-	frame := v.dataFrame
-	for i := node.Depth; i > 0; i-- {
-		if frame.parent == nil {
-			return nil
-		}
-		frame = frame.parent
-	}
-
-	return frame.Find(node.Parts)
-}
-
-// Evaluate a context path expression
-func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
-	v.at(node)
-
-	var result interface{}
-
-	depth := node.Depth
-	ctx := v.ancestorCtx(depth)
-	stopDeep := false
-
-	for (result == nil) && ctx.IsValid() && (depth <= len(v.ctx) && !stopDeep) {
-		switch ctx.Kind() {
-		case reflect.Array, reflect.Slice:
-			// Array context
-			var results []interface{}
-
-			for i := 0; i < ctx.Len(); i++ {
-				value, _ := v.evalPath(ctx.Index(i), node.Parts, exprRoot)
-				if value.IsValid() {
-					results = append(results, value.Interface())
-				}
-			}
-
-			result = results
-		default:
-			// NOT array context
-			value, partResolved := v.evalPath(ctx, node.Parts, exprRoot)
-			if value.IsValid() {
-				result = value.Interface()
-			}
-
-			if partResolved {
-				// As soon as we find the first part of a path, we must not try to resolve with parent context if result is finally `nil`
-				// Reference: "Dotted Names - Context Precedence" mustache test
-				stopDeep = true
-			}
-		}
-
-		if result == nil {
-			// check ancestor
-			depth++
-			ctx = v.ancestorCtx(depth)
-		}
-	}
-
-	return result
 }
 
 func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {

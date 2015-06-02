@@ -379,14 +379,16 @@ These handlebars options are currently NOT implemented:
 
 These handlebars features are currently NOT implemented:
 
+- Function in private data frame
 - `blockHelperMissing` - helper called when a helper can not be directly resolved
 - `helperMissing` - helper called when a potential helper expression was not found
-- Function in private data frame
+- `@contextPath` - value set in `trackIds` mode that records the lookup path for the current context
+- `@level` - log level
 
 
 ## Todo
 
-- [ ] function in private data frame (needs factorization of path evaluation)
+- [ ] function in private data frame
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
 - [ ] benchmarks
 
