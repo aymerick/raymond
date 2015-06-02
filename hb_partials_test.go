@@ -66,6 +66,7 @@ var hbPartialsTests = []raymondTest{
 	},
 
 	// @todo "rendering undefined partial throws an exception"
+
 	// @todo "registering undefined partial throws an exception"
 
 	// SKIP: "rendering template partial in vm mode throws an exception"
@@ -97,6 +98,7 @@ var hbPartialsTests = []raymondTest{
 	},
 
 	// @todo "Global Partials"
+
 	// @todo "Multiple partial registration"
 
 	{

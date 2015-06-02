@@ -70,9 +70,7 @@ var hbBuiltinsTests = []raymondTest{
 			"goodbye": func() bool { return true },
 			"world":   "world",
 		},
-		nil,
-		nil,
-		nil,
+		nil, nil, nil,
 		"GOODBYE cruel world!",
 	},
 	{

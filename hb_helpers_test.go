@@ -252,6 +252,7 @@ var hbHelpersTests = []raymondTest{
 		nil,
 		"helper",
 	},
+
 	// @todo "helpers hash - the helper hash should augment the global hash"
 
 	// @todo "registration"

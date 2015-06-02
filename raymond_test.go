@@ -107,9 +107,6 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 		var err error
 		var tpl *Template
 
-		// log.Printf("****************************************")
-		// log.Printf("* TEST: '%s'", test.name)
-
 		// parse template
 		tpl, err = Parse(test.input)
 		if err != nil {
@@ -197,9 +194,6 @@ func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
 	for _, test := range tests {
 		var err error
 		var tpl *Template
-
-		// log.Printf("****************************************")
-		// log.Printf("* TEST: '%s'", test.name)
 
 		// parse template
 		tpl, err = Parse(test.input)

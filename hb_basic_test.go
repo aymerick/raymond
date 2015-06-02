@@ -266,9 +266,14 @@ var hbBasicTests = []raymondTest{
 		nil, nil, nil,
 		"Escaped, &lt;b&gt; looks like: &amp;lt;b&amp;gt;",
 	},
-
-	// @todo "functions returning safestrings shouldn't be escaped"
-
+	// // @todo SafeString
+	// {
+	// 	"functions returning safestrings shouldn't be escaped",
+	// 	"{{awesome}}",
+	// 	map[string]interface{}{"awesome": func() (string, bool) { return "&'\\<>", true }},
+	// 	nil, nil, nil,
+	// 	"&'\\<>",
+	// },
 	{
 		"functions (1)",
 		"{{awesome}}",
