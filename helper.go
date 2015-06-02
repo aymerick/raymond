@@ -88,12 +88,17 @@ func (h *HelperArg) ParamStr(pos int) string {
 	return Str(h.Param(pos))
 }
 
-// Returns hash value by name
-func (h *HelperArg) Hash(name string) interface{} {
+// Returns entire hash
+func (h *HelperArg) Hash() map[string]interface{} {
+	return h.hash
+}
+
+// Returns hash property
+func (h *HelperArg) HashProp(name string) interface{} {
 	return h.hash[name]
 }
 
-// Returns string representation of hash value by name
+// Returns string representation of hash property
 func (h *HelperArg) HashStr(name string) string {
 	return Str(h.hash[name])
 }
@@ -177,6 +182,11 @@ func (h *HelperArg) BlockWithCtx(ctx interface{}) string {
 	return h.BlockWith(ctx, nil, nil)
 }
 
+// Evaluate block with given private data
+func (h *HelperArg) BlockWithData(data *DataFrame) string {
+	return h.BlockWith(nil, data, nil)
+}
+
 // Evaluate block
 func (h *HelperArg) Block() string {
 	return h.BlockWith(nil, nil, nil)
@@ -231,7 +241,7 @@ func (h *HelperArg) truthFirstParam() bool {
 
 // Returns true if 'includeZero' option is set and first param is the number 0
 func (h *HelperArg) isIncludableZero() bool {
-	b, ok := h.Hash("includeZero").(bool)
+	b, ok := h.HashProp("includeZero").(bool)
 	if ok && b {
 		nb, ok := h.Param(0).(int)
 		if ok && nb == 0 {

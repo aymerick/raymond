@@ -1,5 +1,7 @@
 package raymond
 
+import "reflect"
+
 // Cf. private variables at: http://handlebarsjs.com/block_helpers.html
 
 // A private data frame
@@ -55,21 +57,36 @@ func (p *DataFrame) Find(parts []string) interface{} {
 
 	for i, part := range parts {
 		val := data[part]
+		if val == nil {
+			return nil
+		}
 
 		if i == len(parts)-1 {
 			// found
 			return val
 		}
 
-		next, ok := val.(map[string]interface{})
-		if !ok {
+		valValue := reflect.ValueOf(val)
+		if valValue.Kind() != reflect.Map {
 			// not found
 			return nil
 		}
 
-		data = next
+		// continue
+		data = mapStringInterface(valValue)
 	}
 
 	// not found
 	return nil
+}
+
+// converts any `map` to `map[string]interface{}`
+func mapStringInterface(value reflect.Value) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	for _, key := range value.MapKeys() {
+		result[strValue(key)] = value.MapIndex(key).Interface()
+	}
+
+	return result
 }

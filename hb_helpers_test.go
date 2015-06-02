@@ -385,7 +385,7 @@ var hbHelpersTests = []raymondTest{
 		`{{goodbye cruel="CRUEL" world="WORLD" print=true}}`,
 		nil, nil,
 		map[string]Helper{"goodbye": func(h *HelperArg) interface{} {
-			p, ok := h.Hash("print").(bool)
+			p, ok := h.HashProp("print").(bool)
 			if ok {
 				if p {
 					return "GOODBYE " + h.HashStr("cruel") + " " + h.HashStr("world")
@@ -404,7 +404,7 @@ var hbHelpersTests = []raymondTest{
 		`{{goodbye cruel="CRUEL" world="WORLD" print=false}}`,
 		nil, nil,
 		map[string]Helper{"goodbye": func(h *HelperArg) interface{} {
-			p, ok := h.Hash("print").(bool)
+			p, ok := h.HashProp("print").(bool)
 			if ok {
 				if p {
 					return "GOODBYE " + h.HashStr("cruel") + " " + h.HashStr("world")
@@ -443,7 +443,7 @@ var hbHelpersTests = []raymondTest{
 		`{{#goodbye cruel="CRUEL" print=true}}world{{/goodbye}}`,
 		nil, nil,
 		map[string]Helper{"goodbye": func(h *HelperArg) interface{} {
-			p, ok := h.Hash("print").(bool)
+			p, ok := h.HashProp("print").(bool)
 			if ok {
 				if p {
 					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()
@@ -462,7 +462,7 @@ var hbHelpersTests = []raymondTest{
 		`{{#goodbye cruel="CRUEL" print=false}}world{{/goodbye}}`,
 		nil, nil,
 		map[string]Helper{"goodbye": func(h *HelperArg) interface{} {
-			p, ok := h.Hash("print").(bool)
+			p, ok := h.HashProp("print").(bool)
 			if ok {
 				if p {
 					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()
@@ -488,7 +488,7 @@ var hbHelpersTests = []raymondTest{
 		`{{#goodbye cruel="CRUEL" print=false}}world{{/goodbye}}`,
 		nil, nil,
 		map[string]Helper{"goodbye": func(h *HelperArg) interface{} {
-			p, ok := h.Hash("print").(bool)
+			p, ok := h.HashProp("print").(bool)
 			if ok {
 				if p {
 					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()

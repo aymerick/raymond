@@ -348,6 +348,13 @@ Displays:
 his name is: Goldorak
 ```
 
+## Utilities
+
+@todo doc for `IsSafeString()`
+
+@todo doc for `Str()`
+
+
 ## Mustache
 
 Handlebars is a superset of [mustache](https://mustache.github.io) but it differs on those points:
@@ -374,11 +381,12 @@ These handlebars features are currently NOT implemented:
 
 - `blockHelperMissing` - helper called when a helper can not be directly resolved
 - `helperMissing` - helper called when a potential helper expression was not found
+- Function in private data frame
 
 
 ## Todo
 
-- [ ] @data handlebar tests
+- [ ] function in private data frame (needs factorization of path evaluation)
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
 - [ ] benchmarks
 
