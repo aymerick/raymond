@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -206,7 +207,373 @@ var hbHelpersTests = []raymondTest{
 		"winning",
 	},
 
-	// @todo Add remaining tests
+	{
+		"helpers hash - providing a helpers hash (1)",
+		"Goodbye {{cruel}} {{world}}!",
+		map[string]interface{}{"cruel": "cruel"},
+		nil,
+		map[string]Helper{"world": func(h *HelperArg) string { return "world" }},
+		nil,
+		"Goodbye cruel world!",
+	},
+	{
+		"helpers hash - providing a helpers hash (2)",
+		"Goodbye {{#iter}}{{cruel}} {{world}}{{/iter}}!",
+		map[string]interface{}{"iter": []map[string]string{{"cruel": "cruel"}}},
+		nil,
+		map[string]Helper{"world": func(h *HelperArg) string { return "world" }},
+		nil,
+		"Goodbye cruel world!",
+	},
+	{
+		"helpers hash - in cases of conflict, helpers win (1)",
+		"{{{lookup}}}",
+		map[string]interface{}{"lookup": "Explicit"},
+		nil,
+		map[string]Helper{"lookup": func(h *HelperArg) string { return "helpers" }},
+		nil,
+		"helpers",
+	},
+	{
+		"helpers hash - in cases of conflict, helpers win (2)",
+		"{{lookup}}",
+		map[string]interface{}{"lookup": "Explicit"},
+		nil,
+		map[string]Helper{"lookup": func(h *HelperArg) string { return "helpers" }},
+		nil,
+		"helpers",
+	},
+	{
+		"helpers hash - the helpers hash is available is nested contexts",
+		"{{#outer}}{{#inner}}{{helper}}{{/inner}}{{/outer}}",
+		map[string]interface{}{"outer": map[string]interface{}{"inner": map[string]interface{}{"unused": []string{}}}},
+		nil,
+		map[string]Helper{"helper": func(h *HelperArg) string { return "helper" }},
+		nil,
+		"helper",
+	},
+	// @todo "helpers hash - the helper hash should augment the global hash"
+
+	// @todo "registration"
+
+	{
+		"decimal number literals work",
+		"Message: {{hello -1.2 1.2}}",
+		nil, nil,
+		map[string]Helper{"hello": func(h *HelperArg) string {
+			ts, t2s := "NaN", "NaN"
+
+			if v, ok := h.Param(0).(float64); ok {
+				ts = Str(v)
+			}
+
+			if v, ok := h.Param(1).(float64); ok {
+				t2s = Str(v)
+			}
+
+			return "Hello " + ts + " " + t2s + " times"
+		}},
+		nil,
+		"Message: Hello -1.2 1.2 times",
+	},
+	{
+		"negative number literals work",
+		"Message: {{hello -12}}",
+		nil, nil,
+		map[string]Helper{"hello": func(h *HelperArg) string {
+			times := "NaN"
+
+			if v, ok := h.Param(0).(int); ok {
+				times = Str(v)
+			}
+
+			return "Hello " + times + " times"
+		}},
+		nil,
+		"Message: Hello -12 times",
+	},
+
+	{
+		"String literal parameters - simple literals work",
+		`Message: {{hello "world" 12 true false}}`,
+		nil, nil,
+		map[string]Helper{"hello": func(h *HelperArg) string {
+			times, bool1, bool2 := "NaN", "NaB", "NaB"
+
+			param, ok := h.Param(0).(string)
+			if !ok {
+				param = "NaN"
+			}
+
+			if v, ok := h.Param(1).(int); ok {
+				times = Str(v)
+			}
+
+			if v, ok := h.Param(2).(bool); ok {
+				bool1 = Str(v)
+			}
+
+			if v, ok := h.Param(3).(bool); ok {
+				bool2 = Str(v)
+			}
+
+			return "Hello " + param + " " + times + " times: " + bool1 + " " + bool2
+		}},
+		nil,
+		"Message: Hello world 12 times: true false",
+	},
+
+	// @todo "using a quote in the middle of a parameter raises an error"
+
+	{
+		"String literal parameters - escaping a String is possible",
+		"Message: {{{hello \"\\\"world\\\"\"}}}",
+		nil, nil,
+		map[string]Helper{"hello": func(h *HelperArg) string {
+			return "Hello " + h.ParamStr(0)
+		}},
+		nil,
+		`Message: Hello "world"`,
+	},
+	{
+		"String literal parameters - it works with ' marks",
+		"Message: {{{hello \"Alan's world\"}}}",
+		nil, nil,
+		map[string]Helper{"hello": func(h *HelperArg) string {
+			return "Hello " + h.ParamStr(0)
+		}},
+		nil,
+		`Message: Hello Alan's world`,
+	},
+
+	{
+		"multiple parameters - simple multi-params work",
+		"Message: {{goodbye cruel world}}",
+		map[string]string{"cruel": "cruel", "world": "world"},
+		nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			return "Goodbye " + h.ParamStr(0) + " " + h.ParamStr(1)
+		}},
+		nil,
+		"Message: Goodbye cruel world",
+	},
+	{
+		"multiple parameters - block multi-params work",
+		"Message: {{#goodbye cruel world}}{{greeting}} {{adj}} {{noun}}{{/goodbye}}",
+		map[string]string{"cruel": "cruel", "world": "world"},
+		nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			return h.BlockWithCtx(map[string]interface{}{"greeting": "Goodbye", "adj": h.Param(0), "noun": h.Param(1)})
+		}},
+		nil,
+		"Message: Goodbye cruel world",
+	},
+
+	{
+		"hash - helpers can take an optional hash",
+		`{{goodbye cruel="CRUEL" world="WORLD" times=12}}`,
+		nil, nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			return "GOODBYE " + h.HashStr("cruel") + " " + h.HashStr("world") + " " + h.HashStr("times") + " TIMES"
+		}},
+		nil,
+		"GOODBYE CRUEL WORLD 12 TIMES",
+	},
+	{
+		"hash - helpers can take an optional hash with booleans (1)",
+		`{{goodbye cruel="CRUEL" world="WORLD" print=true}}`,
+		nil, nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			p, ok := h.Hash("print").(bool)
+			if ok {
+				if p {
+					return "GOODBYE " + h.HashStr("cruel") + " " + h.HashStr("world")
+				} else {
+					return "NOT PRINTING"
+				}
+			}
+
+			return "THIS SHOULD NOT HAPPEN"
+		}},
+		nil,
+		"GOODBYE CRUEL WORLD",
+	},
+	{
+		"hash - helpers can take an optional hash with booleans (2)",
+		`{{goodbye cruel="CRUEL" world="WORLD" print=false}}`,
+		nil, nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			p, ok := h.Hash("print").(bool)
+			if ok {
+				if p {
+					return "GOODBYE " + h.HashStr("cruel") + " " + h.HashStr("world")
+				} else {
+					return "NOT PRINTING"
+				}
+			}
+
+			return "THIS SHOULD NOT HAPPEN"
+		}},
+		nil,
+		"NOT PRINTING",
+	},
+	{
+		"block helpers can take an optional hash",
+		`{{#goodbye cruel="CRUEL" times=12}}world{{/goodbye}}`,
+		nil, nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			return "GOODBYE " + h.HashStr("cruel") + " " + h.Block() + " " + h.HashStr("times") + " TIMES"
+		}},
+		nil,
+		"GOODBYE CRUEL world 12 TIMES",
+	},
+	{
+		"block helpers can take an optional hash with single quoted stings",
+		`{{#goodbye cruel='CRUEL' times=12}}world{{/goodbye}}`,
+		nil, nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			return "GOODBYE " + h.HashStr("cruel") + " " + h.Block() + " " + h.HashStr("times") + " TIMES"
+		}},
+		nil,
+		"GOODBYE CRUEL world 12 TIMES",
+	},
+	{
+		"block helpers can take an optional hash with booleans (1)",
+		`{{#goodbye cruel="CRUEL" print=true}}world{{/goodbye}}`,
+		nil, nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			p, ok := h.Hash("print").(bool)
+			if ok {
+				if p {
+					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()
+				} else {
+					return "NOT PRINTING"
+				}
+			}
+
+			return "THIS SHOULD NOT HAPPEN"
+		}},
+		nil,
+		"GOODBYE CRUEL world",
+	},
+	{
+		"block helpers can take an optional hash with booleans (1)",
+		`{{#goodbye cruel="CRUEL" print=false}}world{{/goodbye}}`,
+		nil, nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			p, ok := h.Hash("print").(bool)
+			if ok {
+				if p {
+					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()
+				} else {
+					return "NOT PRINTING"
+				}
+			}
+
+			return "THIS SHOULD NOT HAPPEN"
+		}},
+		nil,
+		"NOT PRINTING",
+	},
+
+	// @todo "helperMissing - if a context is not found, helperMissing is used" throw error
+
+	// @todo "helperMissing - if a context is not found, custom helperMissing is used"
+
+	// @todo "helperMissing - if a value is not found, custom helperMissing is used"
+
+	{
+		"block helpers can take an optional hash with booleans (1)",
+		`{{#goodbye cruel="CRUEL" print=false}}world{{/goodbye}}`,
+		nil, nil,
+		map[string]Helper{"goodbye": func(h *HelperArg) string {
+			p, ok := h.Hash("print").(bool)
+			if ok {
+				if p {
+					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()
+				} else {
+					return "NOT PRINTING"
+				}
+			}
+
+			return "THIS SHOULD NOT HAPPEN"
+		}},
+		nil,
+		"NOT PRINTING",
+	},
+
+	// @todo "knownHelpers/knownHelpersOnly" tests
+
+	// @todo "blockHelperMissing" tests
+
+	// @todo "name field" tests
+
+	{
+		"name conflicts - helpers take precedence over same-named context properties",
+		`{{goodbye}} {{cruel world}}`,
+		map[string]string{"goodbye": "goodbye", "world": "world"},
+		nil,
+		map[string]Helper{
+			"goodbye": func(h *HelperArg) string {
+				return strings.ToUpper(h.FieldStr("goodbye"))
+			},
+			"cruel": func(h *HelperArg) string {
+				return "cruel " + strings.ToUpper(h.ParamStr(0))
+			},
+		},
+		nil,
+		"GOODBYE cruel WORLD",
+	},
+	{
+		"name conflicts - helpers take precedence over same-named context properties",
+		`{{#goodbye}} {{cruel world}}{{/goodbye}}`,
+		map[string]string{"goodbye": "goodbye", "world": "world"},
+		nil,
+		map[string]Helper{
+			"goodbye": func(h *HelperArg) string {
+				return strings.ToUpper(h.FieldStr("goodbye")) + h.Block()
+			},
+			"cruel": func(h *HelperArg) string {
+				return "cruel " + strings.ToUpper(h.ParamStr(0))
+			},
+		},
+		nil,
+		"GOODBYE cruel WORLD",
+	},
+	{
+		"name conflicts - Scoped names take precedence over helpers",
+		`{{this.goodbye}} {{cruel world}} {{cruel this.goodbye}}`,
+		map[string]string{"goodbye": "goodbye", "world": "world"},
+		nil,
+		map[string]Helper{
+			"goodbye": func(h *HelperArg) string {
+				return strings.ToUpper(h.FieldStr("goodbye"))
+			},
+			"cruel": func(h *HelperArg) string {
+				return "cruel " + strings.ToUpper(h.ParamStr(0))
+			},
+		},
+		nil,
+		"goodbye cruel WORLD cruel GOODBYE",
+	},
+	{
+		"name conflicts - Scoped names take precedence over block helpers",
+		`{{#goodbye}} {{cruel world}}{{/goodbye}} {{this.goodbye}}`,
+		map[string]string{"goodbye": "goodbye", "world": "world"},
+		nil,
+		map[string]Helper{
+			"goodbye": func(h *HelperArg) string {
+				return strings.ToUpper(h.FieldStr("goodbye")) + h.Block()
+			},
+			"cruel": func(h *HelperArg) string {
+				return "cruel " + strings.ToUpper(h.ParamStr(0))
+			},
+		},
+		nil,
+		"GOODBYE cruel WORLD goodbye",
+	},
+
+	// @todo "block params" tests
 }
 
 func TestHandlebarsHelpers(t *testing.T) {
