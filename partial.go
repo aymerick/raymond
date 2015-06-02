@@ -33,6 +33,13 @@ func RegisterPartial(name string, source string) {
 	partials[name] = NewPartial(name, source)
 }
 
+// Register several global partials
+func RegisterPartials(partials map[string]string) {
+	for name, partial := range partials {
+		RegisterPartial(name, partial)
+	}
+}
+
 // Find a registered global partial
 func FindPartial(name string) *Partial {
 	return partials[name]
