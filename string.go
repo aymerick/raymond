@@ -18,11 +18,11 @@ func IsSafeString(value interface{}) bool {
 
 // returns string representation of a `interface{}`
 func Str(value interface{}) string {
-	return StrValue(reflect.ValueOf(value))
+	return strValue(reflect.ValueOf(value))
 }
 
 // returns string representation of a `reflect.Value`
-func StrValue(value reflect.Value) string {
+func strValue(value reflect.Value) string {
 	result := ""
 
 	ival, ok := printableValue(value)
@@ -35,7 +35,7 @@ func StrValue(value reflect.Value) string {
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
-			result += StrValue(val.Index(i))
+			result += strValue(val.Index(i))
 		}
 	case reflect.Bool:
 		result = "false"

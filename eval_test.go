@@ -82,7 +82,7 @@ func TestEvalErrors(t *testing.T) {
 }
 
 //
-// StrValue() / Str() tests
+// strValue() / Str() tests
 //
 
 type strTest struct {

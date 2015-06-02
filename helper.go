@@ -83,7 +83,7 @@ func (h *HelperArg) Param(pos int) interface{} {
 	}
 }
 
-// Get string representation of parameter at given position
+// Returns string representation of parameter at given position
 func (h *HelperArg) ParamStr(pos int) string {
 	return Str(h.Param(pos))
 }
@@ -113,9 +113,19 @@ func (h *HelperArg) Field(name string) interface{} {
 	return value.Interface()
 }
 
-// Get string representation of current context field value
+// Returns string representation of current context field value
 func (h *HelperArg) FieldStr(name string) string {
 	return Str(h.Field(name))
+}
+
+// Returns private data value by name
+func (h *HelperArg) Data(name string) interface{} {
+	return h.eval.dataFrame.Get(name)
+}
+
+// Returns string representation of private data value by name
+func (h *HelperArg) DataStr(name string) string {
+	return Str(h.eval.dataFrame.Get(name))
 }
 
 //

@@ -8,7 +8,6 @@ import (
 
 //
 // @todo Adds tests from:
-//   https://github.com/wycats/handlebars.js/blob/master/spec/data.js
 //   https://github.com/wycats/handlebars.js/blob/master/spec/regressions.js
 //
 
