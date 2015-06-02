@@ -159,6 +159,8 @@ By default, the result of a mustache expression is HTML escaped. Use the triple 
   fmt.Print(result)
 ```
 
+Output:
+
 ```html
 <div class="entry">
   <h1>All about &lt;p&gt; Tags</h1>
@@ -189,6 +191,8 @@ When returning HTML from a helper, you should return a `SafeString` if you don't
   fmt.Print(result)
 ```
 
+Output:
+
 ```html
 <a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>
 ```
@@ -213,6 +217,8 @@ You can register template partials before execution:
   fmt.Print(result)
 ```
 
+Output:
+
 ```html
 <span>bar</span> baz
 ```
@@ -229,6 +235,8 @@ tpl.RegisterPartials(map[string]string{
 result := tpl.MustExec(nil)
 fmt.Print(result)
 ```
+
+Output:
 
 ```html
 <span>bar</span> and <span>bat</span>
