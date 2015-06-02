@@ -7,14 +7,15 @@ Handlebars for golang
 
 ## Todo
 
-- [ ] `strict` mode
-- [ ] `stringParams` mode: resolve a parameter to it's name if the value isn't present in the context stack
-- [ ] `compat` mode
-- [ ] `preventIndent` mode
-- [ ] `knownHelpers` / `knownHelpersOnly` modes
-- [ ] track ids
-- [ ] the `blockHelperMissing` helper
-- [ ] the `helperMissing` helper
+- [ ] `strict` mode: errors on missing lookup
+- [ ] `stringParams` mode: resolves a parameter to it's name if the value isn't present in the context stack
+- [ ] `compat` mode : enables recursive lookup (as mustache spec)
+- [ ] `preventIndent` mode: disables indentation of nested partials
+- [ ] `knownHelpersOnly` mode: allows only known builtin helpers
+- [ ] `trackIds` mode: informs helpers about the paths that were used to lookup an argument for a given value
+
+- [ ] the `blockHelperMissing` helper: helper called when a helper can not be directly resolved
+- [ ] the `helperMissing` helper: helper called when a potential helper expression was not found
 
 - [ ] pass all handlebars.js tests
 - [ ] documentation
