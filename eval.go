@@ -459,44 +459,41 @@ func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression) interface
 func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	v.at(node)
 
-	depth := node.Depth
-	ctx := v.ancestorCtx(depth)
-	parts := node.Parts
-
-	// `@root`
 	if node.IsDataRoot() {
-		ctx = v.rootCtx()
-		parts = parts[1:len(parts)]
+		// `@root` - remove the first part
+		parts := node.Parts[1:len(node.Parts)]
+
+		result, _ := v.evalCtxPath(v.rootCtx(), parts, exprRoot)
+		return result
 	}
 
-	return v.evalCtxPathDeep(ctx, parts, depth, exprRoot)
+	return v.evalDepthPath(node.Depth, node.Parts, exprRoot)
 }
 
-// Iterate on contexts until we find one resolving the path
-func (v *EvalVisitor) evalCtxPathDeep(ctx reflect.Value, parts []string, depth int, exprRoot bool) interface{} {
+// Iterate on contexts, starting at given depth, until there is one that resolve path
+func (v *EvalVisitor) evalDepthPath(depth int, parts []string, exprRoot bool) interface{} {
 	var result interface{}
 	partResolved := false
 
-	stopDeep := false
-	for (result == nil) && ctx.IsValid() && (depth <= len(v.ctx) && !stopDeep) {
+	ctx := v.ancestorCtx(depth)
+
+	for (result == nil) && ctx.IsValid() && (depth <= len(v.ctx) && !partResolved) {
+		// try with context
 		result, partResolved = v.evalCtxPath(ctx, parts, exprRoot)
-		if partResolved {
-			// As soon as we find the first part of a path, we must not try to resolve with parent context if result is finally `nil`
-			// Reference: "Dotted Names - Context Precedence" mustache test
-			stopDeep = true
-		} else {
-			if result == nil {
-				// check ancestor
-				depth++
-				ctx = v.ancestorCtx(depth)
-			}
+
+		// As soon as we find the first part of a path, we must not try to resolve with parent context if result is finally `nil`
+		// Reference: "Dotted Names - Context Precedence" mustache test
+		if !partResolved && (result == nil) {
+			// try with previous context
+			depth++
+			ctx = v.ancestorCtx(depth)
 		}
 	}
 
 	return result
 }
 
-// Evaluate path parts
+// Evaluate path with given context
 func (v *EvalVisitor) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bool) (interface{}, bool) {
 	var result interface{}
 	partResolved := false
