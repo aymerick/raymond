@@ -3,7 +3,7 @@
 Handlebars for [golang](https://golang.org), supporting the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
 
-## Quick start
+## Quick Start
 
     $ go get github.com/aymerick/raymond
 
@@ -55,7 +55,7 @@ Displays:
 Please note that the template will be parsed everytime you call `Render()` function. So you probably want to read the next section.
 
 
-## Correct usage
+## Correct Usage
 
 To avoid parsing a template several times, use the `Parse()` and `Exec()` function:
 
@@ -135,7 +135,7 @@ You can use `MustParse()` and `MustExec()` functions if you don't want to deal w
 ```
 
 
-## HTML escaping
+## HTML Escaping
 
 By default, the result of a mustache expression is HTML escaped. Use the triple mustache `{{{` to output unescaped values.
 
@@ -246,7 +246,7 @@ Output:
 <span>bar</span> and <span>bat</span>
 ```
 
-### Global partials
+### Global Partials
 
 You can registers global partials that will be accessible by all templates:
 
@@ -398,7 +398,7 @@ These handlebars features are currently NOT implemented:
   - <https://www.youtube.com/watch?v=HxaD_trXwRE>
 
 
-## Others implementations
+## Others Implementations
 
 - [handlebars.js](http://handlebarsjs.com) - javascript
 - [handlebars.java](https://github.com/jknack/handlebars.java) - java
