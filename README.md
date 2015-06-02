@@ -155,15 +155,15 @@ By default, the result of a mustache expression is HTML escaped. Use the triple 
 </div>
 `
 
-    data := map[string]string{
-        "title": "All about <p> Tags",
-        "body":  "<p>This is a post about &lt;p&gt; tags</p>",
-    }
+  data := map[string]string{
+    "title": "All about <p> Tags",
+    "body":  "<p>This is a post about &lt;p&gt; tags</p>",
+  }
 
-    tpl := raymond.MustParse(source)
-    result := tpl.MustExec(data)
+  tpl := raymond.MustParse(source)
+  result := tpl.MustExec(data)
 
-    fmt.Print(result)
+  fmt.Print(result)
 ```
 
 ```html
