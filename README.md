@@ -202,6 +202,10 @@ Output:
 
 @todo doc
 
+### Private data
+
+@todo doc
+
 
 ## Partials
 
@@ -267,6 +271,82 @@ Or:
   fmt.Print(result)
 ```
 
+### Dynamic Partials
+
+It's possible to dynamically select the partial to be executed by using sub expression syntax.
+
+For example, that template randomly evaluates the `foo` or `baz` partial:
+
+```go
+  tpl := raymond.MustParse("{{> (whichPartial) }}")
+  tpl.RegisterPartials(map[string]string{
+    "foo": "<span>bar</span>",
+    "baz": "<span>bat</span>",
+  })
+
+  data := map[string]interface{}{
+    "whichPartial": func() string {
+      rand.Seed(time.Now().UTC().UnixNano())
+
+      names := []string{"foo", "baz"}
+      return names[rand.Intn(len(names))]
+    },
+  }
+
+  result := tpl.MustExec(data)
+  fmt.Print(result)
+```
+
+### Partial Contexts
+
+It's possible to execute partials on a custom context by passing in the context to the partial call.
+
+For example:
+
+```go
+  tpl := raymond.MustParse("User: {{> userDetails user }}")
+  tpl.RegisterPartial("userDetails", "{{firstname}} {{lastname}}")
+
+  data := map[string]interface{}{
+    "user": map[string]string{
+      "firstname": "Jean",
+      "lastname":  "Valjean",
+    },
+  }
+
+  result := tpl.MustExec(data)
+  fmt.Print(result)
+```
+
+Displays:
+
+```html
+User: Jean Valjean
+```
+
+### Partial Parameters
+
+Custom data can be passed to partials through hash parameters.
+
+For example:
+
+```go
+  tpl := raymond.MustParse("{{> myPartial name=hero }}")
+  tpl.RegisterPartial("myPartial", "his name is: {{name}}")
+
+  data := map[string]interface{}{
+    "hero": "Goldorak",
+  }
+
+  result := tpl.MustExec(data)
+  fmt.Print(result)
+```
+
+Displays:
+
+```html
+his name is: Goldorak
+```
 
 ## Mustache
 
@@ -298,6 +378,7 @@ These handlebars features are currently NOT implemented:
 
 ## Todo
 
+- [ ] @data handlebar tests
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
 - [ ] benchmarks
 
