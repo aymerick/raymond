@@ -211,13 +211,13 @@ You can register template partials before execution:
 
   result := tpl.MustExec(nil)
   fmt.Print(result)
-``
+```
 
 ```html
 <span>bar</span> baz
 ```
 
-You can too register several partials at once:
+You can register several partials at once:
 
 ```go
 tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
