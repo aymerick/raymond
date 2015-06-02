@@ -357,7 +357,7 @@ func (node *Expression) HelperName() string {
 		return ""
 	}
 
-	if path.Data || (len(path.Parts) != 1) || (path.Depth > 0) {
+	if path.Data || (len(path.Parts) != 1) || (path.Depth > 0) || path.Scoped {
 		return ""
 	}
 
@@ -476,6 +476,7 @@ type PathExpression struct {
 	Depth    int
 	Parts    []string
 	Data     bool
+	Scoped   bool
 }
 
 func NewPathExpression(pos int, line int, data bool) *PathExpression {
@@ -508,8 +509,9 @@ func (node *PathExpression) Part(part string) {
 	switch part {
 	case "..":
 		node.Depth += 1
+		node.Scoped = true
 	case ".", "this":
-		// NOOP
+		node.Scoped = true
 	default:
 		node.Parts = append(node.Parts, part)
 	}
