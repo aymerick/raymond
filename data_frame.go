@@ -2,22 +2,22 @@ package raymond
 
 import "reflect"
 
-// Cf. private variables at: http://handlebarsjs.com/block_helpers.html
-
-// A private data frame
+// DataFrame represents a private data frame
+//
+// Cf. private variables documentation at: http://handlebarsjs.com/block_helpers.html
 type DataFrame struct {
 	parent *DataFrame
 	data   map[string]interface{}
 }
 
-// Instanciate a new private data frame
+// NewDataFrame instanciates a new private data frame
 func NewDataFrame() *DataFrame {
 	return &DataFrame{
 		data: make(map[string]interface{}),
 	}
 }
 
-// Returns a new private data frame, with parent set to self
+// Copy instanciates a new private data frame, with parent set to self
 func (p *DataFrame) Copy() *DataFrame {
 	result := NewDataFrame()
 
@@ -30,6 +30,7 @@ func (p *DataFrame) Copy() *DataFrame {
 	return result
 }
 
+// NewIterDataFrame instanciates a new private data frame, with parent set to self an with iterable data set (@index, @key, @first, @last)
 func (p *DataFrame) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
 	result := p.Copy()
 
@@ -41,17 +42,18 @@ func (p *DataFrame) NewIterDataFrame(length int, i int, key interface{}) *DataFr
 	return result
 }
 
-// Set a data value
+// Set sets a data value
 func (p *DataFrame) Set(key string, val interface{}) {
 	p.data[key] = val
 }
 
-// Get a data value
+// Get gets a data value
 func (p *DataFrame) Get(key string) interface{} {
 	return p.Find([]string{key})
 }
 
-// Get a deep data value
+// Find gets a deep data value
+//
 // @todo This is NOT consistent with the way we resolve data in template (cf. `evalDataPathExpression()`) ! FIX THAT !
 func (p *DataFrame) Find(parts []string) interface{} {
 	data := p.data
@@ -81,7 +83,7 @@ func (p *DataFrame) Find(parts []string) interface{} {
 	return nil
 }
 
-// converts any `map` to `map[string]interface{}`
+// mapStringInterface converts any `map` to `map[string]interface{}`
 func mapStringInterface(value reflect.Value) map[string]interface{} {
 	result := make(map[string]interface{})
 

@@ -52,8 +52,7 @@ func escape(w writer, s string) error {
 	return err
 }
 
-// EscapeString escapes special characters like "<" to become "&lt;". It
-// escapes only five such characters: <, >, &, ' and ".
+// EscapeString escapes special HTML characters like "<" to become "&lt;"
 func EscapeString(s string) string {
 	if strings.IndexAny(s, escapedChars) == -1 {
 		return s

@@ -18,7 +18,7 @@ var (
 	zero reflect.Value
 )
 
-// Template evaluation visitor
+// EvalVisitor evaluates a handlebars template with context
 type EvalVisitor struct {
 	tpl *Template
 
@@ -44,8 +44,10 @@ type EvalVisitor struct {
 	curNode ast.Node
 }
 
-// Instanciate a new evaluation visitor
-func NewEvalVisitor(tpl *Template, data interface{}, privData *DataFrame) *EvalVisitor {
+// NewEvalVisitor instanciate a new evaluation visitor with given context and initial private data frame
+//
+// If privData is nil, then a default data frame is created
+func NewEvalVisitor(tpl *Template, ctx interface{}, privData *DataFrame) *EvalVisitor {
 	frame := privData
 	if frame == nil {
 		frame = NewDataFrame()
@@ -53,22 +55,27 @@ func NewEvalVisitor(tpl *Template, data interface{}, privData *DataFrame) *EvalV
 
 	return &EvalVisitor{
 		tpl:       tpl,
-		ctx:       []reflect.Value{reflect.ValueOf(data)},
+		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
 		dataFrame: frame,
 		exprFunc:  make(map[*ast.Expression]bool),
 	}
+}
+
+// at sets current node
+func (v *EvalVisitor) at(node ast.Node) {
+	v.curNode = node
 }
 
 //
 // Contexts stack
 //
 
-// push new context
+// pushCtx pushes new context to the stack
 func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
 	v.ctx = append(v.ctx, ctx)
 }
 
-// pop last context
+// popCtx pops last context from stack
 func (v *EvalVisitor) popCtx() reflect.Value {
 	if len(v.ctx) == 0 {
 		return zero
@@ -80,17 +87,17 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 	return result
 }
 
-// returns root context
+// rootCtx returns root context
 func (v *EvalVisitor) rootCtx() reflect.Value {
 	return v.ctx[0]
 }
 
-// returns current context
+// curCtx returns current context
 func (v *EvalVisitor) curCtx() reflect.Value {
 	return v.ancestorCtx(0)
 }
 
-// get ancestor context
+// ancestorCtx returns ancestor context
 func (v *EvalVisitor) ancestorCtx(depth int) reflect.Value {
 	index := len(v.ctx) - 1 - depth
 	if index < 0 {
@@ -104,12 +111,12 @@ func (v *EvalVisitor) ancestorCtx(depth int) reflect.Value {
 // Private data frame
 //
 
-// set new data frame
+// setDataFrame sets new data frame
 func (v *EvalVisitor) setDataFrame(frame *DataFrame) {
 	v.dataFrame = frame
 }
 
-// set back parent data frame
+// popDataFrame sets back parent data frame
 func (v *EvalVisitor) popDataFrame() {
 	v.dataFrame = v.dataFrame.parent
 }
@@ -118,12 +125,12 @@ func (v *EvalVisitor) popDataFrame() {
 // Block Parameters stack
 //
 
-// push new block params
+// pushBlockParams pushes new block params to the stack
 func (v *EvalVisitor) pushBlockParams(params map[string]interface{}) {
 	v.blockParams = append(v.blockParams, params)
 }
 
-// pop last block params
+// popBlockParams pops last block params from stack
 func (v *EvalVisitor) popBlockParams() map[string]interface{} {
 	var result map[string]interface{}
 
@@ -135,7 +142,7 @@ func (v *EvalVisitor) popBlockParams() map[string]interface{} {
 	return result
 }
 
-// find block parameter value
+// blockParam iterates on stack to find given block parameter, and returns its value or nil if not founc
 func (v *EvalVisitor) blockParam(name string) interface{} {
 	for i := len(v.blockParams) - 1; i >= 0; i-- {
 		for k, v := range v.blockParams[i] {
@@ -152,12 +159,12 @@ func (v *EvalVisitor) blockParam(name string) interface{} {
 // Blocks stack
 //
 
-// push new block statement
+// pushBlock pushes new block statement to stack
 func (v *EvalVisitor) pushBlock(block *ast.BlockStatement) {
 	v.blocks = append(v.blocks, block)
 }
 
-// pop last block statement
+// popBlock pops last block statement from stack
 func (v *EvalVisitor) popBlock() *ast.BlockStatement {
 	if len(v.blocks) == 0 {
 		return nil
@@ -169,7 +176,7 @@ func (v *EvalVisitor) popBlock() *ast.BlockStatement {
 	return result
 }
 
-// returns current block statement
+// curBlock returns current block statement
 func (v *EvalVisitor) curBlock() *ast.BlockStatement {
 	if len(v.blocks) == 0 {
 		return nil
@@ -182,12 +189,12 @@ func (v *EvalVisitor) curBlock() *ast.BlockStatement {
 // Expressions stack
 //
 
-// push new expression
+// pushExpr pushes new expression to stack
 func (v *EvalVisitor) pushExpr(expression *ast.Expression) {
 	v.exprs = append(v.exprs, expression)
 }
 
-// pop last expression
+// popExpr pops last expression from stack
 func (v *EvalVisitor) popExpr() *ast.Expression {
 	if len(v.exprs) == 0 {
 		return nil
@@ -199,7 +206,7 @@ func (v *EvalVisitor) popExpr() *ast.Expression {
 	return result
 }
 
-// returns current expression
+// curExpr returns current expression
 func (v *EvalVisitor) curExpr() *ast.Expression {
 	if len(v.exprs) == 0 {
 		return nil
@@ -212,26 +219,22 @@ func (v *EvalVisitor) curExpr() *ast.Expression {
 // Error functions
 //
 
-// fatal evaluation error
+// errPanic panics
 func (v *EvalVisitor) errPanic(err error) {
 	panic(fmt.Errorf("Evaluation error: %s\nCurrent node:\n\t%s", err, v.curNode))
 }
 
-// fatal evaluation error message
+// errorf panics with a custom message
 func (v *EvalVisitor) errorf(format string, args ...interface{}) {
 	v.errPanic(fmt.Errorf(format, args...))
 }
 
-// set current node
-func (v *EvalVisitor) at(node ast.Node) {
-	v.curNode = node
-}
 
 //
 // Evaluation
 //
 
-// Evaluate program with given context and returns string result
+// evalProgram eEvaluates program with given context and returns string result
 func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, data *DataFrame, key interface{}) string {
 	blockParams := make(map[string]interface{})
 
@@ -277,7 +280,7 @@ func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, data *D
 	return result
 }
 
-// evaluates all path parts
+// evalPath evaluates all path parts with given context
 func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool) (reflect.Value, bool) {
 	partResolved := false
 
@@ -301,7 +304,7 @@ func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool)
 	return ctx, partResolved
 }
 
-// evaluates field in given context
+// evalField evaluates field with given context
 func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bool) reflect.Value {
 	result := zero
 
@@ -339,7 +342,7 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 	return result
 }
 
-// evaluates a function
+// evalFunc evaluates given function
 func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Value {
 	funcType := funcVal.Type()
 
@@ -382,6 +385,7 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Val
 	return resArr[0]
 }
 
+// findBlockParam returns node's block parameter
 func (v *EvalVisitor) findBlockParam(node *ast.PathExpression) (string, interface{}) {
 	if len(node.Parts) > 0 {
 		name := node.Parts[0]
@@ -393,7 +397,7 @@ func (v *EvalVisitor) findBlockParam(node *ast.PathExpression) (string, interfac
 	return "", nil
 }
 
-// Evaluate a path expression
+// evalPathExpression evaluates a path expression
 func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	var result interface{}
 
@@ -441,7 +445,7 @@ func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool
 	return result
 }
 
-// Evaluate a private data path expression
+// evalDataPathExpression evaluates a private data path expression
 func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	// find data frame
 	frame := v.dataFrame
@@ -458,7 +462,7 @@ func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression, exprRoot 
 	return result
 }
 
-// Evaluate a context path expression
+// evalCtxPathExpression evaluates a context path expression
 func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	v.at(node)
 
@@ -473,7 +477,7 @@ func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot b
 	return v.evalDepthPath(node.Depth, node.Parts, exprRoot)
 }
 
-// Iterate on contexts, starting at given depth, until there is one that resolve path
+// evalDepthPath iterates on contexts, starting at given depth, until there is one that resolve given path parts
 func (v *EvalVisitor) evalDepthPath(depth int, parts []string, exprRoot bool) interface{} {
 	var result interface{}
 	partResolved := false
@@ -496,7 +500,7 @@ func (v *EvalVisitor) evalDepthPath(depth int, parts []string, exprRoot bool) in
 	return result
 }
 
-// Evaluate path with given context
+// evalCtxPath evaluates path with given context
 func (v *EvalVisitor) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bool) (interface{}, bool) {
 	var result interface{}
 	partResolved := false
@@ -531,7 +535,7 @@ func (v *EvalVisitor) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bo
 // Helpers
 //
 
-// Returns true if given expression is a helper call
+// isHelperCall returns true if given expression is a helper call
 func (v *EvalVisitor) isHelperCall(node *ast.Expression) bool {
 	if helperName := node.HelperName(); helperName != "" {
 		return v.findHelper(helperName) != nil
@@ -539,7 +543,7 @@ func (v *EvalVisitor) isHelperCall(node *ast.Expression) bool {
 	return false
 }
 
-// Finds given helper
+// findHelper finds given helper
 func (v *EvalVisitor) findHelper(name string) Helper {
 	// check template helpers
 	if v.tpl.helpers[name] != nil {
@@ -550,7 +554,7 @@ func (v *EvalVisitor) findHelper(name string) Helper {
 	return FindHelper(name)
 }
 
-// Computes helper argument from an expression
+// helperArg computes helper argument from an expression
 func (v *EvalVisitor) helperArg(node *ast.Expression) *HelperArg {
 	var params []interface{}
 	var hash map[string]interface{}
@@ -571,7 +575,7 @@ func (v *EvalVisitor) helperArg(node *ast.Expression) *HelperArg {
 // Partials
 //
 
-// Finds given partial
+// findPartial finds given partial
 func (v *EvalVisitor) findPartial(name string) *Partial {
 	// check template partials
 	if v.tpl.partials[name] != nil {
@@ -582,7 +586,7 @@ func (v *EvalVisitor) findPartial(name string) *Partial {
 	return FindPartial(name)
 }
 
-// Computes partial context
+// partialContext computes partial context
 func (v *EvalVisitor) partialContext(node *ast.PartialStatement) reflect.Value {
 	if nb := len(node.Params); nb > 1 {
 		v.errorf("Unsupported number of partial arguments: %d", nb)
@@ -604,7 +608,7 @@ func (v *EvalVisitor) partialContext(node *ast.PartialStatement) reflect.Value {
 	return zero
 }
 
-// Evaluates a partial
+// evalPartial evaluates a partial
 func (v *EvalVisitor) evalPartial(partial *Partial, node *ast.PartialStatement) string {
 	// get partial template
 	partialTpl, err := partial.Template()
@@ -622,7 +626,7 @@ func (v *EvalVisitor) evalPartial(partial *Partial, node *ast.PartialStatement) 
 	result, _ := partialTpl.program.Accept(v).(string)
 
 	// ident partial
-	result = v.indentLines(result, node.Indent)
+	result = indentLines(result, node.Indent)
 
 	if ctx.IsValid() {
 		v.popCtx()
@@ -631,7 +635,8 @@ func (v *EvalVisitor) evalPartial(partial *Partial, node *ast.PartialStatement) 
 	return result
 }
 
-func (v *EvalVisitor) indentLines(str string, indent string) string {
+// indentLines indents all lines of given string
+func indentLines(str string, indent string) string {
 	if indent == "" {
 		return str
 	}
@@ -655,7 +660,7 @@ func (v *EvalVisitor) indentLines(str string, indent string) string {
 // Functions
 //
 
-// Returns true if given expression was a function call
+// wasFuncCall returns true if given expression was a function call
 func (v *EvalVisitor) wasFuncCall(node *ast.Expression) bool {
 	// check if expression was tagged as a function call
 	return v.exprFunc[node]
@@ -669,7 +674,7 @@ func (v *EvalVisitor) wasFuncCall(node *ast.Expression) bool {
 // We indirect through pointers and empty interfaces (only) because
 // non-empty interfaces have methods we might need.
 //
-// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
+// NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
 func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
 	for ; v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface; v = v.Elem() {
 		if v.IsNil() {
@@ -685,7 +690,7 @@ func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
 // IsTruth reports whether the value is 'true', in the sense of not the zero of its type,
 // and whether the value has a meaningful truth value.
 //
-// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
+// NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
 func IsTruth(val reflect.Value) (truth, ok bool) {
 	if !val.IsValid() {
 		// Something like var x interface{}, never set. It's a form of nil.

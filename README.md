@@ -27,12 +27,12 @@ func main() {
 </div>
 `
 
-    data := map[string]string{
+    ctx := map[string]string{
         "title": "My New Post",
         "body":  "This is my first post!",
     }
 
-    result, err := raymond.Render(tpl, data)
+    result, err := raymond.Render(tpl, ctx)
     if err != nil {
         panic("Please fill a bug :)")
     }
@@ -77,7 +77,7 @@ func main() {
 </div>
 `
 
-    dataList := []map[string]string{
+    ctxList := []map[string]string{
         {
             "title": "My New Post",
             "body":  "This is my first post!",
@@ -94,9 +94,9 @@ func main() {
         panic(err)
     }
 
-    for _, data := range dataList {
+    for _, ctx := range ctxList {
         // render template
-        result, err := tpl.Exec(data)
+        result, err := tpl.Exec(ctx)
         if err != nil {
             panic(err)
         }
@@ -131,7 +131,7 @@ You can use `MustParse()` and `MustExec()` functions if you don't want to deal w
     tpl := raymond.MustParse(source)
 
     // render template
-    result := tpl.MustExec(data)
+    result := tpl.MustExec(ctx)
 ```
 
 
@@ -148,13 +148,13 @@ By default, the result of a mustache expression is HTML escaped. Use the triple 
 </div>
 `
 
-  data := map[string]string{
+  ctx := map[string]string{
     "title": "All about <p> Tags",
     "body":  "<p>This is a post about &lt;p&gt; tags</p>",
   }
 
   tpl := raymond.MustParse(source)
-  result := tpl.MustExec(data)
+  result := tpl.MustExec(ctx)
 
   fmt.Print(result)
 ```
@@ -182,12 +182,12 @@ When returning HTML from a helper, you should return a `SafeString` if you don't
     return raymond.SafeString("<a href='" + url + "'>" + text + "</a>")
   })
 
-  data := map[string]string{
+  ctx := map[string]string{
     "text": "This is a <em>cool</em> website",
     "url":  "http://www.aymerick.com/",
   }
 
-  result := tpl.MustExec(data)
+  result := tpl.MustExec(ctx)
   fmt.Print(result)
 ```
 
@@ -208,7 +208,7 @@ Output:
 
 @todo doc
 
-### Private data
+### Private Data
 
 @todo doc
 
@@ -290,7 +290,7 @@ For example, that template randomly evaluates the `foo` or `baz` partial:
     "baz": "<span>bat</span>",
   })
 
-  data := map[string]interface{}{
+  ctx := map[string]interface{}{
     "whichPartial": func() string {
       rand.Seed(time.Now().UTC().UnixNano())
 
@@ -299,7 +299,7 @@ For example, that template randomly evaluates the `foo` or `baz` partial:
     },
   }
 
-  result := tpl.MustExec(data)
+  result := tpl.MustExec(ctx)
   fmt.Print(result)
 ```
 
@@ -313,14 +313,14 @@ For example:
   tpl := raymond.MustParse("User: {{> userDetails user }}")
   tpl.RegisterPartial("userDetails", "{{firstname}} {{lastname}}")
 
-  data := map[string]interface{}{
+  ctx := map[string]interface{}{
     "user": map[string]string{
       "firstname": "Jean",
       "lastname":  "Valjean",
     },
   }
 
-  result := tpl.MustExec(data)
+  result := tpl.MustExec(ctx)
   fmt.Print(result)
 ```
 
@@ -340,11 +340,11 @@ For example:
   tpl := raymond.MustParse("{{> myPartial name=hero }}")
   tpl.RegisterPartial("myPartial", "his name is: {{name}}")
 
-  data := map[string]interface{}{
+  ctx := map[string]interface{}{
     "hero": "Goldorak",
   }
 
-  result := tpl.MustExec(data)
+  result := tpl.MustExec(ctx)
   fmt.Print(result)
 ```
 
