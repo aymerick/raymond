@@ -52,6 +52,7 @@ func (p *DataFrame) Get(key string) interface{} {
 }
 
 // Get a deep data value
+// @todo This is NOT consistent with the way we resolve data in template (cf. `evalDataPathExpression()`) ! FIX THAT !
 func (p *DataFrame) Find(parts []string) interface{} {
 	data := p.data
 
