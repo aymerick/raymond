@@ -31,7 +31,37 @@ func TestStr(t *testing.T) {
 	}
 }
 
-func ExampleStr() {
-	fmt.Println(Str([]map[string]string{{"foo": "bar"}, {"baz": "bat"}}))
-	// Output: map[foo:bar]map[baz:bat]
+func ExampleStr_bool() {
+	output := "foo is " + Str(true) + " but bar is " + Str(false)
+
+	fmt.Println(output)
+	// Output: foo is true but bar is false
+}
+
+func ExampleStr_numbers() {
+	output := "I saw " + Str(3) + " foo with " + Str(-1.25) + " bar"
+
+	fmt.Println(output)
+	// Output: I saw 3 foo with -1.25 bar
+}
+
+func ExampleStr_nil() {
+	output := "You know '" + Str(nil) + "' John Snow"
+
+	fmt.Println(output)
+	// Output: You know '' John Snow
+}
+
+func ExampleStr_map() {
+	output := Str(map[string]string{"foo": "bar"})
+
+	fmt.Println(output)
+	// Output: map[foo:bar]
+}
+
+func ExampleStr_array() {
+	output := Str([]interface{}{true, 10, "foo", 5, "bar"})
+
+	fmt.Println(output)
+	// Output: true10foo5bar
 }
