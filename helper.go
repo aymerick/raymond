@@ -149,13 +149,15 @@ func (h *HelperArg) DataFrame() *DataFrame {
 	return h.eval.dataFrame
 }
 
-// NewDataFrame instanciates a new data frame that is a copy of current one.
+// NewDataFrame instanciates a new data frame that is a copy of current evaluation data frame.
+//
+// Parent of returned frame is set to current evaluation frame.
 func (h *HelperArg) NewDataFrame() *DataFrame {
 	return h.eval.dataFrame.Copy()
 }
 
-// newIterDataFrame instanciates a new data frame and set iteration specific vars.
-func (h *HelperArg) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
+// newIterDataFrame instanciates a new data frame and set iteration specific vars
+func (h *HelperArg) newIterDataFrame(length int, i int, key interface{}) *DataFrame {
 	return h.eval.dataFrame.newIterDataFrame(length, i, key)
 }
 
@@ -299,7 +301,7 @@ func eachHelper(h *HelperArg) interface{} {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
 			// computes private data
-			data := h.NewIterDataFrame(val.Len(), i, nil)
+			data := h.newIterDataFrame(val.Len(), i, nil)
 
 			// evaluates block
 			result += h.blockWith(val.Index(i).Interface(), data, i)
@@ -312,7 +314,7 @@ func eachHelper(h *HelperArg) interface{} {
 			ctx := val.MapIndex(keys[i]).Interface()
 
 			// computes private data
-			data := h.NewIterDataFrame(len(keys), i, key)
+			data := h.newIterDataFrame(len(keys), i, key)
 
 			// evaluates block
 			result += h.blockWith(ctx, data, key)
@@ -332,7 +334,7 @@ func eachHelper(h *HelperArg) interface{} {
 			ctx := val.Field(fieldIndex).Interface()
 
 			// computes private data
-			data := h.NewIterDataFrame(len(exportedFields), i, key)
+			data := h.newIterDataFrame(len(exportedFields), i, key)
 
 			// evaluates block
 			result += h.blockWith(ctx, data, key)
