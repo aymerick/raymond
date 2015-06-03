@@ -2,21 +2,21 @@ package raymond
 
 import "fmt"
 
-// A partial template
+// Partial represents a partial template
 type Partial struct {
 	name   string
 	source string
 	tpl    *Template
 }
 
-// All global partials
+// partials storres all global partials
 var partials map[string]*Partial
 
 func init() {
 	partials = make(map[string]*Partial)
 }
 
-// Instanciate a new partial
+// newPartial instanciates a new partial
 func NewPartial(name string, source string) *Partial {
 	return &Partial{
 		name:   name,
@@ -24,7 +24,7 @@ func NewPartial(name string, source string) *Partial {
 	}
 }
 
-// Registers a new global partial
+// RegisterPartial registers a global partial
 func RegisterPartial(name string, source string) {
 	if partials[name] != nil {
 		panic(fmt.Errorf("Partial already registered: %s", name))
@@ -33,19 +33,19 @@ func RegisterPartial(name string, source string) {
 	partials[name] = NewPartial(name, source)
 }
 
-// Register several global partials
+// RegisterPartials registers several global partials
 func RegisterPartials(partials map[string]string) {
 	for name, partial := range partials {
 		RegisterPartial(name, partial)
 	}
 }
 
-// Find a registered global partial
+// FindPartial finds a registered global partial
 func FindPartial(name string) *Partial {
 	return partials[name]
 }
 
-// Return partial templae
+// Template returns parsed partial template
 func (p *Partial) Template() (*Template, error) {
 	if p.tpl == nil {
 		var err error

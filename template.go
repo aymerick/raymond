@@ -8,7 +8,7 @@ import (
 	"github.com/aymerick/raymond/parser"
 )
 
-// Template
+// Template represents a handlebars template
 type Template struct {
 	source   string
 	program  *ast.Program
@@ -16,7 +16,7 @@ type Template struct {
 	partials map[string]*Partial
 }
 
-// Instanciate a template an parse it
+// Parse instanciates a template by parsing given source
 func Parse(source string) (*Template, error) {
 	tpl := NewTemplate(source)
 
@@ -28,7 +28,7 @@ func Parse(source string) (*Template, error) {
 	return tpl, nil
 }
 
-// Instanciate a template an parse it. Panics on error.
+// MustParse instanciates a template by parsing given source. Panics on error.
 func MustParse(source string) *Template {
 	result, err := Parse(source)
 	if err != nil {
@@ -37,7 +37,7 @@ func MustParse(source string) *Template {
 	return result
 }
 
-// Instanciate a new template
+// NewTemplate instanciate a new template without parsing it
 func NewTemplate(source string) *Template {
 	return &Template{
 		source:   source,
@@ -46,7 +46,9 @@ func NewTemplate(source string) *Template {
 	}
 }
 
-// Parse template
+// Parse parses the template
+//
+// It can be called several times, the parsing will be done only once.
 func (tpl *Template) Parse() error {
 	if tpl.program == nil {
 		var err error
@@ -60,14 +62,7 @@ func (tpl *Template) Parse() error {
 	return nil
 }
 
-// Register several helpers
-func (tpl *Template) RegisterHelpers(helpers map[string]Helper) {
-	for name, helper := range helpers {
-		tpl.RegisterHelper(name, helper)
-	}
-}
-
-// Register an helper
+// RegisterHelper registers a helper
 func (tpl *Template) RegisterHelper(name string, helper Helper) {
 	if tpl.helpers[name] != nil {
 		panic(fmt.Sprintf("Helper %s already registered", name))
@@ -76,14 +71,14 @@ func (tpl *Template) RegisterHelper(name string, helper Helper) {
 	tpl.helpers[name] = helper
 }
 
-// Register several partials
-func (tpl *Template) RegisterPartials(partials map[string]string) {
-	for name, partial := range partials {
-		tpl.RegisterPartial(name, partial)
+// RegisterHelpers register several helpers
+func (tpl *Template) RegisterHelpers(helpers map[string]Helper) {
+	for name, helper := range helpers {
+		tpl.RegisterHelper(name, helper)
 	}
 }
 
-// Register a partial
+// RegisterPartial registers a partial
 func (tpl *Template) RegisterPartial(name string, partial string) {
 	if tpl.partials[name] != nil {
 		panic(fmt.Sprintf("Partial %s already registered", name))
@@ -92,22 +87,29 @@ func (tpl *Template) RegisterPartial(name string, partial string) {
 	tpl.partials[name] = NewPartial(name, partial)
 }
 
-// Renders a template
-func (tpl *Template) Exec(data interface{}) (result string, err error) {
-	return tpl.ExecWith(data, nil)
+// RegisterPartials registers several partials
+func (tpl *Template) RegisterPartials(partials map[string]string) {
+	for name, partial := range partials {
+		tpl.RegisterPartial(name, partial)
+	}
 }
 
-// Renders a template with input data. Panics on error.
-func (tpl *Template) MustExec(data interface{}) string {
-	result, err := tpl.Exec(data)
+// Exec renders template with given context
+func (tpl *Template) Exec(ctx interface{}) (result string, err error) {
+	return tpl.ExecWith(ctx, nil)
+}
+
+// MustExec renders a template with given context. Panics on error.
+func (tpl *Template) MustExec(ctx interface{}) string {
+	result, err := tpl.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return result
 }
 
-// Renders a template with given private data frame
-func (tpl *Template) ExecWith(data interface{}, privData *DataFrame) (result string, err error) {
+// ExecWith renders a template with given context and private data frame
+func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result string, err error) {
 	defer errRecover(&err)
 
 	// parses template if necessary
@@ -117,7 +119,7 @@ func (tpl *Template) ExecWith(data interface{}, privData *DataFrame) (result str
 	}
 
 	// setup visitor
-	v := NewEvalVisitor(tpl, data, privData)
+	v := NewEvalVisitor(tpl, ctx, privData)
 
 	// visit AST
 	result, _ = tpl.program.Accept(v).(string)
@@ -126,7 +128,7 @@ func (tpl *Template) ExecWith(data interface{}, privData *DataFrame) (result str
 	return
 }
 
-// recovers exec panic
+// errRecover recovers evaluation panic
 func errRecover(errp *error) {
 	e := recover()
 	if e != nil {
@@ -141,7 +143,11 @@ func errRecover(errp *error) {
 	}
 }
 
-// Returns string version of parsed template
+// PrintAST returns string representation of parsed template
 func (tpl *Template) PrintAST() string {
+	if err := tpl.Parse(); err != nil {
+		return fmt.Sprintf("PARSER ERROR: %s", err)
+	}
+
 	return ast.PrintNode(tpl.program)
 }

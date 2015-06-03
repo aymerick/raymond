@@ -368,7 +368,7 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Val
 		} else {
 			// we are not at root of expression, so we are a parameter... and we don't like
 			// infinite loops caused by trying to parse ourself forever
-			arg = NewEmptyHelperArg(v)
+			arg = newEmptyHelperArg(v)
 		}
 
 		if !reflect.TypeOf(arg).AssignableTo(funcType.In(0)) {
@@ -568,7 +568,7 @@ func (v *EvalVisitor) helperArg(node *ast.Expression) *HelperArg {
 		hash, _ = node.Hash.Accept(v).(map[string]interface{})
 	}
 
-	return NewHelperArg(v, params, hash)
+	return newHelperArg(v, params, hash)
 }
 
 //

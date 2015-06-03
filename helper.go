@@ -6,7 +6,7 @@ import (
 	"reflect"
 )
 
-// Arguments provided to helpers
+// HelperArg represents the argument provided to helpers and data functions
 type HelperArg struct {
 	// evaluation visitor
 	eval *EvalVisitor
@@ -16,10 +16,10 @@ type HelperArg struct {
 	hash   map[string]interface{}
 }
 
-// Helper function: can return a string or a SafeString
+// Helper represents a helper. It can return a string or a SafeString
 type Helper func(h *HelperArg) interface{}
 
-// All global helpers
+// helpers stores all globally registered helpers
 var helpers map[string]Helper
 
 func init() {
@@ -34,7 +34,7 @@ func init() {
 	RegisterHelper("lookup", lookupHelper)
 }
 
-// Registers a new global helper function
+// RegisterHelper registers a new global helper
 func RegisterHelper(name string, helper Helper) {
 	if helpers[name] != nil {
 		panic(fmt.Errorf("Helper already registered: %s", name))
@@ -43,13 +43,13 @@ func RegisterHelper(name string, helper Helper) {
 	helpers[name] = helper
 }
 
-// Find a registered global helper function
+// FindHelper finds a globally registered helper
 func FindHelper(name string) Helper {
 	return helpers[name]
 }
 
-// Instanciates a new HelperArg
-func NewHelperArg(eval *EvalVisitor, params []interface{}, hash map[string]interface{}) *HelperArg {
+// newHelperArg instanciates a new HelperArg
+func newHelperArg(eval *EvalVisitor, params []interface{}, hash map[string]interface{}) *HelperArg {
 	return &HelperArg{
 		eval:   eval,
 		params: params,
@@ -57,8 +57,8 @@ func NewHelperArg(eval *EvalVisitor, params []interface{}, hash map[string]inter
 	}
 }
 
-// Instanciates a new empty HelperArg
-func NewEmptyHelperArg(eval *EvalVisitor) *HelperArg {
+// newEmptyHelperArg instanciates a new empty HelperArg
+func newEmptyHelperArg(eval *EvalVisitor) *HelperArg {
 	return &HelperArg{
 		eval: eval,
 		hash: make(map[string]interface{}),
@@ -69,12 +69,12 @@ func NewEmptyHelperArg(eval *EvalVisitor) *HelperArg {
 // Getters
 //
 
-// Returns all parameters
+// Params returns all parameters
 func (h *HelperArg) Params() []interface{} {
 	return h.params
 }
 
-// Returns parameter at given position
+// Paramreturns parameter at given position
 func (h *HelperArg) Param(pos int) interface{} {
 	if len(h.params) > pos {
 		return h.params[pos]
@@ -83,32 +83,32 @@ func (h *HelperArg) Param(pos int) interface{} {
 	}
 }
 
-// Returns string representation of parameter at given position
+// ParamStr returns string representation of parameter at given position
 func (h *HelperArg) ParamStr(pos int) string {
 	return Str(h.Param(pos))
 }
 
-// Returns entire hash
+// Hash returns entire hash
 func (h *HelperArg) Hash() map[string]interface{} {
 	return h.hash
 }
 
-// Returns hash property
+// HashProp returns hash property
 func (h *HelperArg) HashProp(name string) interface{} {
 	return h.hash[name]
 }
 
-// Returns string representation of hash property
+// HashStr returns string representation of hash property
 func (h *HelperArg) HashStr(name string) string {
 	return Str(h.hash[name])
 }
 
-// Returns current evaluation context
+// Ctx returns current evaluation context
 func (h *HelperArg) Ctx() interface{} {
 	return h.eval.curCtx()
 }
 
-// Returns current context field value
+// Field returns current context field value
 func (h *HelperArg) Field(name string) interface{} {
 	value := h.eval.evalField(h.eval.curCtx(), name, false)
 	if !value.IsValid() {
@@ -118,17 +118,17 @@ func (h *HelperArg) Field(name string) interface{} {
 	return value.Interface()
 }
 
-// Returns string representation of current context field value
+// FieldStr returns string representation of current context field value
 func (h *HelperArg) FieldStr(name string) string {
 	return Str(h.Field(name))
 }
 
-// Returns private data value by name
+// Data returns private data value by name
 func (h *HelperArg) Data(name string) interface{} {
 	return h.eval.dataFrame.Get(name)
 }
 
-// Returns string representation of private data value by name
+// DataStr returns string representation of private data value by name
 func (h *HelperArg) DataStr(name string) string {
 	return Str(h.eval.dataFrame.Get(name))
 }
@@ -137,27 +137,27 @@ func (h *HelperArg) DataStr(name string) string {
 // Private data frame
 //
 
-// Get current private data frame
+// DataFrame returns current private data frame
 func (h *HelperArg) DataFrame() *DataFrame {
 	return h.eval.dataFrame
 }
 
-// Instanciates a new data frame that is a copy of current one
+// NewDataFrame instanciates a new data frame that is a copy of current one
 func (h *HelperArg) NewDataFrame() *DataFrame {
 	return h.eval.dataFrame.Copy()
 }
 
-// Instanciates a new data frame and set iteration specific vars
+// NewIterDataFrame instanciates a new data frame and set iteration specific vars
 func (h *HelperArg) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
 	return h.eval.dataFrame.NewIterDataFrame(length, i, key)
 }
 
-// Set current data frame
+// SetDataFrame sets current data frame
 func (h *HelperArg) SetDataFrame(data *DataFrame) {
 	h.eval.setDataFrame(data)
 }
 
-// Set back parent data frame
+// PopDataFrame sets back parent data frame
 func (h *HelperArg) PopDataFrame() {
 	h.eval.popDataFrame()
 }
@@ -166,7 +166,7 @@ func (h *HelperArg) PopDataFrame() {
 // Evaluation
 //
 
-// Evaluate block with given context, private data and iteration key
+// BlockWith evaluates block with given context, private data and iteration key
 func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame, key interface{}) string {
 	result := ""
 
@@ -177,22 +177,22 @@ func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame, key interface{})
 	return result
 }
 
-// Evaluate block with given context
+// BlockWithCtx evaluates block with given context
 func (h *HelperArg) BlockWithCtx(ctx interface{}) string {
 	return h.BlockWith(ctx, nil, nil)
 }
 
-// Evaluate block with given private data
+// BlockWithData evaluates block with given private data
 func (h *HelperArg) BlockWithData(data *DataFrame) string {
 	return h.BlockWith(nil, data, nil)
 }
 
-// Evaluate block
+// Block evaluates block
 func (h *HelperArg) Block() string {
 	return h.BlockWith(nil, nil, nil)
 }
 
-// Evaluate inverse
+// Inverse evaluates block inverse
 func (h *HelperArg) Inverse() string {
 	result := ""
 	if block := h.eval.curBlock(); (block != nil) && (block.Inverse != nil) {
@@ -202,7 +202,7 @@ func (h *HelperArg) Inverse() string {
 	return result
 }
 
-// Evaluate field for given context
+// Eval evaluates field for given context
 func (h *HelperArg) Eval(ctx interface{}, field string) interface{} {
 	if ctx == nil {
 		return nil
@@ -224,7 +224,7 @@ func (h *HelperArg) Eval(ctx interface{}, field string) interface{} {
 // Misc
 //
 
-// Returns true if first param is truthy
+// truthFirstParam returns true if first param is truthy
 func (h *HelperArg) truthFirstParam() bool {
 	val := h.Param(0)
 	if val == nil {
@@ -239,7 +239,7 @@ func (h *HelperArg) truthFirstParam() bool {
 	return thruth
 }
 
-// Returns true if 'includeZero' option is set and first param is the number 0
+// isIncludableZero returns true if 'includeZero' option is set and first param is the number 0
 func (h *HelperArg) isIncludableZero() bool {
 	b, ok := h.HashProp("includeZero").(bool)
 	if ok && b {
@@ -256,6 +256,7 @@ func (h *HelperArg) isIncludableZero() bool {
 // Builtin helpers
 //
 
+// #if block helper
 func ifHelper(h *HelperArg) interface{} {
 	if h.isIncludableZero() || h.truthFirstParam() {
 		return h.Block()
@@ -264,6 +265,7 @@ func ifHelper(h *HelperArg) interface{} {
 	return h.Inverse()
 }
 
+// #unless block helper
 func unlessHelper(h *HelperArg) interface{} {
 	if h.isIncludableZero() || h.truthFirstParam() {
 		return h.Inverse()
@@ -272,6 +274,7 @@ func unlessHelper(h *HelperArg) interface{} {
 	return h.Block()
 }
 
+// #with block helper
 func withHelper(h *HelperArg) interface{} {
 	if h.truthFirstParam() {
 		return h.BlockWithCtx(h.Param(0))
@@ -280,6 +283,7 @@ func withHelper(h *HelperArg) interface{} {
 	return h.Inverse()
 }
 
+// #each block helper
 func eachHelper(h *HelperArg) interface{} {
 	if !h.truthFirstParam() {
 		h.Inverse()
@@ -336,11 +340,13 @@ func eachHelper(h *HelperArg) interface{} {
 	return result
 }
 
+// #log helper
 func logHelper(h *HelperArg) interface{} {
 	log.Print(h.ParamStr(0))
 	return ""
 }
 
+// #lookup helper
 func lookupHelper(h *HelperArg) interface{} {
 	return Str(h.Eval(h.Param(0), h.ParamStr(1)))
 }

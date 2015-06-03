@@ -6,9 +6,10 @@ import (
 	"strconv"
 )
 
+// SafeString represents a string that must not be escaped
 type SafeString string
 
-// returns true if argument is a safe string
+// IsSafeString returns true if argument is a SafeString
 func IsSafeString(value interface{}) bool {
 	if _, ok := value.(SafeString); ok {
 		return true
@@ -16,12 +17,12 @@ func IsSafeString(value interface{}) bool {
 	return false
 }
 
-// returns string representation of a `interface{}`
+// Str returns string representation of anty type instance
 func Str(value interface{}) string {
 	return strValue(reflect.ValueOf(value))
 }
 
-// returns string representation of a `reflect.Value`
+// strValue returns string representation of a reflect.Value
 func strValue(value reflect.Value) string {
 	result := ""
 
@@ -58,7 +59,7 @@ func strValue(value reflect.Value) string {
 // printableValue returns the, possibly indirected, interface value inside v that
 // is best for a call to formatted printer.
 //
-// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
+// NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
 func printableValue(v reflect.Value) (interface{}, bool) {
 	if v.Kind() == reflect.Ptr {
 		v, _ = indirect(v) // fmt.Fprint handles nil.
