@@ -3,7 +3,6 @@ package raymond
 import (
 	"fmt"
 	"regexp"
-	"sync"
 	"testing"
 )
 
@@ -28,75 +27,17 @@ var testOutput = `<div class="entry">
 </div>`
 
 func TestRender(t *testing.T) {
-	stats.test()
-
 	output, err := Render(testInput, testCtx)
 	if err != nil || (output != testOutput) {
 		t.Errorf("Failed to render template\ninput:\n\n'%s'\n\nexpected:\n\n%s\n\ngot:\n\n%serror:\n\n%s", testInput, testOutput, output, err)
-		stats.failed()
 	}
-
-	stats.output()
 }
 
 func TestMustRender(t *testing.T) {
-	stats.test()
-
 	output := MustRender(testInput, testCtx)
 	if (output != testOutput) {
 		t.Errorf("Failed to render template\ninput:\n\n'%s'\n\nexpected:\n\n%s\n\ngot:\n\n%s", testInput, testOutput, output)
-		stats.failed()
 	}
-
-	stats.output()
-}
-
-//
-// Test stats
-//
-
-type raymondStats struct {
-	sync.Mutex
-	total      int
-	fail       int
-	handlebars int
-	mustache   int
-}
-
-var (
-	stats = &raymondStats{}
-)
-
-func (stats *raymondStats) tests(nb int) {
-	stats.Lock()
-	stats.total += nb
-	stats.Unlock()
-}
-
-func (stats *raymondStats) test() {
-	stats.tests(1)
-}
-
-func (stats *raymondStats) handlebarsTests(nb int) {
-	stats.Lock()
-	stats.handlebars += nb
-	stats.Unlock()
-}
-
-func (stats *raymondStats) mustacheTests(nb int) {
-	stats.Lock()
-	stats.mustache += nb
-	stats.Unlock()
-}
-
-func (stats *raymondStats) failed() {
-	stats.Lock()
-	stats.fail += 1
-	stats.Unlock()
-}
-
-func (stats *raymondStats) output() {
-	// fmt.Printf("[stats] Total: %d (handlebars: %d / mustache: %d) - Failed: %d\n", stats.total, stats.handlebars, stats.mustache, stats.fail)
 }
 
 //
@@ -118,8 +59,6 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 	// @todo Check why this fails
 	// t.Parallel()
 
-	stats.tests(len(tests))
-
 	for _, test := range tests {
 		var err error
 		var tpl *Template
@@ -128,7 +67,6 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 		tpl, err = Parse(test.input)
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
-			stats.failed()
 		} else {
 			if len(test.helpers) > 0 {
 				// register helpers
@@ -153,7 +91,6 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 			output, err := tpl.ExecWith(test.data, privData)
 			if err != nil {
 				t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\nerror:\n\t%s\nAST:\n\t%s", test.name, test.input, Str(test.data), err, tpl.PrintAST())
-				stats.failed()
 			} else {
 				// check output
 				var expectedArr []string
@@ -169,7 +106,6 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 
 					if !match {
 						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), Str(test.partials), expectedArr, output, tpl.PrintAST())
-						stats.failed()
 					}
 				} else {
 					expectedStr, ok := test.output.(string)
@@ -179,35 +115,26 @@ func launchRaymondTests(t *testing.T, tests []raymondTest) {
 
 					if expectedStr != output {
 						t.Errorf("Test '%s' failed\ninput:\n\t'%s'\ndata:\n\t%s\npartials:\n\t%s\nexpected\n\t%q\ngot\n\t%q\nAST:\n%s", test.name, test.input, Str(test.data), Str(test.partials), expectedStr, output, tpl.PrintAST())
-						stats.failed()
 					}
 				}
 			}
 		}
 	}
-
-	stats.output()
 }
 
 // launch handlebars tests with stats
 func launchHandlebarsTests(t *testing.T, tests []raymondTest) {
-	stats.handlebarsTests(len(tests))
-
 	launchRaymondTests(t, tests)
 }
 
 // launch mustache tests with stats
 func launchMustacheTests(t *testing.T, tests []raymondTest) {
-	stats.mustacheTests(len(tests))
-
 	launchRaymondTests(t, tests)
 }
 
 // launch an array of error tests
 // @todo Factorize with launchRaymondTests()
 func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
-	stats.tests(len(tests))
-
 	for _, test := range tests {
 		var err error
 		var tpl *Template
@@ -216,7 +143,6 @@ func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
 		tpl, err = Parse(test.input)
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
-			stats.failed()
 		} else {
 			if len(test.helpers) > 0 {
 				// register helpers
@@ -241,7 +167,6 @@ func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
 			output, err := tpl.ExecWith(test.data, privData)
 			if err == nil {
 				t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\nAST:\n%q", test.name, test.input, output, tpl.PrintAST())
-				stats.failed()
 			} else {
 				var errMatch error
 				match := false
@@ -284,11 +209,8 @@ func launchRaymondErrorTests(t *testing.T, tests []raymondTest) {
 
 				if !match {
 					t.Errorf("Test '%s' failed - Incorrect error returned\ninput:\n\t'%s'\ndata:\n\t%s\nexpected\n\t%q\ngot\n\t%q", test.name, test.input, Str(test.data), test.output, err)
-					stats.failed()
 				}
 			}
 		}
 	}
-
-	stats.output()
 }

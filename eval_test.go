@@ -104,14 +104,9 @@ var strTests = []strTest{
 }
 
 func TestStr(t *testing.T) {
-	stats.tests(len(strTests))
-
 	for _, test := range strTests {
 		if res := Str(test.input); res != test.output {
 			t.Errorf("Failed to stringify: %s\nexpected:\n\t'%s'got:\n\t%q", test.name, test.output, res)
-			stats.failed()
 		}
 	}
-
-	stats.output()
 }

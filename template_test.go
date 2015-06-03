@@ -22,30 +22,19 @@ CONTENT[ '
 `
 
 func TestNewTemplate(t *testing.T) {
-	stats.test()
-
 	tpl := NewTemplate(sourceBasic)
 	if tpl.source != sourceBasic {
 		t.Errorf("Faild to instantiate template")
-		stats.failed()
 	}
-
-	stats.output()
 }
 
 func TestParseTemplate(t *testing.T) {
-	stats.test()
-
 	tpl, err := Parse(sourceBasic)
 	if err != nil || (tpl.source != sourceBasic) {
 		t.Errorf("Faild to parse template")
-		stats.failed()
 	}
 
 	if str := tpl.PrintAST(); str != basicAST {
 		t.Errorf("Template parsing incorrect: %s", str)
-		stats.failed()
 	}
-
-	stats.output()
 }
