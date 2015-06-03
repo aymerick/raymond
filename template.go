@@ -149,5 +149,5 @@ func (tpl *Template) PrintAST() string {
 		return fmt.Sprintf("PARSER ERROR: %s", err)
 	}
 
-	return ast.PrintNode(tpl.program)
+	return ast.Print(tpl.program)
 }

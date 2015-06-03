@@ -725,6 +725,7 @@ func IsTruth(val reflect.Value) (truth, ok bool) {
 
 // Statements
 
+// VisitProgram implements corresponding Visitor interface method
 func (v *evalVisitor) VisitProgram(node *ast.Program) interface{} {
 	v.at(node)
 
@@ -741,6 +742,7 @@ func (v *evalVisitor) VisitProgram(node *ast.Program) interface{} {
 	return buf.String()
 }
 
+// VisitMustache implements corresponding Visitor interface method
 func (v *evalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	v.at(node)
 
@@ -760,6 +762,7 @@ func (v *evalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	return str
 }
 
+// VisitBlock implements corresponding Visitor interface method
 func (v *evalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.at(node)
 
@@ -804,6 +807,7 @@ func (v *evalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	return result
 }
 
+// VisitPartial implements corresponding Visitor interface method
 func (v *evalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 	v.at(node)
 
@@ -827,6 +831,7 @@ func (v *evalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 	return v.evalPartial(partial, node)
 }
 
+// VisitContent implements corresponding Visitor interface method
 func (v *evalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 	v.at(node)
 
@@ -834,6 +839,7 @@ func (v *evalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 	return node.Value
 }
 
+// VisitComment implements corresponding Visitor interface method
 func (v *evalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 	v.at(node)
 
@@ -843,6 +849,7 @@ func (v *evalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 
 // Expressions
 
+// VisitExpression implements corresponding Visitor interface method
 func (v *evalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	v.at(node)
 
@@ -886,30 +893,35 @@ func (v *evalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	return result
 }
 
+// VisitSubExpression implements corresponding Visitor interface method
 func (v *evalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 	v.at(node)
 
 	return node.Expression.Accept(v)
 }
 
+// VisitPath implements corresponding Visitor interface method
 func (v *evalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	return v.evalPathExpression(node, false)
 }
 
 // Literals
 
+// VisitString implements corresponding Visitor interface method
 func (v *evalVisitor) VisitString(node *ast.StringLiteral) interface{} {
 	v.at(node)
 
 	return node.Value
 }
 
+// VisitBoolean implements corresponding Visitor interface method
 func (v *evalVisitor) VisitBoolean(node *ast.BooleanLiteral) interface{} {
 	v.at(node)
 
 	return node.Value
 }
 
+// VisitNumber implements corresponding Visitor interface method
 func (v *evalVisitor) VisitNumber(node *ast.NumberLiteral) interface{} {
 	v.at(node)
 
@@ -918,6 +930,7 @@ func (v *evalVisitor) VisitNumber(node *ast.NumberLiteral) interface{} {
 
 // Miscellaneous
 
+// VisitHash implements corresponding Visitor interface method
 func (v *evalVisitor) VisitHash(node *ast.Hash) interface{} {
 	v.at(node)
 
@@ -932,6 +945,7 @@ func (v *evalVisitor) VisitHash(node *ast.Hash) interface{} {
 	return result
 }
 
+// VisitHashPair implements corresponding Visitor interface method
 func (v *evalVisitor) VisitHashPair(node *ast.HashPair) interface{} {
 	v.at(node)
 

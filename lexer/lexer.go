@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	// mustaches detection
+	// Mustaches detection
 	ESCAPED_ESCAPED_OPEN_MUSTACHE  = "\\\\{{"
 	ESCAPED_OPEN_MUSTACHE          = "\\{{"
 	OPEN_MUSTACHE                  = "{{"

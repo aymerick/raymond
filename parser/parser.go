@@ -231,7 +231,7 @@ func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	// helperName param* hash?
 	result.Expression = p.parseExpression(tok)
 
-	openName := result.Expression.Str()
+	openName := result.Expression.Canonical()
 
 	// CLOSE_RAW_BLOCK
 	tok = p.shift()
@@ -447,7 +447,7 @@ func (p *Parser) parseCloseBlock(block *ast.BlockStatement) {
 		errNode(endId, "Erroneous closing expression")
 	}
 
-	openName := block.Expression.Str()
+	openName := block.Expression.Canonical()
 	if openName != closeName {
 		errNode(endId, fmt.Sprintf("%s doesn't match %s", openName, closeName))
 	}

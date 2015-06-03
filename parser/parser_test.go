@@ -90,7 +90,7 @@ func TestParser(t *testing.T) {
 
 		node, err := Parse(test.input)
 		if err == nil {
-			output = ast.PrintNode(node)
+			output = ast.Print(node)
 		}
 
 		if (err != nil) || (test.output != output) {
@@ -159,7 +159,7 @@ func TestParserErrors(t *testing.T) {
 	for _, test := range parserErrorTests {
 		node, err := Parse(test.input)
 		if err == nil {
-			output := ast.PrintNode(node)
+			output := ast.Print(node)
 			tokens := lexer.Collect(test.input)
 
 			t.Errorf("Test '%s' failed - Error expected\ninput:\n\t'%s'\ngot\n\t%q\ntokens:\n\t%q", test.name, test.input, output, tokens)
