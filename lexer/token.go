@@ -40,10 +40,10 @@ const (
 )
 
 const (
-	// Generate token position in string representation of tokens
+	// Option to generate token position in its string representation
 	DUMP_TOKEN_POS = false
 
-	// Generate values for all token kinds for their string representation
+	// Option to generate values for all token kinds for their string representations
 	DUMP_ALL_TOKENS_VAL = true
 )
 
@@ -91,7 +91,7 @@ var tokenName = map[TokenKind]string{
 	TokenSep:              "Sep",
 }
 
-// String returns the string representation of Token kind
+// String returns the token kind string representation for debugging.
 func (k TokenKind) String() string {
 	s := tokenName[k]
 	if s == "" {
@@ -100,7 +100,7 @@ func (k TokenKind) String() string {
 	return s
 }
 
-// String returns the string representation of kind
+// String returns the token string representation for debugging.
 func (t Token) String() string {
 	result := ""
 

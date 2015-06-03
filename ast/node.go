@@ -1,15 +1,15 @@
 // Package ast provides structures to represent a handlebars Abstract Syntax Tree, and a Visitor interface to visit that tree.
-//
-// References:
-//   - https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/ast.js
-//   - https://github.com/wycats/handlebars.js/blob/master/docs/compiler-api.md
-//   - https://github.com/golang/go/blob/master/src/text/template/parse/node.go
 package ast
 
 import (
 	"fmt"
 	"strconv"
 )
+
+// References:
+//   - https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/ast.js
+//   - https://github.com/wycats/handlebars.js/blob/master/docs/compiler-api.md
+//   - https://github.com/golang/go/blob/master/src/text/template/parse/node.go
 
 // A Node is an element in the AST.
 type Node interface {
@@ -158,7 +158,7 @@ func (node *Program) String() string {
 	return fmt.Sprintf("Program{Pos: %d}", node.Loc.Pos)
 }
 
-// Accept is the receiver entry pointfor visitors.
+// Accept is the receiver entry point for visitors.
 func (node *Program) Accept(visitor Visitor) interface{} {
 	return visitor.VisitProgram(node)
 }
@@ -687,7 +687,7 @@ func (node *NumberLiteral) Canonical() string {
 	return strconv.FormatFloat(node.Value, 'f', prec, 64)
 }
 
-// Number returns an integer or a float
+// Number returns an integer or a float.
 func (node *NumberLiteral) Number() interface{} {
 	if node.IsInt {
 		return int(node.Value)

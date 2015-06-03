@@ -1,8 +1,4 @@
 // Package lexer provides a handlebars tokenizer.
-//
-// References:
-//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.l
-//   - https://github.com/golang/go/blob/master/src/text/template/parse/lex.go
 package lexer
 
 import (
@@ -12,6 +8,10 @@ import (
 	"unicode"
 	"unicode/utf8"
 )
+
+// References:
+//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.l
+//   - https://github.com/golang/go/blob/master/src/text/template/parse/lex.go
 
 const (
 	// Mustaches detection

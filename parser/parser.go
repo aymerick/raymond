@@ -1,8 +1,4 @@
 // Package parser provides a handlebars syntax analyser. It consumes the tokens provided by the lexer to build an AST.
-//
-// References:
-//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.yy
-//   - https://github.com/golang/go/blob/master/src/text/template/parse/parse.go
 package parser
 
 import (
@@ -15,8 +11,12 @@ import (
 	"github.com/aymerick/raymond/lexer"
 )
 
+// References:
+//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.yy
+//   - https://github.com/golang/go/blob/master/src/text/template/parse/parse.go
+
 // Parser is a syntax analyzer.
-type Parser struct {
+type parser struct {
 	// Lexer
 	lex *lexer.Lexer
 
@@ -37,13 +37,13 @@ var (
 )
 
 // new instanciates a new parser
-func new(input string) *Parser {
-	return &Parser{
+func new(input string) *parser {
+	return &parser{
 		lex: lexer.Scan(input),
 	}
 }
 
-// Parse parses given input and returns the AST root node.
+// Parse analyzes given input and returns the AST root node.
 func Parse(input string) (result *ast.Program, err error) {
 	// recover error
 	defer errRecover(&err)
@@ -103,7 +103,7 @@ func errExpected(expect lexer.TokenKind, tok *lexer.Token) {
 }
 
 // program : statement*
-func (p *Parser) parseProgram() *ast.Program {
+func (p *parser) parseProgram() *ast.Program {
 	result := ast.NewProgram(p.lex.Pos(), p.lex.Line())
 
 	for p.isStatement() {
@@ -114,7 +114,7 @@ func (p *Parser) parseProgram() *ast.Program {
 }
 
 // statement : mustache | block | rawBlock | partial | content | COMMENT
-func (p *Parser) parseStatement() ast.Node {
+func (p *parser) parseStatement() ast.Node {
 	var result ast.Node
 
 	tok := p.next()
@@ -147,7 +147,7 @@ func (p *Parser) parseStatement() ast.Node {
 }
 
 // isStatement returns true if next token starts a statement
-func (p *Parser) isStatement() bool {
+func (p *parser) isStatement() bool {
 	if !p.have(1) {
 		return false
 	}
@@ -163,7 +163,7 @@ func (p *Parser) isStatement() bool {
 }
 
 // content : CONTENT
-func (p *Parser) parseContent() *ast.ContentStatement {
+func (p *parser) parseContent() *ast.ContentStatement {
 	// CONTENT
 	tok := p.shift()
 	if tok.Kind != lexer.TokenContent {
@@ -175,7 +175,7 @@ func (p *Parser) parseContent() *ast.ContentStatement {
 }
 
 // COMMENT
-func (p *Parser) parseComment() *ast.CommentStatement {
+func (p *parser) parseComment() *ast.CommentStatement {
 	// COMMENT
 	tok := p.shift()
 
@@ -189,7 +189,7 @@ func (p *Parser) parseComment() *ast.CommentStatement {
 }
 
 // param* hash?
-func (p *Parser) parseExpressionParamsHash() ([]ast.Node, *ast.Hash) {
+func (p *parser) parseExpressionParamsHash() ([]ast.Node, *ast.Hash) {
 	var params []ast.Node
 	var hash *ast.Hash
 
@@ -207,7 +207,7 @@ func (p *Parser) parseExpressionParamsHash() ([]ast.Node, *ast.Hash) {
 }
 
 // helperName param* hash?
-func (p *Parser) parseExpression(tok *lexer.Token) *ast.Expression {
+func (p *parser) parseExpression(tok *lexer.Token) *ast.Expression {
 	result := ast.NewExpression(tok.Pos, tok.Line)
 
 	// helperName
@@ -222,7 +222,7 @@ func (p *Parser) parseExpression(tok *lexer.Token) *ast.Expression {
 // rawBlock : openRawBlock content endRawBlock
 // openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK
 // endRawBlock : OPEN_END_RAW_BLOCK helperName CLOSE_RAW_BLOCK
-func (p *Parser) parseRawBlock() *ast.BlockStatement {
+func (p *parser) parseRawBlock() *ast.BlockStatement {
 	// OPEN_RAW_BLOCK
 	tok := p.shift()
 
@@ -277,7 +277,7 @@ func (p *Parser) parseRawBlock() *ast.BlockStatement {
 }
 
 // block : openBlock program inverseChain? closeBlock
-func (p *Parser) parseBlock() *ast.BlockStatement {
+func (p *parser) parseBlock() *ast.BlockStatement {
 	// openBlock
 	result, blockParams := p.parseOpenBlock()
 
@@ -319,7 +319,7 @@ func setBlockInverseStrip(block *ast.BlockStatement) {
 }
 
 // block : openInverse program inverseAndProgram? closeBlock
-func (p *Parser) parseInverse() *ast.BlockStatement {
+func (p *parser) parseInverse() *ast.BlockStatement {
 	// openInverse
 	result, blockParams := p.parseOpenBlock()
 
@@ -343,7 +343,7 @@ func (p *Parser) parseInverse() *ast.BlockStatement {
 }
 
 // helperName param* hash? blockParams?
-func (p *Parser) parseOpenBlockExpression(tok *lexer.Token) (*ast.BlockStatement, []string) {
+func (p *parser) parseOpenBlockExpression(tok *lexer.Token) (*ast.BlockStatement, []string) {
 	var blockParams []string
 
 	result := ast.NewBlockStatement(tok.Pos, tok.Line)
@@ -362,7 +362,7 @@ func (p *Parser) parseOpenBlockExpression(tok *lexer.Token) (*ast.BlockStatement
 
 // inverseChain : openInverseChain program inverseChain?
 //              | inverseAndProgram
-func (p *Parser) parseInverseChain() *ast.Program {
+func (p *parser) parseInverseChain() *ast.Program {
 	if p.isInverse() {
 		// inverseAndProgram
 		return p.parseInverseAndProgram()
@@ -393,12 +393,12 @@ func (p *Parser) parseInverseChain() *ast.Program {
 }
 
 // Returns true if current token starts an inverse chain
-func (p *Parser) isInverseChain() bool {
+func (p *parser) isInverseChain() bool {
 	return p.isOpenInverseChain() || p.isInverse()
 }
 
 // inverseAndProgram : INVERSE program
-func (p *Parser) parseInverseAndProgram() *ast.Program {
+func (p *parser) parseInverseAndProgram() *ast.Program {
 	// INVERSE
 	tok := p.shift()
 
@@ -412,7 +412,7 @@ func (p *Parser) parseInverseAndProgram() *ast.Program {
 // openBlock : OPEN_BLOCK helperName param* hash? blockParams? CLOSE
 // openInverse : OPEN_INVERSE helperName param* hash? blockParams? CLOSE
 // openInverseChain: OPEN_INVERSE_CHAIN helperName param* hash? blockParams? CLOSE
-func (p *Parser) parseOpenBlock() (*ast.BlockStatement, []string) {
+func (p *parser) parseOpenBlock() (*ast.BlockStatement, []string) {
 	// OPEN_BLOCK | OPEN_INVERSE | OPEN_INVERSE_CHAIN
 	tok := p.shift()
 
@@ -432,7 +432,7 @@ func (p *Parser) parseOpenBlock() (*ast.BlockStatement, []string) {
 }
 
 // closeBlock : OPEN_ENDBLOCK helperName CLOSE
-func (p *Parser) parseCloseBlock(block *ast.BlockStatement) {
+func (p *parser) parseCloseBlock(block *ast.BlockStatement) {
 	// OPEN_ENDBLOCK
 	tok := p.shift()
 	if tok.Kind != lexer.TokenOpenEndBlock {
@@ -463,7 +463,7 @@ func (p *Parser) parseCloseBlock(block *ast.BlockStatement) {
 
 // mustache : OPEN helperName param* hash? CLOSE
 //          | OPEN_UNESCAPED helperName param* hash? CLOSE_UNESCAPED
-func (p *Parser) parseMustache() *ast.MustacheStatement {
+func (p *parser) parseMustache() *ast.MustacheStatement {
 	// OPEN | OPEN_UNESCAPED
 	tok := p.shift()
 
@@ -494,7 +494,7 @@ func (p *Parser) parseMustache() *ast.MustacheStatement {
 }
 
 // partial : OPEN_PARTIAL partialName param* hash? CLOSE
-func (p *Parser) parsePartial() *ast.PartialStatement {
+func (p *parser) parsePartial() *ast.PartialStatement {
 	// OPEN_PARTIAL
 	tok := p.shift()
 
@@ -518,7 +518,7 @@ func (p *Parser) parsePartial() *ast.PartialStatement {
 }
 
 // helperName | sexpr
-func (p *Parser) parseHelperNameOrSexpr() ast.Node {
+func (p *parser) parseHelperNameOrSexpr() ast.Node {
 	if p.isSexpr() {
 		// sexpr
 		return p.parseSexpr()
@@ -529,17 +529,17 @@ func (p *Parser) parseHelperNameOrSexpr() ast.Node {
 }
 
 // param : helperName | sexpr
-func (p *Parser) parseParam() ast.Node {
+func (p *parser) parseParam() ast.Node {
 	return p.parseHelperNameOrSexpr()
 }
 
 // Returns true if next tokens represent a `param`
-func (p *Parser) isParam() bool {
+func (p *parser) isParam() bool {
 	return (p.isSexpr() || p.isHelperName()) && !p.isHashSegment()
 }
 
 // param*
-func (p *Parser) parseParams() []ast.Node {
+func (p *parser) parseParams() []ast.Node {
 	var result []ast.Node
 
 	for p.isParam() {
@@ -550,7 +550,7 @@ func (p *Parser) parseParams() []ast.Node {
 }
 
 // sexpr : OPEN_SEXPR helperName param* hash? CLOSE_SEXPR
-func (p *Parser) parseSexpr() *ast.SubExpression {
+func (p *parser) parseSexpr() *ast.SubExpression {
 	// OPEN_SEXPR
 	tok := p.shift()
 
@@ -569,7 +569,7 @@ func (p *Parser) parseSexpr() *ast.SubExpression {
 }
 
 // hash : hashSegment+
-func (p *Parser) parseHash() *ast.Hash {
+func (p *parser) parseHash() *ast.Hash {
 	var pairs []*ast.HashPair
 
 	for p.isHashSegment() {
@@ -585,12 +585,12 @@ func (p *Parser) parseHash() *ast.Hash {
 }
 
 // returns true if next tokens represents a `hashSegment`
-func (p *Parser) isHashSegment() bool {
+func (p *parser) isHashSegment() bool {
 	return p.have(2) && (p.next().Kind == lexer.TokenID) && (p.nextAt(1).Kind == lexer.TokenEquals)
 }
 
 // hashSegment : ID EQUALS param
-func (p *Parser) parseHashSegment() *ast.HashPair {
+func (p *parser) parseHashSegment() *ast.HashPair {
 	// ID
 	tok := p.shift()
 
@@ -608,7 +608,7 @@ func (p *Parser) parseHashSegment() *ast.HashPair {
 }
 
 // blockParams : OPEN_BLOCK_PARAMS ID+ CLOSE_BLOCK_PARAMS
-func (p *Parser) parseBlockParams() []string {
+func (p *parser) parseBlockParams() []string {
 	var result []string
 
 	// OPEN_BLOCK_PARAMS
@@ -633,7 +633,7 @@ func (p *Parser) parseBlockParams() []string {
 }
 
 // helperName : path | dataName | STRING | NUMBER | BOOLEAN | UNDEFINED | NULL
-func (p *Parser) parseHelperName() ast.Node {
+func (p *parser) parseHelperName() ast.Node {
 	var result ast.Node
 
 	tok := p.next()
@@ -688,7 +688,7 @@ func parseNumber(tok *lexer.Token) (result float64, isInt bool) {
 }
 
 // Returns true if next tokens represent a `helperName`
-func (p *Parser) isHelperName() bool {
+func (p *parser) isHelperName() bool {
 	switch p.next().Kind {
 	case lexer.TokenBoolean, lexer.TokenNumber, lexer.TokenString, lexer.TokenData, lexer.TokenID:
 		return true
@@ -698,12 +698,12 @@ func (p *Parser) isHelperName() bool {
 }
 
 // partialName : helperName | sexpr
-func (p *Parser) parsePartialName() ast.Node {
+func (p *parser) parsePartialName() ast.Node {
 	return p.parseHelperNameOrSexpr()
 }
 
 // dataName : DATA pathSegments
-func (p *Parser) parseDataName() *ast.PathExpression {
+func (p *parser) parseDataName() *ast.PathExpression {
 	// DATA
 	p.shift()
 
@@ -714,7 +714,7 @@ func (p *Parser) parseDataName() *ast.PathExpression {
 // path : pathSegments
 // pathSegments : pathSegments SEP ID
 //              | ID
-func (p *Parser) parsePath(data bool) *ast.PathExpression {
+func (p *parser) parsePath(data bool) *ast.PathExpression {
 	var tok *lexer.Token
 
 	// ID
@@ -751,7 +751,7 @@ func (p *Parser) parsePath(data bool) *ast.PathExpression {
 }
 
 // Ensures there is token to parse at given index
-func (p *Parser) ensure(index int) {
+func (p *parser) ensure(index int) {
 	if p.lexOver {
 		// nothing more to grab
 		return
@@ -774,28 +774,28 @@ func (p *Parser) ensure(index int) {
 }
 
 // have returns true is there are a list given number of tokens to consume left
-func (p *Parser) have(nb int) bool {
+func (p *parser) have(nb int) bool {
 	p.ensure(nb - 1)
 
 	return len(p.tokens) >= nb
 }
 
 // nextAt returns next token at given index, without consuming it
-func (p *Parser) nextAt(index int) *lexer.Token {
+func (p *parser) nextAt(index int) *lexer.Token {
 	p.ensure(index)
 
 	return p.tokens[index]
 }
 
 // next returns next token without consuming it
-func (p *Parser) next() *lexer.Token {
+func (p *parser) next() *lexer.Token {
 	return p.nextAt(0)
 }
 
 // shift returns next token and remove it from the tokens buffer
 //
 // Panics if next token is `TokenError`
-func (p *Parser) shift() *lexer.Token {
+func (p *parser) shift() *lexer.Token {
 	var result *lexer.Token
 
 	p.ensure(0)
@@ -811,36 +811,36 @@ func (p *Parser) shift() *lexer.Token {
 }
 
 // isToken returns true if next token is of given type
-func (p *Parser) isToken(kind lexer.TokenKind) bool {
+func (p *parser) isToken(kind lexer.TokenKind) bool {
 	return p.have(1) && p.next().Kind == kind
 }
 
 // isSexpr returns true if next token starts a sexpr
-func (p *Parser) isSexpr() bool {
+func (p *parser) isSexpr() bool {
 	return p.isToken(lexer.TokenOpenSexpr)
 }
 
 // isPathSep returns true if next token is a path separator
-func (p *Parser) isPathSep() bool {
+func (p *parser) isPathSep() bool {
 	return p.isToken(lexer.TokenSep)
 }
 
 // isID returns true if next token is an ID
-func (p *Parser) isID() bool {
+func (p *parser) isID() bool {
 	return p.isToken(lexer.TokenID)
 }
 
 // isBlockParams returns true if next token starts a block params
-func (p *Parser) isBlockParams() bool {
+func (p *parser) isBlockParams() bool {
 	return p.isToken(lexer.TokenOpenBlockParams)
 }
 
 // isInverse returns true if next token starts an INVERSE sequence
-func (p *Parser) isInverse() bool {
+func (p *parser) isInverse() bool {
 	return p.isToken(lexer.TokenInverse)
 }
 
 // isOpenInverseChain returns true if next token is OPEN_INVERSE_CHAIN
-func (p *Parser) isOpenInverseChain() bool {
+func (p *parser) isOpenInverseChain() bool {
 	return p.isToken(lexer.TokenOpenInverseChain)
 }
