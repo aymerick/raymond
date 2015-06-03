@@ -15,7 +15,7 @@ import (
 	"github.com/aymerick/raymond/lexer"
 )
 
-// Parser is a syntax analyzer
+// Parser is a syntax analyzer.
 type Parser struct {
 	// Lexer
 	lex *lexer.Lexer
@@ -36,22 +36,22 @@ var (
 	rOpenAmp      = regexp.MustCompile(`^\{\{~?&`)
 )
 
-// New instanciates a new parser
-func New(input string) *Parser {
+// new instanciates a new parser
+func new(input string) *Parser {
 	return &Parser{
 		lex: lexer.Scan(input),
 	}
 }
 
-// Parse parses given input and returns the AST root node
+// Parse parses given input and returns the AST root node.
 func Parse(input string) (result *ast.Program, err error) {
 	// recover error
 	defer errRecover(&err)
 
-	parser := New(input)
+	parser := new(input)
 
 	// parse
-	result = parser.ParseProgram()
+	result = parser.parseProgram()
 
 	// check last token
 	token := parser.shift()
@@ -61,7 +61,7 @@ func Parse(input string) (result *ast.Program, err error) {
 	}
 
 	// fix whitespaces
-	ProcessWhitespaces(result)
+	processWhitespaces(result)
 
 	// named returned values
 	return
@@ -102,8 +102,8 @@ func errExpected(expect lexer.TokenKind, tok *lexer.Token) {
 	errPanic(fmt.Errorf("Expecting %s, got: '%s'", expect, tok), tok.Line)
 }
 
-// ParseProgram parses: "program : statement*"
-func (p *Parser) ParseProgram() *ast.Program {
+// program : statement*
+func (p *Parser) parseProgram() *ast.Program {
 	result := ast.NewProgram(p.lex.Pos(), p.lex.Line())
 
 	for p.isStatement() {
@@ -282,7 +282,7 @@ func (p *Parser) parseBlock() *ast.BlockStatement {
 	result, blockParams := p.parseOpenBlock()
 
 	// program
-	program := p.ParseProgram()
+	program := p.parseProgram()
 	program.BlockParams = blockParams
 	result.Program = program
 
@@ -324,7 +324,7 @@ func (p *Parser) parseInverse() *ast.BlockStatement {
 	result, blockParams := p.parseOpenBlock()
 
 	// program
-	program := p.ParseProgram()
+	program := p.parseProgram()
 
 	program.BlockParams = blockParams
 	result.Inverse = program
@@ -373,7 +373,7 @@ func (p *Parser) parseInverseChain() *ast.Program {
 		block, blockParams := p.parseOpenBlock()
 
 		// program
-		program := p.ParseProgram()
+		program := p.parseProgram()
 
 		program.BlockParams = blockParams
 		block.Program = program
@@ -403,7 +403,7 @@ func (p *Parser) parseInverseAndProgram() *ast.Program {
 	tok := p.shift()
 
 	// program
-	result := p.ParseProgram()
+	result := p.parseProgram()
 	result.Strip = ast.NewStripForStr(tok.Val)
 
 	return result

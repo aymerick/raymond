@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	// mustache detection
+	// mustaches detection
 	ESCAPED_ESCAPED_OPEN_MUSTACHE  = "\\\\{{"
 	ESCAPED_OPEN_MUSTACHE          = "\\{{"
 	OPEN_MUSTACHE                  = "{{"
@@ -25,10 +25,10 @@ const (
 
 const eof = -1
 
-// lexFunc represents a function that returns the next lexer function
+// lexFunc represents a function that returns the next lexer function.
 type lexFunc func(*Lexer) lexFunc
 
-// Lexer is a lexical analyzer
+// Lexer is a lexical analyzer.
 type Lexer struct {
 	input    string     // input to scan
 	name     string     // lexer name, used for testing purpose
@@ -82,16 +82,16 @@ var (
 	rCloseComment = regexp.MustCompile(`^\s*~?\}\}`)
 )
 
-// Scan scans given input
+// Scan scans given input.
 //
-// Tokens can then be fetched sequentially thanks to NextToken() function on returned lexer
+// Tokens can then be fetched sequentially thanks to NextToken() function on returned lexer.
 func Scan(input string) *Lexer {
 	return ScanWithName(input, "")
 }
 
-// ScanWithName scans given input, with a name used for testing
+// ScanWithName scans given input, with a name used for testing.
 //
-// Tokens can then be fetched sequentially thanks to NextToken() function on returned lexer
+// Tokens can then be fetched sequentially thanks to NextToken() function on returned lexer.
 func ScanWithName(input string, name string) *Lexer {
 	result := &Lexer{
 		input:  input,
@@ -105,9 +105,9 @@ func ScanWithName(input string, name string) *Lexer {
 	return result
 }
 
-// Collect scans and collect all tokens
+// Collect scans and collect all tokens.
 //
-// This should be used for debugging purpose only
+// This should be used for debugging purpose only.
 func Collect(input string) []Token {
 	var result []Token
 
@@ -124,19 +124,19 @@ func Collect(input string) []Token {
 	return result
 }
 
-// NextToken returns the next scanned token
+// NextToken returns the next scanned token.
 func (l *Lexer) NextToken() Token {
 	result := <-l.tokens
 
 	return result
 }
 
-// Pos returns the current byte position
+// Pos returns the current byte position.
 func (l *Lexer) Pos() int {
 	return l.pos
 }
 
-// Line returns the current line number
+// Line returns the current line number.
 func (l *Lexer) Line() int {
 	return l.line
 }

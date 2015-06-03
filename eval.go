@@ -18,8 +18,8 @@ var (
 	zero reflect.Value
 )
 
-// EvalVisitor evaluates a handlebars template with context
-type EvalVisitor struct {
+// evalVisitor evaluates a handlebars template with context
+type evalVisitor struct {
 	tpl *Template
 
 	// contexts stack
@@ -47,13 +47,13 @@ type EvalVisitor struct {
 // NewEvalVisitor instanciate a new evaluation visitor with given context and initial private data frame
 //
 // If privData is nil, then a default data frame is created
-func NewEvalVisitor(tpl *Template, ctx interface{}, privData *DataFrame) *EvalVisitor {
+func newEvalVisitor(tpl *Template, ctx interface{}, privData *DataFrame) *evalVisitor {
 	frame := privData
 	if frame == nil {
 		frame = NewDataFrame()
 	}
 
-	return &EvalVisitor{
+	return &evalVisitor{
 		tpl:       tpl,
 		ctx:       []reflect.Value{reflect.ValueOf(ctx)},
 		dataFrame: frame,
@@ -62,7 +62,7 @@ func NewEvalVisitor(tpl *Template, ctx interface{}, privData *DataFrame) *EvalVi
 }
 
 // at sets current node
-func (v *EvalVisitor) at(node ast.Node) {
+func (v *evalVisitor) at(node ast.Node) {
 	v.curNode = node
 }
 
@@ -71,12 +71,12 @@ func (v *EvalVisitor) at(node ast.Node) {
 //
 
 // pushCtx pushes new context to the stack
-func (v *EvalVisitor) pushCtx(ctx reflect.Value) {
+func (v *evalVisitor) pushCtx(ctx reflect.Value) {
 	v.ctx = append(v.ctx, ctx)
 }
 
 // popCtx pops last context from stack
-func (v *EvalVisitor) popCtx() reflect.Value {
+func (v *evalVisitor) popCtx() reflect.Value {
 	if len(v.ctx) == 0 {
 		return zero
 	}
@@ -88,17 +88,17 @@ func (v *EvalVisitor) popCtx() reflect.Value {
 }
 
 // rootCtx returns root context
-func (v *EvalVisitor) rootCtx() reflect.Value {
+func (v *evalVisitor) rootCtx() reflect.Value {
 	return v.ctx[0]
 }
 
 // curCtx returns current context
-func (v *EvalVisitor) curCtx() reflect.Value {
+func (v *evalVisitor) curCtx() reflect.Value {
 	return v.ancestorCtx(0)
 }
 
 // ancestorCtx returns ancestor context
-func (v *EvalVisitor) ancestorCtx(depth int) reflect.Value {
+func (v *evalVisitor) ancestorCtx(depth int) reflect.Value {
 	index := len(v.ctx) - 1 - depth
 	if index < 0 {
 		return zero
@@ -112,12 +112,12 @@ func (v *EvalVisitor) ancestorCtx(depth int) reflect.Value {
 //
 
 // setDataFrame sets new data frame
-func (v *EvalVisitor) setDataFrame(frame *DataFrame) {
+func (v *evalVisitor) setDataFrame(frame *DataFrame) {
 	v.dataFrame = frame
 }
 
 // popDataFrame sets back parent data frame
-func (v *EvalVisitor) popDataFrame() {
+func (v *evalVisitor) popDataFrame() {
 	v.dataFrame = v.dataFrame.parent
 }
 
@@ -126,12 +126,12 @@ func (v *EvalVisitor) popDataFrame() {
 //
 
 // pushBlockParams pushes new block params to the stack
-func (v *EvalVisitor) pushBlockParams(params map[string]interface{}) {
+func (v *evalVisitor) pushBlockParams(params map[string]interface{}) {
 	v.blockParams = append(v.blockParams, params)
 }
 
 // popBlockParams pops last block params from stack
-func (v *EvalVisitor) popBlockParams() map[string]interface{} {
+func (v *evalVisitor) popBlockParams() map[string]interface{} {
 	var result map[string]interface{}
 
 	if len(v.blockParams) == 0 {
@@ -143,7 +143,7 @@ func (v *EvalVisitor) popBlockParams() map[string]interface{} {
 }
 
 // blockParam iterates on stack to find given block parameter, and returns its value or nil if not founc
-func (v *EvalVisitor) blockParam(name string) interface{} {
+func (v *evalVisitor) blockParam(name string) interface{} {
 	for i := len(v.blockParams) - 1; i >= 0; i-- {
 		for k, v := range v.blockParams[i] {
 			if name == k {
@@ -160,12 +160,12 @@ func (v *EvalVisitor) blockParam(name string) interface{} {
 //
 
 // pushBlock pushes new block statement to stack
-func (v *EvalVisitor) pushBlock(block *ast.BlockStatement) {
+func (v *evalVisitor) pushBlock(block *ast.BlockStatement) {
 	v.blocks = append(v.blocks, block)
 }
 
 // popBlock pops last block statement from stack
-func (v *EvalVisitor) popBlock() *ast.BlockStatement {
+func (v *evalVisitor) popBlock() *ast.BlockStatement {
 	if len(v.blocks) == 0 {
 		return nil
 	}
@@ -177,7 +177,7 @@ func (v *EvalVisitor) popBlock() *ast.BlockStatement {
 }
 
 // curBlock returns current block statement
-func (v *EvalVisitor) curBlock() *ast.BlockStatement {
+func (v *evalVisitor) curBlock() *ast.BlockStatement {
 	if len(v.blocks) == 0 {
 		return nil
 	}
@@ -190,12 +190,12 @@ func (v *EvalVisitor) curBlock() *ast.BlockStatement {
 //
 
 // pushExpr pushes new expression to stack
-func (v *EvalVisitor) pushExpr(expression *ast.Expression) {
+func (v *evalVisitor) pushExpr(expression *ast.Expression) {
 	v.exprs = append(v.exprs, expression)
 }
 
 // popExpr pops last expression from stack
-func (v *EvalVisitor) popExpr() *ast.Expression {
+func (v *evalVisitor) popExpr() *ast.Expression {
 	if len(v.exprs) == 0 {
 		return nil
 	}
@@ -207,7 +207,7 @@ func (v *EvalVisitor) popExpr() *ast.Expression {
 }
 
 // curExpr returns current expression
-func (v *EvalVisitor) curExpr() *ast.Expression {
+func (v *evalVisitor) curExpr() *ast.Expression {
 	if len(v.exprs) == 0 {
 		return nil
 	}
@@ -220,12 +220,12 @@ func (v *EvalVisitor) curExpr() *ast.Expression {
 //
 
 // errPanic panics
-func (v *EvalVisitor) errPanic(err error) {
+func (v *evalVisitor) errPanic(err error) {
 	panic(fmt.Errorf("Evaluation error: %s\nCurrent node:\n\t%s", err, v.curNode))
 }
 
 // errorf panics with a custom message
-func (v *EvalVisitor) errorf(format string, args ...interface{}) {
+func (v *evalVisitor) errorf(format string, args ...interface{}) {
 	v.errPanic(fmt.Errorf(format, args...))
 }
 
@@ -235,7 +235,7 @@ func (v *EvalVisitor) errorf(format string, args ...interface{}) {
 //
 
 // evalProgram eEvaluates program with given context and returns string result
-func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, data *DataFrame, key interface{}) string {
+func (v *evalVisitor) evalProgram(program *ast.Program, ctx interface{}, data *DataFrame, key interface{}) string {
 	blockParams := make(map[string]interface{})
 
 	// compute block params
@@ -281,7 +281,7 @@ func (v *EvalVisitor) evalProgram(program *ast.Program, ctx interface{}, data *D
 }
 
 // evalPath evaluates all path parts with given context
-func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool) (reflect.Value, bool) {
+func (v *evalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool) (reflect.Value, bool) {
 	partResolved := false
 
 	for i := 0; i < len(parts); i++ {
@@ -305,7 +305,7 @@ func (v *EvalVisitor) evalPath(ctx reflect.Value, parts []string, exprRoot bool)
 }
 
 // evalField evaluates field with given context
-func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bool) reflect.Value {
+func (v *evalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bool) reflect.Value {
 	result := zero
 
 	ctx, _ = indirect(ctx)
@@ -343,7 +343,7 @@ func (v *EvalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 }
 
 // evalFunc evaluates given function
-func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Value {
+func (v *evalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Value {
 	funcType := funcVal.Type()
 
 	if funcType.NumOut() != 1 {
@@ -386,7 +386,7 @@ func (v *EvalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Val
 }
 
 // findBlockParam returns node's block parameter
-func (v *EvalVisitor) findBlockParam(node *ast.PathExpression) (string, interface{}) {
+func (v *evalVisitor) findBlockParam(node *ast.PathExpression) (string, interface{}) {
 	if len(node.Parts) > 0 {
 		name := node.Parts[0]
 		if value := v.blockParam(name); value != nil {
@@ -398,7 +398,7 @@ func (v *EvalVisitor) findBlockParam(node *ast.PathExpression) (string, interfac
 }
 
 // evalPathExpression evaluates a path expression
-func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
+func (v *evalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	var result interface{}
 
 	if name, value := v.findBlockParam(node); value != nil {
@@ -446,7 +446,7 @@ func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool
 }
 
 // evalDataPathExpression evaluates a private data path expression
-func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
+func (v *evalVisitor) evalDataPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	// find data frame
 	frame := v.dataFrame
 	for i := node.Depth; i > 0; i-- {
@@ -463,7 +463,7 @@ func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression, exprRoot 
 }
 
 // evalCtxPathExpression evaluates a context path expression
-func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
+func (v *evalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	v.at(node)
 
 	if node.IsDataRoot() {
@@ -478,7 +478,7 @@ func (v *EvalVisitor) evalCtxPathExpression(node *ast.PathExpression, exprRoot b
 }
 
 // evalDepthPath iterates on contexts, starting at given depth, until there is one that resolve given path parts
-func (v *EvalVisitor) evalDepthPath(depth int, parts []string, exprRoot bool) interface{} {
+func (v *evalVisitor) evalDepthPath(depth int, parts []string, exprRoot bool) interface{} {
 	var result interface{}
 	partResolved := false
 
@@ -501,7 +501,7 @@ func (v *EvalVisitor) evalDepthPath(depth int, parts []string, exprRoot bool) in
 }
 
 // evalCtxPath evaluates path with given context
-func (v *EvalVisitor) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bool) (interface{}, bool) {
+func (v *evalVisitor) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bool) (interface{}, bool) {
 	var result interface{}
 	partResolved := false
 
@@ -536,7 +536,7 @@ func (v *EvalVisitor) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bo
 //
 
 // isHelperCall returns true if given expression is a helper call
-func (v *EvalVisitor) isHelperCall(node *ast.Expression) bool {
+func (v *evalVisitor) isHelperCall(node *ast.Expression) bool {
 	if helperName := node.HelperName(); helperName != "" {
 		return v.findHelper(helperName) != nil
 	}
@@ -544,7 +544,7 @@ func (v *EvalVisitor) isHelperCall(node *ast.Expression) bool {
 }
 
 // findHelper finds given helper
-func (v *EvalVisitor) findHelper(name string) Helper {
+func (v *evalVisitor) findHelper(name string) Helper {
 	// check template helpers
 	if v.tpl.helpers[name] != nil {
 		return v.tpl.helpers[name]
@@ -555,7 +555,7 @@ func (v *EvalVisitor) findHelper(name string) Helper {
 }
 
 // helperArg computes helper argument from an expression
-func (v *EvalVisitor) helperArg(node *ast.Expression) *HelperArg {
+func (v *evalVisitor) helperArg(node *ast.Expression) *HelperArg {
 	var params []interface{}
 	var hash map[string]interface{}
 
@@ -576,18 +576,18 @@ func (v *EvalVisitor) helperArg(node *ast.Expression) *HelperArg {
 //
 
 // findPartial finds given partial
-func (v *EvalVisitor) findPartial(name string) *Partial {
+func (v *evalVisitor) findPartial(name string) *partial {
 	// check template partials
 	if v.tpl.partials[name] != nil {
 		return v.tpl.partials[name]
 	}
 
 	// check global partials
-	return FindPartial(name)
+	return findPartial(name)
 }
 
 // partialContext computes partial context
-func (v *EvalVisitor) partialContext(node *ast.PartialStatement) reflect.Value {
+func (v *evalVisitor) partialContext(node *ast.PartialStatement) reflect.Value {
 	if nb := len(node.Params); nb > 1 {
 		v.errorf("Unsupported number of partial arguments: %d", nb)
 	}
@@ -609,9 +609,9 @@ func (v *EvalVisitor) partialContext(node *ast.PartialStatement) reflect.Value {
 }
 
 // evalPartial evaluates a partial
-func (v *EvalVisitor) evalPartial(partial *Partial, node *ast.PartialStatement) string {
+func (v *evalVisitor) evalPartial(p *partial, node *ast.PartialStatement) string {
 	// get partial template
-	partialTpl, err := partial.Template()
+	partialTpl, err := p.template()
 	if err != nil {
 		v.errPanic(err)
 	}
@@ -661,7 +661,7 @@ func indentLines(str string, indent string) string {
 //
 
 // wasFuncCall returns true if given expression was a function call
-func (v *EvalVisitor) wasFuncCall(node *ast.Expression) bool {
+func (v *evalVisitor) wasFuncCall(node *ast.Expression) bool {
 	// check if expression was tagged as a function call
 	return v.exprFunc[node]
 }
@@ -725,7 +725,7 @@ func IsTruth(val reflect.Value) (truth, ok bool) {
 
 // Statements
 
-func (v *EvalVisitor) VisitProgram(node *ast.Program) interface{} {
+func (v *evalVisitor) VisitProgram(node *ast.Program) interface{} {
 	v.at(node)
 
 	buf := new(bytes.Buffer)
@@ -741,7 +741,7 @@ func (v *EvalVisitor) VisitProgram(node *ast.Program) interface{} {
 	return buf.String()
 }
 
-func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
+func (v *evalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	v.at(node)
 
 	// evaluate expression
@@ -760,7 +760,7 @@ func (v *EvalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	return str
 }
 
-func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
+func (v *evalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	v.at(node)
 
 	v.pushBlock(node)
@@ -784,7 +784,7 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 					// Array context
 					for i := 0; i < val.Len(); i++ {
 						// Computes new private data frame
-						frame := v.dataFrame.NewIterDataFrame(val.Len(), i, nil)
+						frame := v.dataFrame.newIterDataFrame(val.Len(), i, nil)
 
 						// Evaluate program
 						result += v.evalProgram(node.Program, val.Index(i).Interface(), frame, i)
@@ -804,7 +804,7 @@ func (v *EvalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	return result
 }
 
-func (v *EvalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
+func (v *evalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 	v.at(node)
 
 	// partialName: helperName | sexpr
@@ -827,14 +827,14 @@ func (v *EvalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 	return v.evalPartial(partial, node)
 }
 
-func (v *EvalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
+func (v *evalVisitor) VisitContent(node *ast.ContentStatement) interface{} {
 	v.at(node)
 
 	// write content as is
 	return node.Value
 }
 
-func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
+func (v *evalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 	v.at(node)
 
 	// ignore comments
@@ -843,7 +843,7 @@ func (v *EvalVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 
 // Expressions
 
-func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
+func (v *evalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	v.at(node)
 
 	var result interface{}
@@ -886,31 +886,31 @@ func (v *EvalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	return result
 }
 
-func (v *EvalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
+func (v *evalVisitor) VisitSubExpression(node *ast.SubExpression) interface{} {
 	v.at(node)
 
 	return node.Expression.Accept(v)
 }
 
-func (v *EvalVisitor) VisitPath(node *ast.PathExpression) interface{} {
+func (v *evalVisitor) VisitPath(node *ast.PathExpression) interface{} {
 	return v.evalPathExpression(node, false)
 }
 
 // Literals
 
-func (v *EvalVisitor) VisitString(node *ast.StringLiteral) interface{} {
+func (v *evalVisitor) VisitString(node *ast.StringLiteral) interface{} {
 	v.at(node)
 
 	return node.Value
 }
 
-func (v *EvalVisitor) VisitBoolean(node *ast.BooleanLiteral) interface{} {
+func (v *evalVisitor) VisitBoolean(node *ast.BooleanLiteral) interface{} {
 	v.at(node)
 
 	return node.Value
 }
 
-func (v *EvalVisitor) VisitNumber(node *ast.NumberLiteral) interface{} {
+func (v *evalVisitor) VisitNumber(node *ast.NumberLiteral) interface{} {
 	v.at(node)
 
 	return node.Number()
@@ -918,7 +918,7 @@ func (v *EvalVisitor) VisitNumber(node *ast.NumberLiteral) interface{} {
 
 // Miscellaneous
 
-func (v *EvalVisitor) VisitHash(node *ast.Hash) interface{} {
+func (v *evalVisitor) VisitHash(node *ast.Hash) interface{} {
 	v.at(node)
 
 	result := make(map[string]interface{})
@@ -932,7 +932,7 @@ func (v *EvalVisitor) VisitHash(node *ast.Hash) interface{} {
 	return result
 }
 
-func (v *EvalVisitor) VisitHashPair(node *ast.HashPair) interface{} {
+func (v *evalVisitor) VisitHashPair(node *ast.HashPair) interface{} {
 	v.at(node)
 
 	return node.Val.Accept(v)

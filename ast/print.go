@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// PrintVisitor implements the Visitor interface to print the AST. It is used for unit testing.
-type PrintVisitor struct {
+// printVisitor implements the Visitor interface to print the AST. It is used for unit testing
+type printVisitor struct {
 	buf   string
 	depth int
 
@@ -14,36 +14,36 @@ type PrintVisitor struct {
 	inBlock  bool
 }
 
-func NewPrintVisitor() *PrintVisitor {
-	return &PrintVisitor{}
+func newPrintVisitor() *printVisitor {
+	return &printVisitor{}
 }
 
 func PrintNode(node Node) string {
-	visitor := NewPrintVisitor()
+	visitor := newPrintVisitor()
 	node.Accept(visitor)
-	return visitor.Output()
+	return visitor.output()
 }
 
-func (v *PrintVisitor) Output() string {
+func (v *printVisitor) output() string {
 	return v.buf
 }
 
-func (v *PrintVisitor) indent() {
+func (v *printVisitor) indent() {
 	for i := 0; i < v.depth; {
 		v.buf += "  "
 		i++
 	}
 }
 
-func (v *PrintVisitor) str(val string) {
+func (v *printVisitor) str(val string) {
 	v.buf += val
 }
 
-func (v *PrintVisitor) nl() {
+func (v *printVisitor) nl() {
 	v.str("\n")
 }
 
-func (v *PrintVisitor) line(val string) {
+func (v *printVisitor) line(val string) {
 	v.indent()
 	v.str(val)
 	v.nl()
@@ -55,7 +55,7 @@ func (v *PrintVisitor) line(val string) {
 
 // Statements
 
-func (v *PrintVisitor) VisitProgram(node *Program) interface{} {
+func (v *printVisitor) VisitProgram(node *Program) interface{} {
 	if len(node.BlockParams) > 0 {
 		v.line("BLOCK PARAMS: [ " + strings.Join(node.BlockParams, " ") + " ]")
 	}
@@ -67,7 +67,7 @@ func (v *PrintVisitor) VisitProgram(node *Program) interface{} {
 	return nil
 }
 
-func (v *PrintVisitor) VisitMustache(node *MustacheStatement) interface{} {
+func (v *printVisitor) VisitMustache(node *MustacheStatement) interface{} {
 	v.indent()
 	v.str("{{ ")
 
@@ -79,7 +79,7 @@ func (v *PrintVisitor) VisitMustache(node *MustacheStatement) interface{} {
 	return nil
 }
 
-func (v *PrintVisitor) VisitBlock(node *BlockStatement) interface{} {
+func (v *printVisitor) VisitBlock(node *BlockStatement) interface{} {
 	v.inBlock = true
 
 	v.line("BLOCK:")
@@ -114,7 +114,7 @@ func (v *PrintVisitor) VisitBlock(node *BlockStatement) interface{} {
 	return nil
 }
 
-func (v *PrintVisitor) VisitPartial(node *PartialStatement) interface{} {
+func (v *printVisitor) VisitPartial(node *PartialStatement) interface{} {
 	v.indent()
 	v.str("{{> PARTIAL:")
 
@@ -139,13 +139,13 @@ func (v *PrintVisitor) VisitPartial(node *PartialStatement) interface{} {
 	return nil
 }
 
-func (v *PrintVisitor) VisitContent(node *ContentStatement) interface{} {
+func (v *printVisitor) VisitContent(node *ContentStatement) interface{} {
 	v.line("CONTENT[ '" + node.Value + "' ]")
 
 	return nil
 }
 
-func (v *PrintVisitor) VisitComment(node *CommentStatement) interface{} {
+func (v *printVisitor) VisitComment(node *CommentStatement) interface{} {
 	v.line("{{! '" + node.Value + "' }}")
 
 	return nil
@@ -153,7 +153,7 @@ func (v *PrintVisitor) VisitComment(node *CommentStatement) interface{} {
 
 // Expressions
 
-func (v *PrintVisitor) VisitExpression(node *Expression) interface{} {
+func (v *printVisitor) VisitExpression(node *Expression) interface{} {
 	if v.inBlock {
 		v.indent()
 	}
@@ -184,13 +184,13 @@ func (v *PrintVisitor) VisitExpression(node *Expression) interface{} {
 	return nil
 }
 
-func (v *PrintVisitor) VisitSubExpression(node *SubExpression) interface{} {
+func (v *printVisitor) VisitSubExpression(node *SubExpression) interface{} {
 	node.Expression.Accept(v)
 
 	return nil
 }
 
-func (v *PrintVisitor) VisitPath(node *PathExpression) interface{} {
+func (v *printVisitor) VisitPath(node *PathExpression) interface{} {
 	if v.original {
 		v.str(node.Original)
 	} else {
@@ -209,7 +209,7 @@ func (v *PrintVisitor) VisitPath(node *PathExpression) interface{} {
 
 // Literals
 
-func (v *PrintVisitor) VisitString(node *StringLiteral) interface{} {
+func (v *printVisitor) VisitString(node *StringLiteral) interface{} {
 	if v.original {
 		v.str(node.Value)
 	} else {
@@ -219,7 +219,7 @@ func (v *PrintVisitor) VisitString(node *StringLiteral) interface{} {
 	return nil
 }
 
-func (v *PrintVisitor) VisitBoolean(node *BooleanLiteral) interface{} {
+func (v *printVisitor) VisitBoolean(node *BooleanLiteral) interface{} {
 	if v.original {
 		v.str(node.Original)
 	} else {
@@ -229,7 +229,7 @@ func (v *PrintVisitor) VisitBoolean(node *BooleanLiteral) interface{} {
 	return nil
 }
 
-func (v *PrintVisitor) VisitNumber(node *NumberLiteral) interface{} {
+func (v *printVisitor) VisitNumber(node *NumberLiteral) interface{} {
 	if v.original {
 		v.str(node.Original)
 	} else {
@@ -241,7 +241,7 @@ func (v *PrintVisitor) VisitNumber(node *NumberLiteral) interface{} {
 
 // Miscellaneous
 
-func (v *PrintVisitor) VisitHash(node *Hash) interface{} {
+func (v *printVisitor) VisitHash(node *Hash) interface{} {
 	v.str("HASH{")
 
 	for i, p := range node.Pairs {
@@ -256,7 +256,7 @@ func (v *PrintVisitor) VisitHash(node *Hash) interface{} {
 	return nil
 }
 
-func (v *PrintVisitor) VisitHashPair(node *HashPair) interface{} {
+func (v *printVisitor) VisitHashPair(node *HashPair) interface{} {
 	v.str(node.Key + "=")
 	node.Val.Accept(v)
 

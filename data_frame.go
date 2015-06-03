@@ -17,7 +17,7 @@ func NewDataFrame() *DataFrame {
 	}
 }
 
-// Copy instanciates a new private data frame, with parent set to self
+// Copy instanciates a new private data frame with receiver as parent
 func (p *DataFrame) Copy() *DataFrame {
 	result := NewDataFrame()
 
@@ -30,8 +30,8 @@ func (p *DataFrame) Copy() *DataFrame {
 	return result
 }
 
-// NewIterDataFrame instanciates a new private data frame, with parent set to self an with iterable data set (@index, @key, @first, @last)
-func (p *DataFrame) NewIterDataFrame(length int, i int, key interface{}) *DataFrame {
+// newIterDataFrame instanciates a new private data frame with receiver as parent and with iteration data set (@index, @key, @first, @last)
+func (p *DataFrame) newIterDataFrame(length int, i int, key interface{}) *DataFrame {
 	result := p.Copy()
 
 	result.Set("index", i)
@@ -49,13 +49,13 @@ func (p *DataFrame) Set(key string, val interface{}) {
 
 // Get gets a data value
 func (p *DataFrame) Get(key string) interface{} {
-	return p.Find([]string{key})
+	return p.find([]string{key})
 }
 
 // Find gets a deep data value
 //
 // @todo This is NOT consistent with the way we resolve data in template (cf. `evalDataPathExpression()`) ! FIX THAT !
-func (p *DataFrame) Find(parts []string) interface{} {
+func (p *DataFrame) find(parts []string) interface{} {
 	data := p.data
 
 	for i, part := range parts {

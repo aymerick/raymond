@@ -40,14 +40,17 @@ const (
 )
 
 const (
-	DUMP_TOKEN_POS      = false
+	// Generate token position in string representation of tokens
+	DUMP_TOKEN_POS = false
+
+	// Generate values for all token kinds for their string representation
 	DUMP_ALL_TOKENS_VAL = true
 )
 
-// TokenKind represents a Token type
+// TokenKind represents a Token type.
 type TokenKind int
 
-// Token represents a scanned token
+// Token represents a scanned token.
 type Token struct {
 	Kind TokenKind // Token kind
 	Val  string    // Token value
@@ -88,6 +91,7 @@ var tokenName = map[TokenKind]string{
 	TokenSep:              "Sep",
 }
 
+// String returns the string representation of Token kind
 func (k TokenKind) String() string {
 	s := tokenName[k]
 	if s == "" {
@@ -96,6 +100,7 @@ func (k TokenKind) String() string {
 	return s
 }
 
+// String returns the string representation of kind
 func (t Token) String() string {
 	result := ""
 

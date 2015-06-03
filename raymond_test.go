@@ -115,6 +115,9 @@ type raymondTest struct {
 
 // launch an array of tests
 func launchRaymondTests(t *testing.T, tests []raymondTest) {
+	// @todo Check why this fails
+	// t.Parallel()
+
 	stats.tests(len(tests))
 
 	for _, test := range tests {

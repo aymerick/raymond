@@ -6,10 +6,10 @@ import (
 	"strconv"
 )
 
-// SafeString represents a string that must not be escaped
+// SafeString represents a string that must not be escaped.
 type SafeString string
 
-// IsSafeString returns true if argument is a SafeString
+// IsSafeString returns true if argument is a SafeString.
 func IsSafeString(value interface{}) bool {
 	if _, ok := value.(SafeString); ok {
 		return true
@@ -17,7 +17,7 @@ func IsSafeString(value interface{}) bool {
 	return false
 }
 
-// Str returns string representation of any type instance
+// Str returns string representation of any type instance.
 func Str(value interface{}) string {
 	return strValue(reflect.ValueOf(value))
 }

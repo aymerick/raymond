@@ -6,11 +6,11 @@ import (
 	"github.com/aymerick/raymond/ast"
 )
 
-// WhitespaceVisitor walks through the AST to perform whitespace control
+// whitespaceVisitor walks through the AST to perform whitespace control
 //
 // The logic was shamelessly borrowed from:
 //   https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/whitespace-control.js
-type WhitespaceVisitor struct {
+type whitespaceVisitor struct {
 	isRootSeen bool
 }
 
@@ -30,16 +30,16 @@ var (
 	rPartialIndent = regexp.MustCompile(`([ \t]+$)`)
 )
 
-// NewWhitespaceVisitor instanciates a new WhitespaceVisitor
-func NewWhitespaceVisitor() *WhitespaceVisitor {
-	return &WhitespaceVisitor{}
+// newWhitespaceVisitor instanciates a new whitespaceVisitor
+func newWhitespaceVisitor() *whitespaceVisitor {
+	return &whitespaceVisitor{}
 }
 
-// ProcessWhitespaces performs whitespace control on given AST.
+// processWhitespaces performs whitespace control on given AST
 //
 // WARNING: It must be called only once on AST.
-func ProcessWhitespaces(node ast.Node) {
-	node.Accept(NewWhitespaceVisitor())
+func processWhitespaces(node ast.Node) {
+	node.Accept(newWhitespaceVisitor())
 }
 
 func omitRightFirst(body []ast.Node, multiple bool) {
@@ -168,7 +168,7 @@ func isNextWhitespaceProgram(body []ast.Node, i int, isRoot bool) bool {
 // Visitor interface
 //
 
-func (v *WhitespaceVisitor) VisitProgram(program *ast.Program) interface{} {
+func (v *whitespaceVisitor) VisitProgram(program *ast.Program) interface{} {
 	isRoot := !v.isRootSeen
 	v.isRootSeen = true
 
@@ -241,7 +241,7 @@ func (v *WhitespaceVisitor) VisitProgram(program *ast.Program) interface{} {
 	return nil
 }
 
-func (v *WhitespaceVisitor) VisitBlock(block *ast.BlockStatement) interface{} {
+func (v *whitespaceVisitor) VisitBlock(block *ast.BlockStatement) interface{} {
 	if block.Program != nil {
 		block.Program.Accept(v)
 	}
@@ -318,7 +318,7 @@ func (v *WhitespaceVisitor) VisitBlock(block *ast.BlockStatement) interface{} {
 	return strip
 }
 
-func (v *WhitespaceVisitor) VisitMustache(mustache *ast.MustacheStatement) interface{} {
+func (v *whitespaceVisitor) VisitMustache(mustache *ast.MustacheStatement) interface{} {
 	return mustache.Strip
 }
 
@@ -330,7 +330,7 @@ func _inlineStandalone(strip *ast.Strip) interface{} {
 	}
 }
 
-func (v *WhitespaceVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
+func (v *whitespaceVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 	strip := node.Strip
 	if strip == nil {
 		strip = &ast.Strip{}
@@ -339,7 +339,7 @@ func (v *WhitespaceVisitor) VisitPartial(node *ast.PartialStatement) interface{}
 	return _inlineStandalone(strip)
 }
 
-func (v *WhitespaceVisitor) VisitComment(node *ast.CommentStatement) interface{} {
+func (v *whitespaceVisitor) VisitComment(node *ast.CommentStatement) interface{} {
 	strip := node.Strip
 	if strip == nil {
 		strip = &ast.Strip{}
@@ -349,12 +349,12 @@ func (v *WhitespaceVisitor) VisitComment(node *ast.CommentStatement) interface{}
 }
 
 // NOOP
-func (v *WhitespaceVisitor) VisitContent(node *ast.ContentStatement) interface{}    { return nil }
-func (v *WhitespaceVisitor) VisitExpression(node *ast.Expression) interface{}       { return nil }
-func (v *WhitespaceVisitor) VisitSubExpression(node *ast.SubExpression) interface{} { return nil }
-func (v *WhitespaceVisitor) VisitPath(node *ast.PathExpression) interface{}         { return nil }
-func (v *WhitespaceVisitor) VisitString(node *ast.StringLiteral) interface{}        { return nil }
-func (v *WhitespaceVisitor) VisitBoolean(node *ast.BooleanLiteral) interface{}      { return nil }
-func (v *WhitespaceVisitor) VisitNumber(node *ast.NumberLiteral) interface{}        { return nil }
-func (v *WhitespaceVisitor) VisitHash(node *ast.Hash) interface{}                   { return nil }
-func (v *WhitespaceVisitor) VisitHashPair(node *ast.HashPair) interface{}           { return nil }
+func (v *whitespaceVisitor) VisitContent(node *ast.ContentStatement) interface{}    { return nil }
+func (v *whitespaceVisitor) VisitExpression(node *ast.Expression) interface{}       { return nil }
+func (v *whitespaceVisitor) VisitSubExpression(node *ast.SubExpression) interface{} { return nil }
+func (v *whitespaceVisitor) VisitPath(node *ast.PathExpression) interface{}         { return nil }
+func (v *whitespaceVisitor) VisitString(node *ast.StringLiteral) interface{}        { return nil }
+func (v *whitespaceVisitor) VisitBoolean(node *ast.BooleanLiteral) interface{}      { return nil }
+func (v *whitespaceVisitor) VisitNumber(node *ast.NumberLiteral) interface{}        { return nil }
+func (v *whitespaceVisitor) VisitHash(node *ast.Hash) interface{}                   { return nil }
+func (v *whitespaceVisitor) VisitHashPair(node *ast.HashPair) interface{}           { return nil }

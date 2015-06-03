@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-// A Node is an element in the AST
+// A Node is an element in the AST.
 type Node interface {
 	// node type
 	Type() NodeType
@@ -26,7 +26,7 @@ type Node interface {
 	Accept(Visitor) interface{}
 }
 
-// Visitor is the interface to visit an AST
+// Visitor is the interface to visit an AST.
 type Visitor interface {
 	VisitProgram(*Program) interface{}
 
@@ -52,10 +52,10 @@ type Visitor interface {
 	VisitHashPair(*HashPair) interface{}
 }
 
-// NodeType represents an AST Node type
+// NodeType represents an AST Node type.
 type NodeType int
 
-// Type returns itself, and permits struct includers to satisfy that part of Node interface
+// Type returns itself, and permits struct includers to satisfy that part of Node interface.
 func (t NodeType) Type() NodeType {
 	return t
 }
@@ -85,18 +85,18 @@ const (
 	NodeHashPair
 )
 
-// Loc represents the position of parsed Node in source file
+// Loc represents the position of parsed Node in source file.
 type Loc struct {
 	Pos  int // Byte position
 	Line int // Line number
 }
 
-// Location returns itself, and permits struct includers to satisfy that part of Node interface
+// Location returns itself, and permits struct includers to satisfy that part of Node interface.
 func (l Loc) Location() Loc {
 	return l
 }
 
-// Strip describes node whitespace management
+// Strip describes node whitespace management.
 type Strip struct {
 	Open  bool
 	Close bool
@@ -106,7 +106,7 @@ type Strip struct {
 	InlineStandalone bool
 }
 
-// NewStrip instanciates a Strip with given open and close mustaches
+// NewStrip instanciates a Strip with given open and close mustaches.
 func NewStrip(openStr, closeStr string) *Strip {
 	return &Strip{
 		Open:  (len(openStr) > 2) && openStr[2] == '~',
@@ -114,7 +114,7 @@ func NewStrip(openStr, closeStr string) *Strip {
 	}
 }
 
-// NewStripForStr instanciates a Stip with an entire tag string
+// NewStripForStr instanciates a Stip with an entire tag string.
 func NewStripForStr(str string) *Strip {
 	return &Strip{
 		Open:  (len(str) > 2) && str[2] == '~',
@@ -130,7 +130,7 @@ func (s *Strip) String() string {
 // Program
 //
 
-// Program represents a Program node
+// Program represents a Program node.
 type Program struct {
 	NodeType
 	Loc
@@ -167,7 +167,7 @@ func (node *Program) AddStatement(statement Node) {
 // Mustache Statement
 //
 
-// MustacheStatement represents a Mustache node
+// MustacheStatement represents a Mustache node.
 type MustacheStatement struct {
 	NodeType
 	Loc
@@ -199,7 +199,7 @@ func (node *MustacheStatement) Accept(visitor Visitor) interface{} {
 // Block Statement
 //
 
-// BlockStatement represents a Block node
+// BlockStatement represents a Block node.
 type BlockStatement struct {
 	NodeType
 	Loc
@@ -234,7 +234,7 @@ func (node *BlockStatement) Accept(visitor Visitor) interface{} {
 // Partial Statement
 //
 
-// PartialStatement represents a Partial node
+// PartialStatement represents a Partial node.
 type PartialStatement struct {
 	NodeType
 	Loc
@@ -267,7 +267,7 @@ func (node *PartialStatement) Accept(visitor Visitor) interface{} {
 // Content Statement
 //
 
-// ContentStatement represents a Content node
+// ContentStatement represents a Content node.
 type ContentStatement struct {
 	NodeType
 	Loc
@@ -302,7 +302,7 @@ func (node *ContentStatement) Accept(visitor Visitor) interface{} {
 // Comment Statement
 //
 
-// CommentStatement represents a Comment node
+// CommentStatement represents a Comment node.
 type CommentStatement struct {
 	NodeType
 	Loc
@@ -334,7 +334,7 @@ func (node *CommentStatement) Accept(visitor Visitor) interface{} {
 // Expression
 //
 
-// Expression represents an Expression node
+// Expression represents an Expression node.
 type Expression struct {
 	NodeType
 	Loc
@@ -363,7 +363,7 @@ func (node *Expression) haveParams() bool {
 	return (len(node.Params) > 0) || ((node.Hash != nil) && (len(node.Hash.Pairs) > 0))
 }
 
-// HelperName returns helper name, or an empty string if this expression can't be an helper
+// HelperName returns helper name, or an empty string if this expression can't be an helper.
 func (node *Expression) HelperName() string {
 	path, ok := node.Path.(*PathExpression)
 	if !ok {
@@ -377,7 +377,7 @@ func (node *Expression) HelperName() string {
 	return path.Parts[0]
 }
 
-// FieldPath returns path expression representing a field path, or nil if this is not a field path
+// FieldPath returns path expression representing a field path, or nil if this is not a field path.
 func (node *Expression) FieldPath() *PathExpression {
 	path, ok := node.Path.(*PathExpression)
 	if !ok {
@@ -387,7 +387,7 @@ func (node *Expression) FieldPath() *PathExpression {
 	return path
 }
 
-// LiteralStr returns string representation of literal value, with a boolean set to false if this is not a literal
+// LiteralStr returns string representation of literal value, with a boolean set to false if this is not a literal.
 func (node *Expression) LiteralStr() (string, bool) {
 	return LiteralStr(node.Path)
 }
@@ -401,7 +401,7 @@ func (node *Expression) Str() string {
 	return ""
 }
 
-// HelperNameStr returns string representation of an helper name, with a boolean set to false if this is not a valid helper name
+// HelperNameStr returns string representation of an helper name, with a boolean set to false if this is not a valid helper name.
 //
 // helperName : path | dataName | STRING | NUMBER | BOOLEAN | UNDEFINED | NULL
 func HelperNameStr(node Node) (string, bool) {
@@ -418,7 +418,7 @@ func HelperNameStr(node Node) (string, bool) {
 	return "", false
 }
 
-// PathExpressionStr returns string representation of path expression value, with a boolean set to false if this is not a path expression
+// PathExpressionStr returns string representation of path expression value, with a boolean set to false if this is not a path expression.
 func PathExpressionStr(node Node) (string, bool) {
 	if path, ok := node.(*PathExpression); ok {
 		result := path.Original
@@ -434,7 +434,7 @@ func PathExpressionStr(node Node) (string, bool) {
 	return "", false
 }
 
-// LiteralStr returns string representation of literal value, with a boolean set to false if this is not a literal
+// LiteralStr returns string representation of literal value, with a boolean set to false if this is not a literal.
 func LiteralStr(node Node) (string, bool) {
 	if lit, ok := node.(*StringLiteral); ok {
 		return lit.Value, true
@@ -455,7 +455,7 @@ func LiteralStr(node Node) (string, bool) {
 // SubExpression
 //
 
-// SubExpression represents a SubExpression node
+// SubExpression represents a SubExpression node.
 type SubExpression struct {
 	NodeType
 	Loc
@@ -482,7 +482,7 @@ func (node *SubExpression) Accept(visitor Visitor) interface{} {
 // Path Expression
 //
 
-// PathExpression represents a Path Expression node
+// PathExpression represents a Path Expression node.
 type PathExpression struct {
 	NodeType
 	Loc
@@ -517,7 +517,7 @@ func (node *PathExpression) Accept(visitor Visitor) interface{} {
 	return visitor.VisitPath(node)
 }
 
-// PArt adds path part
+// Part adds path part.
 func (node *PathExpression) Part(part string) {
 	node.Original += part
 
@@ -532,12 +532,12 @@ func (node *PathExpression) Part(part string) {
 	}
 }
 
-// Sep adds path separator
+// Sep adds path separator.
 func (node *PathExpression) Sep(separator string) {
 	node.Original += separator
 }
 
-// IsDataRoot returns true if path expression is @root
+// IsDataRoot returns true if path expression is @root.
 func (node *PathExpression) IsDataRoot() bool {
 	return node.Data && (node.Parts[0] == "root")
 }
@@ -546,7 +546,7 @@ func (node *PathExpression) IsDataRoot() bool {
 // String Literal
 //
 
-// StringLiteral represents a String node
+// StringLiteral represents a String node.
 type StringLiteral struct {
 	NodeType
 	Loc
@@ -575,7 +575,7 @@ func (node *StringLiteral) Accept(visitor Visitor) interface{} {
 // Boolean Literal
 //
 
-// BooleanLiteral represents a Boolean node
+// BooleanLiteral represents a Boolean node.
 type BooleanLiteral struct {
 	NodeType
 	Loc
@@ -602,7 +602,7 @@ func (node *BooleanLiteral) Accept(visitor Visitor) interface{} {
 	return visitor.VisitBoolean(node)
 }
 
-// Canonical returns the canonical string value ("true" | "false")
+// Canonical returns the canonical string value ("true" | "false").
 func (node *BooleanLiteral) Canonical() string {
 	if node.Value {
 		return "true"
@@ -615,7 +615,7 @@ func (node *BooleanLiteral) Canonical() string {
 // Number Literal
 //
 
-// NumberLiteral represents a Number node
+// NumberLiteral represents a Number node.
 type NumberLiteral struct {
 	NodeType
 	Loc
@@ -644,7 +644,7 @@ func (node *NumberLiteral) Accept(visitor Visitor) interface{} {
 	return visitor.VisitNumber(node)
 }
 
-// Canonical returns the canonical string value
+// Canonical returns the canonical string value.
 func (node *NumberLiteral) Canonical() string {
 	prec := -1
 	if node.IsInt {
@@ -666,7 +666,7 @@ func (node *NumberLiteral) Number() interface{} {
 // Hash
 //
 
-// Hash represents a Hash node
+// Hash represents a Hash node.
 type Hash struct {
 	NodeType
 	Loc
@@ -702,7 +702,7 @@ func (node *Hash) Accept(visitor Visitor) interface{} {
 // HashPair
 //
 
-// HashPair represents a Hash Pair node
+// HashPair represents a Hash Pair node.
 type HashPair struct {
 	NodeType
 	Loc
