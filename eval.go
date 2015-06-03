@@ -702,7 +702,7 @@ func (v *evalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	str := Str(expr)
 	if !isSafe && !node.Unescaped {
 		// escape html
-		str = EscapeString(str)
+		str = Escape(str)
 	}
 
 	return str

@@ -170,21 +170,21 @@ Output:
 </div>
 ```
 
-When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `EscapeString` method.
+When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
 
 ```go
-  tpl := raymond.MustParse("{{{link text url}}}")
+  tpl := raymond.MustParse("{{{link url text}}}")
 
   tpl.RegisterHelper("link", func(h *raymond.HelperArg) interface{} {
-    text := raymond.EscapeString(h.ParamStr(0))
-    url := raymond.EscapeString(h.ParamStr(1))
+    url := raymond.Escape(h.ParamStr(0))
+    text := raymond.Escape(h.ParamStr(1))
 
     return raymond.SafeString("<a href='" + url + "'>" + text + "</a>")
   })
 
   ctx := map[string]string{
-    "text": "This is a <em>cool</em> website",
     "url":  "http://www.aymerick.com/",
+    "text": "This is a <em>cool</em> website",
   }
 
   result := tpl.MustExec(ctx)
