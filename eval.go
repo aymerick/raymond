@@ -429,7 +429,7 @@ func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool
 			// so let's try with private data
 
 			// private data
-			result = v.evalDataPathExpression(node)
+			result = v.evalDataPathExpression(node, exprRoot)
 		}
 
 		if (result == nil) && !ctxTried {
@@ -442,7 +442,7 @@ func (v *EvalVisitor) evalPathExpression(node *ast.PathExpression, exprRoot bool
 }
 
 // Evaluate a private data path expression
-func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression) interface{} {
+func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression, exprRoot bool) interface{} {
 	// find data frame
 	frame := v.dataFrame
 	for i := node.Depth; i > 0; i-- {
@@ -452,7 +452,10 @@ func (v *EvalVisitor) evalDataPathExpression(node *ast.PathExpression) interface
 		frame = frame.parent
 	}
 
-	return frame.Find(node.Parts)
+	// resolve data
+	// @note Can be changed to v.evalCtx() as context can't be an array
+	result, _ := v.evalCtxPath(reflect.ValueOf(frame.data), node.Parts, exprRoot)
+	return result
 }
 
 // Evaluate a context path expression

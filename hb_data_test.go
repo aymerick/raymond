@@ -91,24 +91,22 @@ var hbDataTests = []raymondTest{
 
 	// @todo "parameter data throws when using complex scope references",
 
-	// // @todo Implements data as function
-	// {
-	// 	"data can be functions",
-	// 	`{{@hello}}`,
-	// 	nil,
-	// 	map[string]interface{}{"hello": func() string { return "hello" }},
-	// 	nil, nil,
-	// 	"hello",
-	// },
-	// // @todo Implements data as function
-	// {
-	//  "data can be functions with params",
-	//  `{{@hello "hello"}}`,
-	//  nil,
-	//  map[string]interface{}{"hello": func(h *HelperArg) string { return h.ParamStr(0) }},
-	//  nil, nil,
-	//  "hello",
-	// },
+	{
+		"data can be functions",
+		`{{@hello}}`,
+		nil,
+		map[string]interface{}{"hello": func() string { return "hello" }},
+		nil, nil,
+		"hello",
+	},
+	{
+		"data can be functions with params",
+		`{{@hello "hello"}}`,
+		nil,
+		map[string]interface{}{"hello": func(h *HelperArg) string { return h.ParamStr(0) }},
+		nil, nil,
+		"hello",
+	},
 
 	{
 		"data is inherited downstream",
