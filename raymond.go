@@ -2,10 +2,7 @@
 //
 // Basic usage:
 //
-// source := "<h1>{{title}}</h1>
-//   <div class="body">
-//     {{body}}
-//   </div>"
+//  source := "<h1>{{title}}</h1><div class="body">{{body}}</div>"
 //
 //  ctx := map[string]string{
 //      "title": "My New Post",

@@ -17,7 +17,7 @@ func IsSafeString(value interface{}) bool {
 	return false
 }
 
-// Str returns string representation of anty type instance
+// Str returns string representation of any type instance
 func Str(value interface{}) string {
 	return strValue(reflect.ValueOf(value))
 }
