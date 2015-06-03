@@ -31,37 +31,15 @@ func TestStr(t *testing.T) {
 	}
 }
 
-func ExampleStr_bool() {
-	output := "foo is " + Str(true) + " but bar is " + Str(false)
+func ExampleStr() {
+	output := Str(3) + " foos are " + Str(true) + " and " + Str(-1.25) + " bars are " + Str(false) + "\n"
+	output += "But you know '" + Str(nil) + "' John Snow\n"
+	output += "map: " + Str(map[string]string{"foo": "bar"}) + "\n"
+	output += "array: " + Str([]interface{}{true, 10, "foo", 5, "bar"})
 
 	fmt.Println(output)
-	// Output: foo is true but bar is false
-}
-
-func ExampleStr_numbers() {
-	output := "I saw " + Str(3) + " foo with " + Str(-1.25) + " bar"
-
-	fmt.Println(output)
-	// Output: I saw 3 foo with -1.25 bar
-}
-
-func ExampleStr_nil() {
-	output := "You know '" + Str(nil) + "' John Snow"
-
-	fmt.Println(output)
-	// Output: You know '' John Snow
-}
-
-func ExampleStr_map() {
-	output := Str(map[string]string{"foo": "bar"})
-
-	fmt.Println(output)
-	// Output: map[foo:bar]
-}
-
-func ExampleStr_array() {
-	output := Str([]interface{}{true, 10, "foo", 5, "bar"})
-
-	fmt.Println(output)
-	// Output: true10foo5bar
+	// Output: 3 foos are true and -1.25 bars are false
+	// But you know '' John Snow
+	// map: map[foo:bar]
+	// array: true10foo5bar
 }
