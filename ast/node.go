@@ -107,7 +107,7 @@ type Strip struct {
 	InlineStandalone bool
 }
 
-// NewStrip instanciates a Strip with given open and close mustaches.
+// NewStrip instanciates a Strip for given open and close mustaches.
 func NewStrip(openStr, closeStr string) *Strip {
 	return &Strip{
 		Open:  (len(openStr) > 2) && openStr[2] == '~',
@@ -115,7 +115,7 @@ func NewStrip(openStr, closeStr string) *Strip {
 	}
 }
 
-// NewStripForStr instanciates a Stip with an entire tag string.
+// NewStripForStr instanciates a Strip for given tag.
 func NewStripForStr(str string) *Strip {
 	return &Strip{
 		Open:  (len(str) > 2) && str[2] == '~',
@@ -123,7 +123,7 @@ func NewStripForStr(str string) *Strip {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (s *Strip) String() string {
 	return fmt.Sprintf("Open: %t, Close: %t, OpenStandalone: %t, CloseStandalone: %t, InlineStandalone: %t", s.Open, s.Close, s.OpenStandalone, s.CloseStandalone, s.InlineStandalone)
 }
@@ -153,7 +153,7 @@ func NewProgram(pos int, line int) *Program {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *Program) String() string {
 	return fmt.Sprintf("Program{Pos: %d}", node.Loc.Pos)
 }
@@ -163,7 +163,7 @@ func (node *Program) Accept(visitor Visitor) interface{} {
 	return visitor.VisitProgram(node)
 }
 
-// AddStatement adds given statement node to Program node.
+// AddStatement adds given statement to program.
 func (node *Program) AddStatement(statement Node) {
 	node.Body = append(node.Body, statement)
 }
@@ -193,7 +193,7 @@ func NewMustacheStatement(pos int, line int, unescaped bool) *MustacheStatement 
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *MustacheStatement) String() string {
 	return fmt.Sprintf("Mustache{Pos: %d}", node.Loc.Pos)
 }
@@ -231,7 +231,7 @@ func NewBlockStatement(pos int, line int) *BlockStatement {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *BlockStatement) String() string {
 	return fmt.Sprintf("Block{Pos: %d}", node.Loc.Pos)
 }
@@ -252,7 +252,7 @@ type PartialStatement struct {
 
 	Name   Node   // PathExpression | SubExpression
 	Params []Node // [ Expression ... ]
-	Hash   *Hash  // Hash
+	Hash   *Hash
 
 	// whitespace management
 	Strip  *Strip
@@ -267,7 +267,7 @@ func NewPartialStatement(pos int, line int) *PartialStatement {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *PartialStatement) String() string {
 	return fmt.Sprintf("Partial{Name:%s, Pos:%d}", node.Name, node.Loc.Pos)
 }
@@ -305,7 +305,7 @@ func NewContentStatement(pos int, line int, val string) *ContentStatement {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *ContentStatement) String() string {
 	return fmt.Sprintf("Content{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
 }
@@ -340,7 +340,7 @@ func NewCommentStatement(pos int, line int, val string) *CommentStatement {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *CommentStatement) String() string {
 	return fmt.Sprintf("Comment{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
 }
@@ -361,7 +361,7 @@ type Expression struct {
 
 	Path   Node   // PathExpression | StringLiteral | BooleanLiteral | NumberLiteral
 	Params []Node // [ Expression ... ]
-	Hash   *Hash  // Hash
+	Hash   *Hash
 }
 
 // NewExpression instanciates a new expression node.
@@ -372,7 +372,7 @@ func NewExpression(pos int, line int) *Expression {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *Expression) String() string {
 	return fmt.Sprintf("Expr{Path:%s, Pos:%d}", node.Path, node.Loc.Pos)
 }
@@ -411,7 +411,7 @@ func (node *Expression) LiteralStr() (string, bool) {
 	return LiteralStr(node.Path)
 }
 
-// Canonical returns the canonical string value.
+// Canonical returns the canonical form of expression node as a string.
 func (node *Expression) Canonical() string {
 	if str, ok := HelperNameStr(node.Path); ok {
 		return str
@@ -490,7 +490,7 @@ func NewSubExpression(pos int, line int) *SubExpression {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *SubExpression) String() string {
 	return fmt.Sprintf("Sexp{Path:%s, Pos:%d}", node.Expression.Path, node.Loc.Pos)
 }
@@ -532,7 +532,7 @@ func NewPathExpression(pos int, line int, data bool) *PathExpression {
 	return result
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *PathExpression) String() string {
 	return fmt.Sprintf("Path{Original:'%s', Pos:%d}", node.Original, node.Loc.Pos)
 }
@@ -589,7 +589,7 @@ func NewStringLiteral(pos int, line int, val string) *StringLiteral {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *StringLiteral) String() string {
 	return fmt.Sprintf("String{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
 }
@@ -623,7 +623,7 @@ func NewBooleanLiteral(pos int, line int, val bool, original string) *BooleanLit
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *BooleanLiteral) String() string {
 	return fmt.Sprintf("Boolean{Value:%s, Pos:%d}", node.Canonical(), node.Loc.Pos)
 }
@@ -633,7 +633,7 @@ func (node *BooleanLiteral) Accept(visitor Visitor) interface{} {
 	return visitor.VisitBoolean(node)
 }
 
-// Canonical returns the canonical string value ("true" | "false").
+// Canonical returns the canonical form of boolean node as a string (ie. "true" | "false").
 func (node *BooleanLiteral) Canonical() string {
 	if node.Value {
 		return "true"
@@ -668,7 +668,7 @@ func NewNumberLiteral(pos int, line int, val float64, isInt bool, original strin
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *NumberLiteral) String() string {
 	return fmt.Sprintf("Number{Value:%s, Pos:%d}", node.Canonical(), node.Loc.Pos)
 }
@@ -678,7 +678,7 @@ func (node *NumberLiteral) Accept(visitor Visitor) interface{} {
 	return visitor.VisitNumber(node)
 }
 
-// Canonical returns the canonical string value.
+// Canonical returns the canonical form of number node as a string (eg: "12", "-1.51").
 func (node *NumberLiteral) Canonical() string {
 	prec := -1
 	if node.IsInt {
@@ -705,7 +705,7 @@ type Hash struct {
 	NodeType
 	Loc
 
-	Pairs []*HashPair // [ HashPair ... ]
+	Pairs []*HashPair
 }
 
 // NewNumberLiteral instanciates a new hash node.
@@ -716,7 +716,7 @@ func NewHash(pos int, line int) *Hash {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *Hash) String() string {
 	result := fmt.Sprintf("Hash{[", node.Loc.Pos)
 
@@ -756,7 +756,7 @@ func NewHashPair(pos int, line int) *HashPair {
 	}
 }
 
-// String returns a string representation of receiver that can be used for logs.
+// String returns a string representation of receiver that can be used for debugging.
 func (node *HashPair) String() string {
 	return node.Key + "=" + node.Val.String()
 }
