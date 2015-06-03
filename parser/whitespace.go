@@ -6,11 +6,10 @@ import (
 	"github.com/aymerick/raymond/ast"
 )
 
+// WhitespaceVisitor walks through the AST to perform whitespace control
 //
 // The logic was shamelessly borrowed from:
 //   https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/whitespace-control.js
-//
-
 type WhitespaceVisitor struct {
 	isRootSeen bool
 }
@@ -31,10 +30,14 @@ var (
 	rPartialIndent = regexp.MustCompile(`([ \t]+$)`)
 )
 
+// NewWhitespaceVisitor instanciates a new WhitespaceVisitor
 func NewWhitespaceVisitor() *WhitespaceVisitor {
 	return &WhitespaceVisitor{}
 }
 
+// ProcessWhitespaces performs whitespace control on given AST.
+//
+// WARNING: It must be called only once on AST.
 func ProcessWhitespaces(node ast.Node) {
 	node.Accept(NewWhitespaceVisitor())
 }
