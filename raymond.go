@@ -18,3 +18,10 @@ func Render(source string, ctx interface{}) (string, error) {
 
 	return str, nil
 }
+
+// MustRender parses a template and evaluates it with given context. Panics on error
+//
+// Note that this function call is not optimal as your template is parsed everytime you call it. You should use Parse() function instead.
+func MustRender(source string, ctx interface{}) string {
+	return MustParse(source).MustExec(ctx)
+}
