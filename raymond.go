@@ -1,4 +1,4 @@
-// Package raymond provides handlebars evaluation supporting the same features as handlebars.js 3.0
+// Package raymond provides handlebars evaluation
 //
 // Basic usage:
 //
