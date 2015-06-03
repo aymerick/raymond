@@ -356,8 +356,6 @@ his name is: Goldorak
 
 ## Utilities
 
-@todo doc for `IsSafeString()`
-
 @todo doc for `Str()`
 
 

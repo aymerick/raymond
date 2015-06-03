@@ -9,8 +9,8 @@ import (
 // SafeString represents a string that must not be escaped.
 type SafeString string
 
-// IsSafeString returns true if argument is a SafeString.
-func IsSafeString(value interface{}) bool {
+// IsSafeString returns true if argument is a SafeString
+func isSafeString(value interface{}) bool {
 	if _, ok := value.(SafeString); ok {
 		return true
 	}

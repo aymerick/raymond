@@ -228,7 +228,7 @@ func (h *HelperArg) truthFirstParam() bool {
 		return false
 	}
 
-	thruth, ok := IsTruth(reflect.ValueOf(val))
+	thruth, ok := isTruth(reflect.ValueOf(val))
 	if !ok {
 		return false
 	}
