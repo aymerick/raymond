@@ -43,3 +43,15 @@ func ExampleStr() {
 	// map: map[foo:bar]
 	// array: true10foo5bar
 }
+
+func ExampleSafeString() {
+	RegisterHelper("em", func(h *HelperArg) interface{} {
+		return SafeString("<em>FOO BAR</em>")
+	})
+
+	tpl := MustParse("{{em}}")
+
+	result := tpl.MustExec(nil)
+	fmt.Print(result)
+	// Output: <em>FOO BAR</em>
+}

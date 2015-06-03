@@ -3,7 +3,7 @@ package raymond
 import "fmt"
 
 func ExampleEscape() {
-	tpl := MustParse("{{{link url text}}}")
+	tpl := MustParse("{{link url text}}")
 
 	tpl.RegisterHelper("link", func(h *HelperArg) interface{} {
 		url := Escape(h.ParamStr(0))

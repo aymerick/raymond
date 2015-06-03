@@ -8,7 +8,7 @@ import (
 
 // SafeString represents a string that must not be escaped.
 //
-// It can be returned by helpers to disable escaping.
+// A SafeString can be returned by helpers to disable escaping.
 type SafeString string
 
 // IsSafeString returns true if argument is a SafeString

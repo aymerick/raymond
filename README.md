@@ -173,7 +173,7 @@ Output:
 When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
 
 ```go
-  tpl := raymond.MustParse("{{{link url text}}}")
+  tpl := raymond.MustParse("{{link url text}}")
 
   tpl.RegisterHelper("link", func(h *raymond.HelperArg) interface{} {
     url := raymond.Escape(h.ParamStr(0))
