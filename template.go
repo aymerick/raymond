@@ -30,7 +30,7 @@ func Parse(source string) (*Template, error) {
 	tpl := newTemplate(source)
 
 	// parse template
-	if err := tpl.Parse(); err != nil {
+	if err := tpl.parse(); err != nil {
 		return nil, err
 	}
 
@@ -46,10 +46,10 @@ func MustParse(source string) *Template {
 	return result
 }
 
-// Parse parses the template.
+// parse parses the template
 //
 // It can be called several times, the parsing will be done only once.
-func (tpl *Template) Parse() error {
+func (tpl *Template) parse() error {
 	if tpl.program == nil {
 		var err error
 
@@ -113,7 +113,7 @@ func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result stri
 	defer errRecover(&err)
 
 	// parses template if necessary
-	err = tpl.Parse()
+	err = tpl.parse()
 	if err != nil {
 		return
 	}
@@ -145,7 +145,7 @@ func errRecover(errp *error) {
 
 // PrintAST returns string representation of parsed template.
 func (tpl *Template) PrintAST() string {
-	if err := tpl.Parse(); err != nil {
+	if err := tpl.parse(); err != nil {
 		return fmt.Sprintf("PARSER ERROR: %s", err)
 	}
 
