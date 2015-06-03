@@ -81,7 +81,7 @@ func (h *HelperArg) Params() []interface{} {
 	return h.params
 }
 
-// Paramreturns parameter at given position.
+// Param returns parameter at given position.
 func (h *HelperArg) Param(pos int) interface{} {
 	if len(h.params) > pos {
 		return h.params[pos]
@@ -151,7 +151,7 @@ func (h *HelperArg) DataFrame() *DataFrame {
 
 // NewDataFrame instanciates a new data frame that is a copy of current evaluation data frame.
 //
-// Parent of returned frame is set to current evaluation frame.
+// Parent of returned data frame is set to current evaluation data frame.
 func (h *HelperArg) NewDataFrame() *DataFrame {
 	return h.eval.dataFrame.Copy()
 }
@@ -166,7 +166,7 @@ func (h *HelperArg) newIterDataFrame(length int, i int, key interface{}) *DataFr
 //
 
 // blockWith evaluates block with given context, private data and iteration key
-func (h *HelperArg) blockWith(ctx interface{}, data *DataFrame, key interface{}) string {
+func (h *HelperArg) evalBlock(ctx interface{}, data *DataFrame, key interface{}) string {
 	result := ""
 
 	if block := h.eval.curBlock(); (block != nil) && (block.Program != nil) {
@@ -178,22 +178,22 @@ func (h *HelperArg) blockWith(ctx interface{}, data *DataFrame, key interface{})
 
 // Block evaluates block.
 func (h *HelperArg) Block() string {
-	return h.blockWith(nil, nil, nil)
+	return h.evalBlock(nil, nil, nil)
+}
+
+// BlockWith evaluates block with given context and private data frame.
+func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame) string {
+	return h.evalBlock(ctx, data, nil)
 }
 
 // BlockWithCtx evaluates block with given context.
 func (h *HelperArg) BlockWithCtx(ctx interface{}) string {
-	return h.blockWith(ctx, nil, nil)
+	return h.evalBlock(ctx, nil, nil)
 }
 
 // BlockWithData evaluates block with given private data frame.
 func (h *HelperArg) BlockWithData(data *DataFrame) string {
-	return h.blockWith(nil, data, nil)
-}
-
-// BlockWithCtxData evaluates block with given context and private data frame.
-func (h *HelperArg) BlockWithCtxData(ctx interface{}, data *DataFrame) string {
-	return h.blockWith(ctx, data, nil)
+	return h.evalBlock(nil, data, nil)
 }
 
 // Inverse evaluates block inverse.
@@ -304,7 +304,7 @@ func eachHelper(h *HelperArg) interface{} {
 			data := h.newIterDataFrame(val.Len(), i, nil)
 
 			// evaluates block
-			result += h.blockWith(val.Index(i).Interface(), data, i)
+			result += h.evalBlock(val.Index(i).Interface(), data, i)
 		}
 	case reflect.Map:
 		// note: a go hash is not ordered, so result may vary, this behaviour differs from the JS implementation
@@ -317,7 +317,7 @@ func eachHelper(h *HelperArg) interface{} {
 			data := h.newIterDataFrame(len(keys), i, key)
 
 			// evaluates block
-			result += h.blockWith(ctx, data, key)
+			result += h.evalBlock(ctx, data, key)
 		}
 	case reflect.Struct:
 		var exportedFields []int
@@ -337,7 +337,7 @@ func eachHelper(h *HelperArg) interface{} {
 			data := h.newIterDataFrame(len(exportedFields), i, key)
 
 			// evaluates block
-			result += h.blockWith(ctx, data, key)
+			result += h.evalBlock(ctx, data, key)
 		}
 	}
 

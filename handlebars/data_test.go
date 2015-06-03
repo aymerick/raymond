@@ -230,7 +230,7 @@ var dataTests = []Test{
 				data := h.NewDataFrame()
 				data.Set("adjective", "sad")
 
-				return h.BlockWithCtxData(ctx, data)
+				return h.BlockWith(ctx, data)
 			},
 			"world": func(h *raymond.HelperArg) interface{} {
 				return h.DataStr("adjective") + " " + h.ParamStr(0) + h.FieldStr("exclaim")
@@ -250,7 +250,7 @@ var dataTests = []Test{
 				data := h.NewDataFrame()
 				data.Set("adjective", "sad")
 
-				return h.BlockWithCtxData(ctx, data)
+				return h.BlockWith(ctx, data)
 			},
 			"world": func(h *raymond.HelperArg) interface{} {
 				return h.DataStr("adjective") + " " + h.ParamStr(0) + h.FieldStr("exclaim")
