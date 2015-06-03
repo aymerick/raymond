@@ -1,4 +1,4 @@
-# raymond
+# raymond [![Build Status](https://secure.travis-ci.org/aymerick/raymond.svg?branch=master)](http://travis-ci.org/aymerick/raymond)
 
 Handlebars for [golang](https://golang.org), supporting the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
