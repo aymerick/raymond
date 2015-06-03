@@ -62,7 +62,7 @@ func (tpl *Template) parse() error {
 	return nil
 }
 
-// RegisterHelper registers a helper.
+// RegisterHelper registers a helper for that template.
 func (tpl *Template) RegisterHelper(name string, helper Helper) {
 	if tpl.helpers[name] != nil {
 		panic(fmt.Sprintf("Helper %s already registered", name))
@@ -71,14 +71,14 @@ func (tpl *Template) RegisterHelper(name string, helper Helper) {
 	tpl.helpers[name] = helper
 }
 
-// RegisterHelpers register several helpers.
+// RegisterHelpers registers several helpers for that template.
 func (tpl *Template) RegisterHelpers(helpers map[string]Helper) {
 	for name, helper := range helpers {
 		tpl.RegisterHelper(name, helper)
 	}
 }
 
-// RegisterPartial registers a partial.
+// RegisterPartial registers a partial for that template.
 func (tpl *Template) RegisterPartial(name string, partial string) {
 	if tpl.partials[name] != nil {
 		panic(fmt.Sprintf("Partial %s already registered", name))
@@ -87,7 +87,7 @@ func (tpl *Template) RegisterPartial(name string, partial string) {
 	tpl.partials[name] = newPartial(name, partial)
 }
 
-// RegisterPartials registers several partials.
+// RegisterPartials registers several partials for that template.
 func (tpl *Template) RegisterPartials(partials map[string]string) {
 	for name, partial := range partials {
 		tpl.RegisterPartial(name, partial)

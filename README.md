@@ -2,6 +2,8 @@
 
 Handlebars for [golang](https://golang.org), with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
+The full API documentation is available here: <http://godoc.org/github.com/aymerick/raymond>.
+
 
 ## Quick Start
 
