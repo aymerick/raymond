@@ -16,9 +16,18 @@ type Template struct {
 	partials map[string]*partial
 }
 
+// newTemplate instanciate a new template without parsing it
+func newTemplate(source string) *Template {
+	return &Template{
+		source:   source,
+		helpers:  make(map[string]Helper),
+		partials: make(map[string]*partial),
+	}
+}
+
 // Parse instanciates a template by parsing given source.
 func Parse(source string) (*Template, error) {
-	tpl := NewTemplate(source)
+	tpl := newTemplate(source)
 
 	// parse template
 	if err := tpl.Parse(); err != nil {
@@ -35,15 +44,6 @@ func MustParse(source string) *Template {
 		panic(err)
 	}
 	return result
-}
-
-// NewTemplate instanciate a new template without parsing it.
-func NewTemplate(source string) *Template {
-	return &Template{
-		source:   source,
-		helpers:  make(map[string]Helper),
-		partials: make(map[string]*partial),
-	}
 }
 
 // Parse parses the template.

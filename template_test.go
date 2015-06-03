@@ -22,7 +22,7 @@ CONTENT[ '
 `
 
 func TestNewTemplate(t *testing.T) {
-	tpl := NewTemplate(sourceBasic)
+	tpl := newTemplate(sourceBasic)
 	if tpl.source != sourceBasic {
 		t.Errorf("Faild to instantiate template")
 	}
