@@ -24,7 +24,7 @@ func newPartial(name string, source string) *partial {
 	}
 }
 
-// RegisterPartial registers a global partial.
+// RegisterPartial registers a global partial. That partial will be available to all templates.
 func RegisterPartial(name string, source string) {
 	if partials[name] != nil {
 		panic(fmt.Errorf("Partial already registered: %s", name))
@@ -33,7 +33,7 @@ func RegisterPartial(name string, source string) {
 	partials[name] = newPartial(name, source)
 }
 
-// RegisterPartials registers several global partials.
+// RegisterPartials registers several global partials. Those partials will be available to all templates.
 func RegisterPartials(partials map[string]string) {
 	for name, p := range partials {
 		RegisterPartial(name, p)

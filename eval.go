@@ -550,7 +550,7 @@ func (v *evalVisitor) findHelper(name string) Helper {
 	}
 
 	// check global helpers
-	return FindHelper(name)
+	return findHelper(name)
 }
 
 // helperArg computes helper argument from an expression

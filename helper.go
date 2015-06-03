@@ -34,7 +34,7 @@ func init() {
 	RegisterHelper("lookup", lookupHelper)
 }
 
-// RegisterHelper registers a global helper.
+// RegisterHelper registers a global helper. That helper will be available to all templates.
 func RegisterHelper(name string, helper Helper) {
 	if helpers[name] != nil {
 		panic(fmt.Errorf("Helper already registered: %s", name))
@@ -43,15 +43,15 @@ func RegisterHelper(name string, helper Helper) {
 	helpers[name] = helper
 }
 
-// RegisterHelpers registers several global helpers.
+// RegisterHelpers registers several global helpers. Those helpers will be available to all templates.
 func RegisterHelpers(helpers map[string]Helper) {
 	for name, helper := range helpers {
 		RegisterHelper(name, helper)
 	}
 }
 
-// FindHelper finds a globally registered helper.
-func FindHelper(name string) Helper {
+// findHelper finds a globally registered helper
+func findHelper(name string) Helper {
 	return helpers[name]
 }
 
