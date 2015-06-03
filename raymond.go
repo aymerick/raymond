@@ -1,20 +1,4 @@
 // Package raymond provides handlebars evaluation
-//
-// Basic usage:
-//
-//  source := "<h1>{{title}}</h1><div class="body">{{body}}</div>"
-//
-//  ctx := map[string]string{
-//      "title": "My New Post",
-//      "body":  "This is my first post!",
-//  }
-//
-//  tpl := raymond.MustParse(source)
-//  result := tpl.MustExec(ctx)
-//
-//  // alternatively, for one shots:
-//  result := raymond.MustRender(source, ctx)
-//
 package raymond
 
 // Render parses a template and evaluates it with given context

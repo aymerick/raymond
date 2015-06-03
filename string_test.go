@@ -1,6 +1,9 @@
 package raymond
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 type strTest struct {
 	name   string
@@ -26,4 +29,9 @@ func TestStr(t *testing.T) {
 			t.Errorf("Failed to stringify: %s\nexpected:\n\t'%s'got:\n\t%q", test.name, test.output, res)
 		}
 	}
+}
+
+func ExampleStr() {
+	fmt.Println(Str([]map[string]string{{"foo": "bar"}, {"baz": "bat"}}))
+	// Output: map[foo:bar]map[baz:bat]
 }

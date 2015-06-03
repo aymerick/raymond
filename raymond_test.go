@@ -1,39 +1,57 @@
 package raymond
 
-import (
-	"testing"
-)
+import "fmt"
 
-//
-// Basic rendering test
-//
+func Example() {
+	source := "<h1>{{title}}</h1><p>{{body.content}}</p>"
 
-var testInput = `<div class="entry">
-  <h1>{{title}}</h1>
-  <div class="body">
-    {{body}}
-  </div>
-</div>`
-
-var testCtx = map[string]string{"title": "foo", "body": "bar"}
-
-var testOutput = `<div class="entry">
-  <h1>foo</h1>
-  <div class="body">
-    bar
-  </div>
-</div>`
-
-func TestRender(t *testing.T) {
-	output, err := Render(testInput, testCtx)
-	if err != nil || (output != testOutput) {
-		t.Errorf("Failed to render template\ninput:\n\n'%s'\n\nexpected:\n\n%s\n\ngot:\n\n%serror:\n\n%s", testInput, testOutput, output, err)
+	ctx := map[string]interface{}{
+		"title": "foo",
+		"body":  map[string]string{"content": "bar"},
 	}
+
+	// parse template
+	tpl := MustParse(source)
+
+	// evaluate template with context
+	output := tpl.MustExec(ctx)
+
+	// alternatively, for one shots:
+	// output :=  MustRender(source, ctx)
+
+	fmt.Printf(output)
+	// Output: <h1>foo</h1><p>bar</p>
 }
 
-func TestMustRender(t *testing.T) {
-	output := MustRender(testInput, testCtx)
-	if (output != testOutput) {
-		t.Errorf("Failed to render template\ninput:\n\n'%s'\n\nexpected:\n\n%s\n\ngot:\n\n%s", testInput, testOutput, output)
+func ExampleRender() {
+	tpl := "<h1>{{title}}</h1><p>{{body.content}}</p>"
+
+	ctx := map[string]interface{}{
+		"title": "foo",
+		"body":  map[string]string{"content": "bar"},
 	}
+
+	// render template with context
+	output, err := Render(tpl, ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf(output)
+	// Output: <h1>foo</h1><p>bar</p>
+}
+
+func ExampleMustRender() {
+	tpl := "<h1>{{title}}</h1><p>{{body.content}}</p>"
+
+	ctx := map[string]interface{}{
+		"title": "foo",
+		"body":  map[string]string{"content": "bar"},
+	}
+
+	// render template with context
+	output := MustRender(tpl, ctx)
+
+	fmt.Printf(output)
+	// Output: <h1>foo</h1><p>bar</p>
 }
