@@ -1,4 +1,4 @@
-package raymond
+package handlebars
 
 import "testing"
 
@@ -6,7 +6,7 @@ import "testing"
 // Those tests come from:
 //   https://github.com/wycats/handlebars.js/blob/master/spec/blocks.js
 //
-var hbBlocksTests = []raymondTest{
+var blocksTests = []Test{
 	{
 		"array (1) - Arrays iterate over the contents when not empty",
 		"{{#goodbyes}}{{text}}! {{/goodbyes}}cruel {{world}}!",
@@ -203,6 +203,6 @@ var hbBlocksTests = []raymondTest{
 	},
 }
 
-func TestHandlebarsBlocks(t *testing.T) {
-	launchHandlebarsTests(t, hbBlocksTests)
+func TestBlocks(t *testing.T) {
+	launchTests(t, blocksTests)
 }

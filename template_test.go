@@ -28,7 +28,7 @@ func TestNewTemplate(t *testing.T) {
 	}
 }
 
-func TestParseTemplate(t *testing.T) {
+func TestParse(t *testing.T) {
 	tpl, err := Parse(sourceBasic)
 	if err != nil || (tpl.source != sourceBasic) {
 		t.Errorf("Faild to parse template")

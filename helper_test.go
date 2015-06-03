@@ -1,10 +1,6 @@
 package raymond
 
-import (
-	"fmt"
-	"reflect"
-	"testing"
-)
+import "testing"
 
 const (
 	VERBOSE = false
@@ -15,11 +11,6 @@ const (
 //
 
 func barHelper(h *HelperArg) interface{} { return "bar" }
-
-func barSuffixHelper(h *HelperArg) interface{} {
-	str, _ := h.Param(0).(string)
-	return "bar " + str
-}
 
 func echoHelper(h *HelperArg) interface{} {
 	str, _ := h.Param(0).(string)
@@ -59,81 +50,11 @@ func gnakHelper(h *HelperArg) interface{} {
 	return result
 }
 
-func linkHelper(h *HelperArg) interface{} {
-	prefix, _ := h.Param(0).(string)
-
-	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, h.FieldStr("url"), h.FieldStr("text"))
-}
-
-func rawHelper(h *HelperArg) interface{} {
-	result := h.Block()
-
-	for _, param := range h.Params() {
-		result += Str(param)
-	}
-
-	return result
-}
-
-func formHelper(h *HelperArg) interface{} {
-	return "<form>" + h.Block() + "</form>"
-}
-
-func formCtxHelper(h *HelperArg) interface{} {
-	return "<form>" + h.BlockWithCtx(h.Param(0)) + "</form>"
-}
-
-func listHelper(h *HelperArg) interface{} {
-	ctx := h.Param(0)
-
-	val := reflect.ValueOf(ctx)
-	switch val.Kind() {
-	case reflect.Array, reflect.Slice:
-		if val.Len() > 0 {
-			result := "<ul>"
-			for i := 0; i < val.Len(); i++ {
-				result += "<li>"
-				result += h.BlockWithCtx(val.Index(i).Interface())
-				result += "</li>"
-			}
-			result += "</ul>"
-
-			return result
-		}
-	}
-
-	return "<p>" + h.Inverse() + "</p>"
-}
-
-func blogHelper(h *HelperArg) interface{} {
-	return "val is " + h.ParamStr(0)
-}
-
-func equalHelper(h *HelperArg) interface{} {
-	return Str(h.ParamStr(0) == h.ParamStr(1))
-}
-
-func dashHelper(h *HelperArg) interface{} {
-	return h.ParamStr(0) + "-" + h.ParamStr(1)
-}
-
-func concatHelper(h *HelperArg) interface{} {
-	return h.ParamStr(0) + h.ParamStr(1)
-}
-
-func detectDataHelper(h *HelperArg) interface{} {
-	if val, ok := h.DataFrame().Get("exclaim").(string); ok {
-		return val
-	}
-
-	return ""
-}
-
 //
 // Tests
 //
 
-var helperTests = []raymondTest{
+var helperTests = []Test{
 	{
 		"simple helper",
 		`{{foo}}`,
@@ -250,5 +171,5 @@ var helperTests = []raymondTest{
 //
 
 func TestHelper(t *testing.T) {
-	launchRaymondTests(t, helperTests)
+	launchTests(t, helperTests)
 }

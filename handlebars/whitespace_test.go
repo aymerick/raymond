@@ -1,4 +1,4 @@
-package raymond
+package handlebars
 
 import "testing"
 
@@ -6,7 +6,7 @@ import "testing"
 // Those tests come from:
 //   https://github.com/wycats/handlebars.js/blob/master/spec/whitespace-control.js
 //
-var hbWhitespaceControlTests = []raymondTest{
+var whitespaceControlTests = []Test{
 	{
 		"should strip whitespace around mustache calls (1)",
 		" {{~foo~}} ",
@@ -254,6 +254,6 @@ var hbWhitespaceControlTests = []raymondTest{
 	},
 }
 
-func TestHandlebarsWhitespaceControl(t *testing.T) {
-	launchHandlebarsTests(t, hbWhitespaceControlTests)
+func TestWhitespaceControl(t *testing.T) {
+	launchTests(t, whitespaceControlTests)
 }

@@ -1,22 +1,26 @@
-package raymond
+package handlebars
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/aymerick/raymond"
+)
 
 //
 // Those tests come from:
 //   https://github.com/wycats/handlebars.js/blob/master/spec/subexpression.js
 //
-var hbSubexpressionsTests = []raymondTest{
+var subexpressionsTests = []Test{
 	{
 		"arg-less helper",
 		"{{foo (bar)}}!",
 		map[string]interface{}{},
 		nil,
-		map[string]Helper{
-			"foo": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"foo": func(h *raymond.HelperArg) interface{} {
 				return h.ParamStr(0) + h.ParamStr(0)
 			},
-			"bar": func(h *HelperArg) interface{} {
+			"bar": func(h *raymond.HelperArg) interface{} {
 				return "LOL"
 			},
 		},
@@ -28,7 +32,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{blog (equal a b)}}",
 		map[string]interface{}{"bar": "LOL"},
 		nil,
-		map[string]Helper{
+		map[string]raymond.Helper{
 			"blog":  blogHelper,
 			"equal": equalHelper,
 		},
@@ -40,8 +44,8 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{blog baz.bat (equal a b) baz.bar}}",
 		map[string]interface{}{"bar": "LOL", "baz": map[string]string{"bat": "foo!", "bar": "bar!"}},
 		nil,
-		map[string]Helper{
-			"blog": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"blog": func(h *raymond.HelperArg) interface{} {
 				return "val is " + h.ParamStr(0) + ", " + h.ParamStr(1) + " and " + h.ParamStr(2)
 			},
 			"equal": equalHelper,
@@ -54,7 +58,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{blog (equal (equal true true) true)}}",
 		map[string]interface{}{"bar": "LOL"},
 		nil,
-		map[string]Helper{
+		map[string]raymond.Helper{
 			"blog":  blogHelper,
 			"equal": equalHelper,
 		},
@@ -67,7 +71,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash 'abc' (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		nil,
-		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		map[string]raymond.Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"abc-ab",
 	},
@@ -76,7 +80,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash d (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		nil,
-		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		map[string]raymond.Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"d-ab",
 	},
@@ -85,7 +89,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash c.c (concat a b)}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		nil,
-		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		map[string]raymond.Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"c-ab",
 	},
@@ -94,7 +98,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash (concat a b) c.c}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		nil,
-		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		map[string]raymond.Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"ab-c",
 	},
@@ -103,7 +107,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{dash (concat a e.e) c.c}}",
 		map[string]interface{}{"a": "a", "b": "b", "c": map[string]string{"c": "c"}, "d": "d", "e": map[string]string{"e": "e"}},
 		nil,
-		map[string]Helper{"dash": dashHelper, "concat": concatHelper},
+		map[string]raymond.Helper{"dash": dashHelper, "concat": concatHelper},
 		nil,
 		"ae-c",
 	},
@@ -114,7 +118,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{equal (equal true true) true}}",
 		map[string]interface{}{},
 		nil,
-		map[string]Helper{
+		map[string]raymond.Helper{
 			"equal": equalHelper,
 		},
 		nil,
@@ -125,7 +129,7 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{blog (equal (equal true true) true fun='yes')}}",
 		map[string]interface{}{"bar": "LOL"},
 		nil,
-		map[string]Helper{
+		map[string]raymond.Helper{
 			"blog":  blogHelper,
 			"equal": equalHelper,
 		},
@@ -137,8 +141,8 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{blog fun=(equal (blog fun=1) 'val is 1')}}",
 		map[string]interface{}{},
 		nil,
-		map[string]Helper{
-			"blog": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"blog": func(h *raymond.HelperArg) interface{} {
 				return "val is " + h.HashStr("fun")
 			},
 			"equal": equalHelper,
@@ -151,12 +155,12 @@ var hbSubexpressionsTests = []raymondTest{
 		`{{input aria-label=(t "Name") placeholder=(t "Example User")}}`,
 		map[string]interface{}{},
 		nil,
-		map[string]Helper{
-			"input": func(h *HelperArg) interface{} {
-				return SafeString(`<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`)
+		map[string]raymond.Helper{
+			"input": func(h *raymond.HelperArg) interface{} {
+				return raymond.SafeString(`<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`)
 			},
-			"t": func(h *HelperArg) interface{} {
-				return SafeString(h.ParamStr(0))
+			"t": func(h *raymond.HelperArg) interface{} {
+				return raymond.SafeString(h.ParamStr(0))
 			},
 		},
 		nil,
@@ -167,12 +171,12 @@ var hbSubexpressionsTests = []raymondTest{
 		`{{input aria-label=(t item.field) placeholder=(t item.placeholder)}}`,
 		map[string]map[string]string{"item": {"field": "Name", "placeholder": "Example User"}},
 		nil,
-		map[string]Helper{
-			"input": func(h *HelperArg) interface{} {
-				return SafeString(`<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`)
+		map[string]raymond.Helper{
+			"input": func(h *raymond.HelperArg) interface{} {
+				return raymond.SafeString(`<input aria-label="` + h.HashStr("aria-label") + `" placeholder="` + h.HashStr("placeholder") + `" />`)
 			},
-			"t": func(h *HelperArg) interface{} {
-				return SafeString(h.ParamStr(0))
+			"t": func(h *raymond.HelperArg) interface{} {
+				return raymond.SafeString(h.ParamStr(0))
 			},
 		},
 		nil,
@@ -188,8 +192,8 @@ var hbSubexpressionsTests = []raymondTest{
 		"{{foo (bar)}}!",
 		map[string]interface{}{"bar": func() string { return "LOL" }},
 		nil,
-		map[string]Helper{
-			"foo": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"foo": func(h *raymond.HelperArg) interface{} {
 				return h.ParamStr(0) + h.ParamStr(0)
 			},
 		},
@@ -200,6 +204,6 @@ var hbSubexpressionsTests = []raymondTest{
 	// @todo "subexpressions can't just be property lookups" should raise error
 }
 
-func TestHandlebarsSubexpressions(t *testing.T) {
-	launchHandlebarsTests(t, hbSubexpressionsTests)
+func TestSubexpressions(t *testing.T) {
+	launchTests(t, subexpressionsTests)
 }

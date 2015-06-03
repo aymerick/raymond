@@ -50,12 +50,12 @@ func TestMustache(t *testing.T) {
 			continue
 		}
 
-		launchMustacheTests(t, testsFromMustacheFile(fileName))
+		launchTests(t, testsFromMustacheFile(fileName))
 	}
 }
 
-func testsFromMustacheFile(fileName string) []raymondTest {
-	result := []raymondTest{}
+func testsFromMustacheFile(fileName string) []Test {
+	result := []Test{}
 
 	fileData, err := ioutil.ReadFile(path.Join("mustache", "specs", fileName))
 	if err != nil {
@@ -73,7 +73,7 @@ func testsFromMustacheFile(fileName string) []raymondTest {
 			continue
 		}
 
-		test := raymondTest{
+		test := Test{
 			name:     mustacheTest.Name,
 			input:    mustacheTest.Template,
 			data:     mustacheTest.Data,
@@ -135,7 +135,7 @@ func mustacheTestFiles() []string {
 // Following tests come fron ~lambdas.yml
 //
 
-var mustacheLambdasTests = []raymondTest{
+var mustacheLambdasTests = []Test{
 	{
 		"Interpolation",
 		"Hello, {{lambda}}!",
@@ -228,5 +228,5 @@ var mustacheLambdasTests = []raymondTest{
 }
 
 func TestMustacheLambdas(t *testing.T) {
-	launchMustacheTests(t, mustacheLambdasTests)
+	launchTests(t, mustacheLambdasTests)
 }

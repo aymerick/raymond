@@ -1,18 +1,22 @@
-package raymond
+package handlebars
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/aymerick/raymond"
+)
 
 //
 // Those tests come from:
 //   https://github.com/wycats/handlebars.js/blob/master/spec/data.js
 //
-var hbDataTests = []raymondTest{
+var dataTests = []Test{
 	{
 		"passing in data to a compiled function that expects data - works with helpers",
 		"{{hello}}",
 		map[string]string{"noun": "cat"},
 		map[string]interface{}{"adjective": "happy"},
-		map[string]Helper{"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
 			return h.DataStr("adjective") + " " + h.FieldStr("noun")
 		}},
 		nil,
@@ -31,7 +35,7 @@ var hbDataTests = []raymondTest{
 		`{{#let world="world"}}{{#if foo}}{{#if foo}}Hello {{@world}}{{/if}}{{/if}}{{/let}}`,
 		map[string]bool{"foo": true},
 		map[string]interface{}{"hello": "hello"},
-		map[string]Helper{"let": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"let": func(h *raymond.HelperArg) interface{} {
 			frame := h.NewDataFrame()
 
 			for k, v := range h.Hash() {
@@ -48,7 +52,7 @@ var hbDataTests = []raymondTest{
 		`{{hello @world}}`,
 		nil,
 		map[string]interface{}{"world": "world"},
-		map[string]Helper{"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
 			return "Hello " + h.ParamStr(0)
 		}},
 		nil,
@@ -59,7 +63,7 @@ var hbDataTests = []raymondTest{
 		`{{hello noun=@world}}`,
 		nil,
 		map[string]interface{}{"world": "world"},
-		map[string]Helper{"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
 			return "Hello " + h.HashStr("noun")
 		}},
 		nil,
@@ -70,7 +74,7 @@ var hbDataTests = []raymondTest{
 		`{{hello @world.bar}}`,
 		nil,
 		map[string]interface{}{"world": map[string]string{"bar": "world"}},
-		map[string]Helper{"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
 			return "Hello " + h.ParamStr(0)
 		}},
 		nil,
@@ -81,7 +85,7 @@ var hbDataTests = []raymondTest{
 		`{{hello @world.bar}}`,
 		nil,
 		map[string]interface{}{"foo": map[string]string{"bar": "world"}},
-		map[string]Helper{"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
 			return "Hello " + h.ParamStr(0)
 		}},
 		nil,
@@ -103,7 +107,7 @@ var hbDataTests = []raymondTest{
 		"data can be functions with params",
 		`{{@hello "hello"}}`,
 		nil,
-		map[string]interface{}{"hello": func(h *HelperArg) string { return h.ParamStr(0) }},
+		map[string]interface{}{"hello": func(h *raymond.HelperArg) string { return h.ParamStr(0) }},
 		nil, nil,
 		"hello",
 	},
@@ -113,7 +117,7 @@ var hbDataTests = []raymondTest{
 		`{{#let foo=1 bar=2}}{{#let foo=bar.baz}}{{@bar}}{{@foo}}{{/let}}{{@foo}}{{/let}}`,
 		map[string]map[string]string{"bar": {"baz": "hello world"}},
 		nil,
-		map[string]Helper{"let": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"let": func(h *raymond.HelperArg) interface{} {
 			frame := h.NewDataFrame()
 
 			for k, v := range h.Hash() {
@@ -130,7 +134,7 @@ var hbDataTests = []raymondTest{
 		`{{>myPartial}}`,
 		map[string]string{"noun": "cat"},
 		map[string]interface{}{"adjective": "happy"},
-		map[string]Helper{"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
 			return h.DataStr("adjective") + " " + h.FieldStr("noun")
 		}},
 		map[string]string{
@@ -143,7 +147,7 @@ var hbDataTests = []raymondTest{
 		`{{hello world}}`,
 		map[string]interface{}{"exclaim": true, "world": "world"},
 		map[string]interface{}{"adjective": "happy"},
-		map[string]Helper{"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
 			str := "error"
 			if b, ok := h.Field("exclaim").(bool); ok {
 				if b {
@@ -163,11 +167,11 @@ var hbDataTests = []raymondTest{
 		`{{#hello}}{{world}}{{/hello}}`,
 		map[string]bool{"exclaim": true},
 		map[string]interface{}{"adjective": "happy"},
-		map[string]Helper{
-			"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"hello": func(h *raymond.HelperArg) interface{} {
 				return h.Block()
 			},
-			"world": func(h *HelperArg) interface{} {
+			"world": func(h *raymond.HelperArg) interface{} {
 				str := "error"
 				if b, ok := h.Field("exclaim").(bool); ok {
 					if b {
@@ -188,11 +192,11 @@ var hbDataTests = []raymondTest{
 		`{{#hello}}{{world ../zomg}}{{/hello}}`,
 		map[string]interface{}{"exclaim": true, "zomg": "world"},
 		map[string]interface{}{"adjective": "happy"},
-		map[string]Helper{
-			"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"hello": func(h *raymond.HelperArg) interface{} {
 				return h.BlockWithCtx(map[string]string{"exclaim": "?"})
 			},
-			"world": func(h *HelperArg) interface{} {
+			"world": func(h *raymond.HelperArg) interface{} {
 				return h.DataStr("adjective") + " " + h.ParamStr(0) + h.FieldStr("exclaim")
 			},
 		},
@@ -204,11 +208,11 @@ var hbDataTests = []raymondTest{
 		`{{#hello}}{{world ../zomg}}{{/hello}}`,
 		map[string]interface{}{"exclaim": true, "zomg": "world"},
 		map[string]interface{}{"adjective": "happy", "accessData": "#win"},
-		map[string]Helper{
-			"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"hello": func(h *raymond.HelperArg) interface{} {
 				return h.DataStr("accessData") + " " + h.BlockWithCtx(map[string]string{"exclaim": "?"})
 			},
-			"world": func(h *HelperArg) interface{} {
+			"world": func(h *raymond.HelperArg) interface{} {
 				return h.DataStr("adjective") + " " + h.ParamStr(0) + h.FieldStr("exclaim")
 			},
 		},
@@ -220,15 +224,15 @@ var hbDataTests = []raymondTest{
 		`{{#hello}}{{world zomg}}{{/hello}}`,
 		map[string]interface{}{"exclaim": true, "zomg": "planet"},
 		map[string]interface{}{"adjective": "happy"},
-		map[string]Helper{
-			"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"hello": func(h *raymond.HelperArg) interface{} {
 				ctx := map[string]string{"exclaim": "?", "zomg": "world"}
 				data := h.NewDataFrame()
 				data.Set("adjective", "sad")
 
 				return h.BlockWith(ctx, data, nil)
 			},
-			"world": func(h *HelperArg) interface{} {
+			"world": func(h *raymond.HelperArg) interface{} {
 				return h.DataStr("adjective") + " " + h.ParamStr(0) + h.FieldStr("exclaim")
 			},
 		},
@@ -240,15 +244,15 @@ var hbDataTests = []raymondTest{
 		`{{#hello}}{{world ../zomg}}{{/hello}}`,
 		map[string]interface{}{"exclaim": true, "zomg": "world"},
 		map[string]interface{}{"adjective": "happy"},
-		map[string]Helper{
-			"hello": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"hello": func(h *raymond.HelperArg) interface{} {
 				ctx := map[string]string{"exclaim": "?"}
 				data := h.NewDataFrame()
 				data.Set("adjective", "sad")
 
 				return h.BlockWith(ctx, data, nil)
 			},
-			"world": func(h *HelperArg) interface{} {
+			"world": func(h *raymond.HelperArg) interface{} {
 				return h.DataStr("adjective") + " " + h.ParamStr(0) + h.FieldStr("exclaim")
 			},
 		},
@@ -275,8 +279,8 @@ var hbDataTests = []raymondTest{
 		`{{#helper}}{{#helper}}{{@./depth}} {{@../depth}} {{@../../depth}}{{/helper}}{{/helper}}`,
 		map[string]interface{}{"foo": "hello"},
 		map[string]interface{}{"depth": 0},
-		map[string]Helper{
-			"helper": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{
+			"helper": func(h *raymond.HelperArg) interface{} {
 				data := h.NewDataFrame()
 
 				if depth, ok := h.Data("depth").(int); ok {
@@ -291,6 +295,6 @@ var hbDataTests = []raymondTest{
 	},
 }
 
-func TestHandlebarsData(t *testing.T) {
-	launchHandlebarsTests(t, hbDataTests)
+func TestData(t *testing.T) {
+	launchTests(t, dataTests)
 }

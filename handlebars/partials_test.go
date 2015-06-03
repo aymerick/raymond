@@ -1,12 +1,16 @@
-package raymond
+package handlebars
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/aymerick/raymond"
+)
 
 //
 // Those tests come from:
 //   https://github.com/wycats/handlebars.js/blob/master/spec/partials.js
 //
-var hbPartialsTests = []raymondTest{
+var partialsTests = []Test{
 	{
 		"basic partials",
 		"Dudes: {{#dudes}}{{> dude}}{{/dudes}}",
@@ -20,7 +24,7 @@ var hbPartialsTests = []raymondTest{
 		"Dudes: {{#dudes}}{{> (partial)}}{{/dudes}}",
 		map[string]interface{}{"dudes": []map[string]string{{"name": "Yehuda", "url": "http://yehuda"}, {"name": "Alan", "url": "http://alan"}}},
 		nil,
-		map[string]Helper{"partial": func(h *HelperArg) interface{} {
+		map[string]raymond.Helper{"partial": func(h *raymond.HelperArg) interface{} {
 			return "dude"
 		}},
 		map[string]string{"dude": "{{name}} ({{url}}) "},
@@ -177,6 +181,6 @@ var hbPartialsTests = []raymondTest{
 	// @todo "compat mode"
 }
 
-func TestHandlebarsPartials(t *testing.T) {
-	launchHandlebarsTests(t, hbPartialsTests)
+func TestPartials(t *testing.T) {
+	launchTests(t, partialsTests)
 }

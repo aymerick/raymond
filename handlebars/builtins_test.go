@@ -1,12 +1,16 @@
-package raymond
+package handlebars
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/aymerick/raymond"
+)
 
 //
 // Those tests come from:
 //   https://github.com/wycats/handlebars.js/blob/master/spec/builtin.js
 //
-var hbBuiltinsTests = []raymondTest{
+var builtinsTests = []Test{
 	{
 		"#if - if with boolean argument shows the contents when true",
 		"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
@@ -77,7 +81,7 @@ var hbBuiltinsTests = []raymondTest{
 		"#if - if with function shows the contents when function returns string",
 		"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
 		map[string]interface{}{
-			"goodbye": func(h *HelperArg) string { return "world" },
+			"goodbye": func(h *raymond.HelperArg) string { return "world" },
 			"world":   "world",
 		},
 		nil, nil, nil,
@@ -272,7 +276,7 @@ var hbBuiltinsTests = []raymondTest{
 		"{{#each letters}}{{this}}{{detectDataInsideEach}}{{/each}}",
 		map[string][]string{"letters": {"a", "b", "c"}},
 		map[string]interface{}{"exclaim": "!"},
-		map[string]Helper{"detectDataInsideEach": detectDataHelper},
+		map[string]raymond.Helper{"detectDataInsideEach": detectDataHelper},
 		nil,
 		"a!b!c!",
 	},
@@ -336,6 +340,6 @@ var hbBuiltinsTests = []raymondTest{
 	},
 }
 
-func TestHandlebarsBuiltins(t *testing.T) {
-	launchHandlebarsTests(t, hbBuiltinsTests)
+func TestBuiltins(t *testing.T) {
+	launchTests(t, builtinsTests)
 }

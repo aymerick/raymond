@@ -2,7 +2,7 @@ package raymond
 
 import "testing"
 
-var evalTests = []raymondTest{
+var evalTests = []Test{
 	{
 		"only content",
 		"this is content",
@@ -50,10 +50,10 @@ var evalTests = []raymondTest{
 }
 
 func TestEval(t *testing.T) {
-	launchRaymondTests(t, evalTests)
+	launchTests(t, evalTests)
 }
 
-var evalErrors = []raymondTest{
+var evalErrors = []Test{
 	{
 		"functions with wrong number of arguments",
 		"{{foo}}",
@@ -78,7 +78,7 @@ var evalErrors = []raymondTest{
 }
 
 func TestEvalErrors(t *testing.T) {
-	launchRaymondErrorTests(t, evalErrors)
+	launchErrorTests(t, evalErrors)
 }
 
 //
