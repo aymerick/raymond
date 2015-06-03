@@ -34,13 +34,20 @@ func init() {
 	RegisterHelper("lookup", lookupHelper)
 }
 
-// RegisterHelper registers a new global helper
+// RegisterHelper registers a global helper
 func RegisterHelper(name string, helper Helper) {
 	if helpers[name] != nil {
 		panic(fmt.Errorf("Helper already registered: %s", name))
 	}
 
 	helpers[name] = helper
+}
+
+// RegisterHelpers registers several global helpers
+func RegisterHelpers(helpers map[string]Helper) {
+	for name, helper := range helpers {
+		RegisterHelper(name, helper)
+	}
 }
 
 // FindHelper finds a globally registered helper
