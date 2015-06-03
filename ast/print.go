@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// PrintVisitor implements the `Visitor` interface to print the AST. It is used for unit testing.
+// PrintVisitor implements the Visitor interface to print the AST. It is used for unit testing.
 type PrintVisitor struct {
 	buf   string
 	depth int

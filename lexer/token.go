@@ -44,8 +44,10 @@ const (
 	DUMP_ALL_TOKENS_VAL = true
 )
 
+// TokenKind represents a Token type
 type TokenKind int
 
+// Token represents a scanned token
 type Token struct {
 	Kind TokenKind // Token kind
 	Val  string    // Token value
@@ -54,6 +56,7 @@ type Token struct {
 	Line int // Line number in input string
 }
 
+// tokenName permits to display token name given token type
 var tokenName = map[TokenKind]string{
 	TokenError:            "Error",
 	TokenEOF:              "EOF",

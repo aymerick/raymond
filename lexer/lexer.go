@@ -1,4 +1,4 @@
-// Package lexer provides and handlebars tokenizer.
+// Package lexer provides a handlebars tokenizer.
 //
 // References:
 //   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.l
@@ -82,14 +82,16 @@ var (
 	rCloseComment = regexp.MustCompile(`^\s*~?\}\}`)
 )
 
-// Scan scans given input. Tokens can then be fetched sequentially thanks to `NextToken` function on returned lexer
+// Scan scans given input
+//
+// Tokens can then be fetched sequentially thanks to NextToken() function on returned lexer
 func Scan(input string) *Lexer {
 	return ScanWithName(input, "")
 }
 
-// scans given input, with a name used for testing
+// ScanWithName scans given input, with a name used for testing
 //
-// Tokens can then be fetched sequentially thanks to `NextToken()` function on returned lexer
+// Tokens can then be fetched sequentially thanks to NextToken() function on returned lexer
 func ScanWithName(input string, name string) *Lexer {
 	result := &Lexer{
 		input:  input,
@@ -103,9 +105,9 @@ func ScanWithName(input string, name string) *Lexer {
 	return result
 }
 
-// scans and collect all tokens
+// Collect scans and collect all tokens
 //
-// This should be used for debugging purpose only.
+// This should be used for debugging purpose only
 func Collect(input string) []Token {
 	var result []Token
 
@@ -122,31 +124,31 @@ func Collect(input string) []Token {
 	return result
 }
 
-// returns the next scanned token
+// NextToken returns the next scanned token
 func (l *Lexer) NextToken() Token {
 	result := <-l.tokens
 
 	return result
 }
 
-// returns the current byte position
+// Pos returns the current byte position
 func (l *Lexer) Pos() int {
 	return l.pos
 }
 
-// returns the current line number
+// Line returns the current line number
 func (l *Lexer) Line() int {
 	return l.line
 }
 
-// starts lexical analysis
+// run starts lexical analysis
 func (l *Lexer) run() {
 	for l.nextFunc = lexContent; l.nextFunc != nil; {
 		l.nextFunc = l.nextFunc(l)
 	}
 }
 
-// returns next character from input, or eof of there is nothing left to scan
+// next returns next character from input, or eof of there is nothing left to scan
 func (l *Lexer) next() rune {
 	if l.pos >= len(l.input) {
 		l.width = 0
@@ -160,7 +162,6 @@ func (l *Lexer) next() rune {
 	return r
 }
 
-// helper
 func (l *Lexer) produce(kind TokenKind, val string) {
 	l.tokens <- Token{kind, val, l.start, l.line}
 
@@ -171,19 +172,19 @@ func (l *Lexer) produce(kind TokenKind, val string) {
 	l.line += strings.Count(val, "\n")
 }
 
-// emits a new scanned token
+// emit emits a new scanned token
 func (l *Lexer) emit(kind TokenKind) {
 	l.produce(kind, l.input[l.start:l.pos])
 }
 
-// emits scanned content
+// emitContent emits scanned content
 func (l *Lexer) emitContent() {
 	if l.pos > l.start {
 		l.emit(TokenContent)
 	}
 }
 
-// emits a scanned string
+// emitString emits a scanned string
 func (l *Lexer) emitString(delimiter rune) {
 	str := l.input[l.start:l.pos]
 
@@ -193,25 +194,26 @@ func (l *Lexer) emitString(delimiter rune) {
 	l.produce(TokenString, str)
 }
 
-// returns but does not consume the next character in the input
+// peek returns but does not consume the next character in the input
 func (l *Lexer) peek() rune {
 	r := l.next()
 	l.backup()
 	return r
 }
 
-// steps back one character
-// @warning Can only be called once per call of next
+// backup steps back one character
+//
+// WARNING: Can only be called once per call of next
 func (l *Lexer) backup() {
 	l.pos -= l.width
 }
 
-// skips all characters that have been scanned up to current position
+// ignoreskips all characters that have been scanned up to current position
 func (l *Lexer) ignore() {
 	l.start = l.pos
 }
 
-// scans the next character if it is included in given string
+// accept scans the next character if it is included in given string
 func (l *Lexer) accept(valid string) bool {
 	if strings.IndexRune(valid, l.next()) >= 0 {
 		return true
@@ -222,7 +224,7 @@ func (l *Lexer) accept(valid string) bool {
 	return false
 }
 
-// scans all following characters that are part of given string
+// acceptRun scans all following characters that are part of given string
 func (l *Lexer) acceptRun(valid string) {
 	for strings.IndexRune(valid, l.next()) >= 0 {
 	}
@@ -230,23 +232,25 @@ func (l *Lexer) acceptRun(valid string) {
 	l.backup()
 }
 
+// errorf emits an error token
 func (l *Lexer) errorf(format string, args ...interface{}) lexFunc {
 	l.tokens <- Token{TokenError, fmt.Sprintf(format, args...), l.start, l.line}
 	return nil
 }
 
-// returns true if content at current scanning position starts with given string
+// isString returns true if content at current scanning position starts with given string
 func (l *Lexer) isString(str string) bool {
 	return strings.HasPrefix(l.input[l.pos:], str)
 }
 
-// returns the first string from current scanning position that matches given regular expression
+// findRegexp returns the first string from current scanning position that matches given regular expression
 func (l *Lexer) findRegexp(r *regexp.Regexp) string {
 	return r.FindString(l.input[l.pos:])
 }
 
-// returns the index of the first string from current scanning position that matches given regular expression
-// returns -1 if not found
+// indexRegexp returns the index of the first string from current scanning position that matches given regular expression
+//
+// It returns -1 if not found
 func (l *Lexer) indexRegexp(r *regexp.Regexp) int {
 	loc := r.FindStringIndex(l.input[l.pos:])
 	if loc == nil {
@@ -256,7 +260,7 @@ func (l *Lexer) indexRegexp(r *regexp.Regexp) int {
 	}
 }
 
-// scanning content (ie: not between mustaches)
+// lexContent scans content (ie: not between mustaches)
 func lexContent(l *Lexer) lexFunc {
 	var next lexFunc
 
@@ -322,7 +326,7 @@ func lexContent(l *Lexer) lexFunc {
 	return lexContent
 }
 
-// scanning \{{
+// lexEscapedOpenMustache scans \{{
 func lexEscapedOpenMustache(l *Lexer) lexFunc {
 	// ignore escape character
 	l.next()
@@ -336,7 +340,7 @@ func lexEscapedOpenMustache(l *Lexer) lexFunc {
 	return lexContent
 }
 
-// scanning {{
+// lexOpenMustache scans {{
 func lexOpenMustache(l *Lexer) lexFunc {
 	var str string
 	var tok TokenKind
@@ -376,7 +380,7 @@ func lexOpenMustache(l *Lexer) lexFunc {
 	return nextFunc
 }
 
-// scanning }} or ~}}
+// lexCloseMustache scans }} or ~}}
 func lexCloseMustache(l *Lexer) lexFunc {
 	var str string
 	var tok TokenKind
@@ -401,7 +405,7 @@ func lexCloseMustache(l *Lexer) lexFunc {
 	return lexContent
 }
 
-// scanning inside mustaches
+// lexExpression scans inside mustaches
 func lexExpression(l *Lexer) lexFunc {
 	// search close mustache delimiter
 	if l.isString(CLOSE_MUSTACHE) || l.isString(CLOSE_STRIP_MUSTACHE) || l.isString(CLOSE_UNESCAPED_STRIP_MUSTACHE) {
@@ -481,7 +485,7 @@ func lexExpression(l *Lexer) lexFunc {
 	return lexExpression
 }
 
-// scanning {{!-- or {{!
+// lexComment scans {{!-- or {{!
 func lexComment(l *Lexer) lexFunc {
 	if str := l.findRegexp(l.closeComment); str != "" {
 		l.pos += len(str)
@@ -497,7 +501,7 @@ func lexComment(l *Lexer) lexFunc {
 	return lexComment
 }
 
-// scans all following ignorable characters
+// lexIgnorable scans all following ignorable characters
 func lexIgnorable(l *Lexer) lexFunc {
 	for isIgnorable(l.peek()) {
 		l.next()
@@ -507,7 +511,7 @@ func lexIgnorable(l *Lexer) lexFunc {
 	return lexExpression
 }
 
-// scans a string
+// lexString scans a string
 func lexString(l *Lexer) lexFunc {
 	// get string delimiter
 	delim := l.next()
@@ -547,7 +551,7 @@ func lexString(l *Lexer) lexFunc {
 // and "089" - but when it's wrong the input is invalid and the parser (via
 // strconv) will notice.
 //
-// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
+// NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
 func lexNumber(l *Lexer) lexFunc {
 	if !l.scanNumber() {
 		return l.errorf("bad number syntax: %q", l.input[l.start:l.pos])
@@ -564,7 +568,9 @@ func lexNumber(l *Lexer) lexFunc {
 	return lexExpression
 }
 
-// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
+// scanNumber scans a number
+//
+// NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
 func (l *Lexer) scanNumber() bool {
 	// Optional leading sign.
 	l.accept("+-")
@@ -599,7 +605,7 @@ func (l *Lexer) scanNumber() bool {
 	return true
 }
 
-// scans an ID
+// lexIdentifier scans an ID
 func lexIdentifier(l *Lexer) lexFunc {
 	str := l.findRegexp(rID)
 	if len(str) == 0 {
@@ -613,7 +619,7 @@ func lexIdentifier(l *Lexer) lexFunc {
 	return lexExpression
 }
 
-// scans an [ID]
+// lexPathLiteral scans an [ID]
 func lexPathLiteral(l *Lexer) lexFunc {
 	for {
 		r := l.next()
@@ -631,13 +637,14 @@ func lexPathLiteral(l *Lexer) lexFunc {
 	return lexExpression
 }
 
-// returns true if given character is ignorable (ie. whitespace of line feed)
+// isIgnorable returns true if given character is ignorable (ie. whitespace of line feed)
 func isIgnorable(r rune) bool {
 	return r == ' ' || r == '\t' || r == '\n'
 }
 
 // isAlphaNumeric reports whether r is an alphabetic, digit, or underscore.
-// @note borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
+//
+// NOTE borrowed from https://github.com/golang/go/tree/master/src/text/template/parse/lex.go
 func isAlphaNumeric(r rune) bool {
 	return r == '_' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }

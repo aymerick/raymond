@@ -1,3 +1,8 @@
+// Package parser provides a handlebars syntax analyser. It consumes the tokens provided by the lexer to build an AST.
+//
+// References:
+//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.yy
+//   - https://github.com/golang/go/blob/master/src/text/template/parse/parse.go
 package parser
 
 import (
@@ -10,11 +15,7 @@ import (
 	"github.com/aymerick/raymond/lexer"
 )
 
-// References:
-//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.yy
-//   - https://github.com/golang/go/blob/master/src/text/template/parse/parse.go
-
-// Grammar parser
+// Parser is a syntax analyzer
 type Parser struct {
 	// Lexer
 	lex *lexer.Lexer
@@ -35,14 +36,14 @@ var (
 	rOpenAmp      = regexp.MustCompile(`^\{\{~?&`)
 )
 
-// instanciate a new parser
+// New instanciates a new parser
 func New(input string) *Parser {
 	return &Parser{
 		lex: lexer.Scan(input),
 	}
 }
 
-// parse given input and returns the ast root node
+// Parse parses given input and returns the AST root node
 func Parse(input string) (result *ast.Program, err error) {
 	// recover error
 	defer errRecover(&err)
@@ -66,7 +67,7 @@ func Parse(input string) (result *ast.Program, err error) {
 	return
 }
 
-// recovers parsing panic
+// errRecover recovers parsing panic
 func errRecover(errp *error) {
 	e := recover()
 	if e != nil {
@@ -81,27 +82,27 @@ func errRecover(errp *error) {
 	}
 }
 
-// fatal parsing error
+// errPanic panics
 func errPanic(err error, line int) {
 	panic(fmt.Errorf("Parse error on line %d:\n%s", line, err))
 }
 
-// fatal parsing error on given node
+// errNode panics with given Node infos
 func errNode(node ast.Node, msg string) {
 	errPanic(fmt.Errorf("%s\nNode: %s", msg, node), node.Location().Line)
 }
 
-// fatal parsing error on given token
+// errNode panics with given Token infos
 func errToken(tok *lexer.Token, msg string) {
 	errPanic(fmt.Errorf("%s\nToken: %s", msg, tok), tok.Line)
 }
 
-// fatal parsing error: unexpected token kind error
+// errNode panics because of an unexpected Token kind
 func errExpected(expect lexer.TokenKind, tok *lexer.Token) {
 	errPanic(fmt.Errorf("Expecting %s, got: '%s'", expect, tok), tok.Line)
 }
 
-// program : statement*
+// ParseProgram parses: "program : statement*"
 func (p *Parser) ParseProgram() *ast.Program {
 	result := ast.NewProgram(p.lex.Pos(), p.lex.Line())
 
@@ -112,7 +113,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return result
 }
 
-// statement : mustache | block | rawBlock | partial | content | COMMENT
+// parseStatement parses: `statement : mustache | block | rawBlock | partial | content | COMMENT`
 func (p *Parser) parseStatement() ast.Node {
 	var result ast.Node
 
@@ -145,7 +146,7 @@ func (p *Parser) parseStatement() ast.Node {
 	return result
 }
 
-// Returns true if next token starts a statement
+// isStatement returns true if next token starts a statement
 func (p *Parser) isStatement() bool {
 	if !p.have(1) {
 		return false
@@ -161,7 +162,7 @@ func (p *Parser) isStatement() bool {
 	return false
 }
 
-// content : CONTENT
+// parseContent parses: `content : CONTENT`
 func (p *Parser) parseContent() *ast.ContentStatement {
 	// CONTENT
 	tok := p.shift()
@@ -173,7 +174,7 @@ func (p *Parser) parseContent() *ast.ContentStatement {
 	return ast.NewContentStatement(tok.Pos, tok.Line, tok.Val)
 }
 
-// COMMENT
+// parseComment parses: `COMMENT`
 func (p *Parser) parseComment() *ast.CommentStatement {
 	// COMMENT
 	tok := p.shift()
@@ -187,7 +188,7 @@ func (p *Parser) parseComment() *ast.CommentStatement {
 	return result
 }
 
-// Parses `param* hash?`
+// parseExpressionParamsHash parses: `param* hash?`
 func (p *Parser) parseExpressionParamsHash() ([]ast.Node, *ast.Hash) {
 	var params []ast.Node
 	var hash *ast.Hash
@@ -205,7 +206,7 @@ func (p *Parser) parseExpressionParamsHash() ([]ast.Node, *ast.Hash) {
 	return params, hash
 }
 
-// Parses an expression `helperName param* hash?`
+// parseExpression parses: `helperName param* hash?`
 func (p *Parser) parseExpression(tok *lexer.Token) *ast.Expression {
 	result := ast.NewExpression(tok.Pos, tok.Line)
 
@@ -218,9 +219,11 @@ func (p *Parser) parseExpression(tok *lexer.Token) *ast.Expression {
 	return result
 }
 
-// rawBlock : openRawBlock content endRawBlock
-// openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK
-// endRawBlock : OPEN_END_RAW_BLOCK helperName CLOSE_RAW_BLOCK
+// parseRawBlock parses a raw block:
+//
+//   `rawBlock : openRawBlock content endRawBlock`
+//   `openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK`
+//   `endRawBlock : OPEN_END_RAW_BLOCK helperName CLOSE_RAW_BLOCK`
 func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	// OPEN_RAW_BLOCK
 	tok := p.shift()
@@ -275,7 +278,7 @@ func (p *Parser) parseRawBlock() *ast.BlockStatement {
 	return result
 }
 
-// block : openBlock program inverseChain? closeBlock
+// parseBlock parses: `block : openBlock program inverseChain? closeBlock`
 func (p *Parser) parseBlock() *ast.BlockStatement {
 	// openBlock
 	result, blockParams := p.parseOpenBlock()
@@ -298,12 +301,12 @@ func (p *Parser) parseBlock() *ast.BlockStatement {
 	return result
 }
 
-// @todo This was totally cargo culted ! CHECK THAT !
+// setBlockInverseStrip is called when parsing `block` (openBlock | openInverse) and `inverseChain`
+//
+// TODO: This was totally cargo culted ! CHECK THAT !
 //
 // cf. prepareBlock() in:
 //   https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/helper.js
-//
-// Called when parsing `block` (openBlock | openInverse) and `inverseChain`
 func setBlockInverseStrip(block *ast.BlockStatement) {
 	if block.Inverse == nil {
 		return
@@ -317,7 +320,8 @@ func setBlockInverseStrip(block *ast.BlockStatement) {
 	block.InverseStrip = block.Inverse.Strip
 }
 
-// block : openInverse program inverseAndProgram? closeBlock
+// parseInverse parses:
+// block : openInverse program inverseAndProgram? closeBlock`
 func (p *Parser) parseInverse() *ast.BlockStatement {
 	// openInverse
 	result, blockParams := p.parseOpenBlock()
@@ -341,7 +345,7 @@ func (p *Parser) parseInverse() *ast.BlockStatement {
 	return result
 }
 
-// Parses `helperName param* hash? blockParams?`
+// parseOpenBlockExpression parses: `helperName param* hash? blockParams?`
 func (p *Parser) parseOpenBlockExpression(tok *lexer.Token) (*ast.BlockStatement, []string) {
 	var blockParams []string
 
@@ -359,6 +363,8 @@ func (p *Parser) parseOpenBlockExpression(tok *lexer.Token) (*ast.BlockStatement
 	return result, blockParams
 }
 
+// parseInverseChain parses:
+//
 // inverseChain : openInverseChain program inverseChain?
 //              | inverseAndProgram
 func (p *Parser) parseInverseChain() *ast.Program {

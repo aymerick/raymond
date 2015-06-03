@@ -1,4 +1,4 @@
-// Package ast provides structures to represent an handlebars Abstract Syntax Tree, and a `Visitor` interface to visit that tree.
+// Package ast provides structures to represent a handlebars Abstract Syntax Tree, and a Visitor interface to visit that tree.
 //
 // References:
 //   - https://github.com/wycats/handlebars.js/blob/master/lib/handlebars/compiler/ast.js
@@ -55,7 +55,7 @@ type Visitor interface {
 // NodeType represents an AST Node type
 type NodeType int
 
-// Type returns itself, and permits struct includers to satisfy that part of `Node` interface
+// Type returns itself, and permits struct includers to satisfy that part of Node interface
 func (t NodeType) Type() NodeType {
 	return t
 }
@@ -91,7 +91,7 @@ type Loc struct {
 	Line int // Line number
 }
 
-// Location returns itself, and permits struct includers to satisfy that part of `Node` interface
+// Location returns itself, and permits struct includers to satisfy that part of Node interface
 func (l Loc) Location() Loc {
 	return l
 }
@@ -537,7 +537,7 @@ func (node *PathExpression) Sep(separator string) {
 	node.Original += separator
 }
 
-// IsDataRoot returns true if path expression is `@root`
+// IsDataRoot returns true if path expression is @root
 func (node *PathExpression) IsDataRoot() bool {
 	return node.Data && (node.Parts[0] == "root")
 }
