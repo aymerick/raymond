@@ -1,3 +1,8 @@
+// Package lexer provides and handlebars tokenizer.
+//
+// References:
+//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.l
+//   - https://github.com/golang/go/blob/master/src/text/template/parse/lex.go
 package lexer
 
 import (
@@ -7,10 +12,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 )
-
-// References:
-//   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.l
-//   - https://github.com/golang/go/blob/master/src/text/template/parse/lex.go
 
 const (
 	// mustache detection
@@ -24,10 +25,10 @@ const (
 
 const eof = -1
 
-// function that returns the next lexer function
+// lexFunc represents a function that returns the next lexer function
 type lexFunc func(*Lexer) lexFunc
 
-// Lexical analyzer
+// Lexer is a lexical analyzer
 type Lexer struct {
 	input    string     // input to scan
 	name     string     // lexer name, used for testing purpose
@@ -81,9 +82,7 @@ var (
 	rCloseComment = regexp.MustCompile(`^\s*~?\}\}`)
 )
 
-// scans given input
-//
-// Tokens can then be fetched sequentially thanks to `NextToken()` function on returned lexer
+// Scan scans given input. Tokens can then be fetched sequentially thanks to `NextToken` function on returned lexer
 func Scan(input string) *Lexer {
 	return ScanWithName(input, "")
 }
