@@ -539,6 +539,7 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 
 	// @todo Is there a better way to do that ?
 	strType := reflect.TypeOf("")
+	boolType := reflect.TypeOf(true)
 
 	// check parameters number
 	addOptions := false
@@ -576,6 +577,10 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 			if strType.AssignableTo(argType) {
 				// convert parameter to string
 				arg = reflect.ValueOf(strValue(arg))
+			} else if boolType.AssignableTo(argType) {
+				// convert parameter to bool
+				val, _ := isTruthValue(arg)
+				arg = reflect.ValueOf(val)
 			} else {
 				v.errorf("Helper %s called with argument %d with type %s but it should be %s", name, i, arg.Type(), argType)
 			}
