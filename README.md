@@ -405,7 +405,7 @@ These handlebars features are currently NOT implemented:
 
 ## Lexer
 
-Here is how the lexer work:
+You should not use the lexer directly, but for your information here is an example:
 
 ```go
 package main
@@ -440,12 +440,47 @@ func main() {
 
 Outputs:
 
-  Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
-
+```
+Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
+```
 
 ## Parser
 
-@todo !!!
+You should not use the parser directly, but for your information here is an example:
+
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/aymerick/raymond/ast"
+  "github.com/aymerick/raymond/parser"
+)
+
+func main() {
+  source := "You know {{nothing}} John Snow"
+
+  // parse template
+  program, err := parser.Parse(source)
+  if err != nil {
+    panic(err)
+  }
+
+  // print AST
+  output := ast.Print(program)
+
+  fmt.Print(output)
+}
+```
+
+Outputs:
+
+```
+CONTENT[ 'You know ' ]
+{{ PATH:nothing [] }}
+CONTENT[ ' John Snow' ]
+```
 
 
 ## Test
