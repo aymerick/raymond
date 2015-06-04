@@ -175,3 +175,22 @@ func TestParserErrors(t *testing.T) {
 		}
 	}
 }
+
+// package example
+func Example() {
+	source := "<h1>{{title}}</h1>"
+
+	// parse template
+	program, err := Parse(source)
+	if err != nil {
+		panic(err)
+	}
+
+	// print AST
+	output := ast.Print(program)
+
+	fmt.Print(output)
+	// Output: CONTENT[ '<h1>' ]
+	// {{ PATH:title [] }}
+	// CONTENT[ '</h1>' ]
+}

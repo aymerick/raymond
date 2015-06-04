@@ -103,7 +103,7 @@ func (tpl *Template) Exec(ctx interface{}) (result string, err error) {
 	return tpl.ExecWith(ctx, nil)
 }
 
-// MustExec renders a template with given context. It panics on error.
+// MustExec renders template with given context. It panics on error.
 func (tpl *Template) MustExec(ctx interface{}) string {
 	result, err := tpl.Exec(ctx)
 	if err != nil {
@@ -112,7 +112,7 @@ func (tpl *Template) MustExec(ctx interface{}) string {
 	return result
 }
 
-// ExecWith renders a template with given context and private data frame.
+// ExecWith renders template with given context and private data frame.
 func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result string, err error) {
 	defer errRecover(&err)
 

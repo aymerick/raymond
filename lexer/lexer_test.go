@@ -1,6 +1,9 @@
 package lexer
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 type lexTest struct {
 	name   string
@@ -511,3 +514,26 @@ func TestLexer(t *testing.T) {
 
 // @todo Test errors:
 //   `{{{{raw foo`
+
+// package example
+func Example() {
+	source := "You know {{nothing}} John Snow"
+
+	output := ""
+
+	lex := Scan(source)
+	for {
+		// consume next token
+		token := lex.NextToken()
+
+		output += fmt.Sprintf(" %s", token)
+
+		// stops when all tokens have been consumed, or on error
+		if token.Kind == TokenEOF || token.Kind == TokenError {
+			break
+		}
+	}
+
+	fmt.Print(output)
+	// Output: Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
+}
