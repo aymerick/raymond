@@ -566,6 +566,8 @@ func (v *evalVisitor) callFunc(funcVal reflect.Value, options *Options) reflect.
 				arg = reflect.Zero(argType)
 			} else if argType.Kind() == reflect.String {
 				arg = reflect.ValueOf("")
+			} else {
+				v.errorf("Invalid parameter passed to helper function: %q", funcVal)
 			}
 		}
 
