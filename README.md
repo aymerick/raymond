@@ -212,7 +212,7 @@ To register a global helper, use the `raymond.RegisterHelper` function: that hel
   })
 ```
 
-But you can can too register a helper on a specific template, and in that case that helper will be only available to that template:
+You can too register a helper on a specific template, and in that case that helper will be only available to that template:
 
 ```go
   tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
@@ -234,11 +234,22 @@ You can use the `if` helper to conditionally render a block. If its argument ret
 <div class="entry">
   {{#if author}}
     <h1>{{firstName}} {{lastName}}</h1>
+  {{/if}}
+</div>
+```
+
+When using a block expression, you can specify a template section to run if the expression returns a falsy value. The section, marked by `{{else}}` is called an "else section".
+
+```html
+<div class="entry">
+  {{#if author}}
+    <h1>{{firstName}} {{lastName}}</h1>
   {{else}}
     <h1>Unknown Author</h1>
   {{/if}}
 </div>
 ```
+
 
 #### The `unless` block helper
 
