@@ -138,9 +138,9 @@ You can use `MustParse()` and `MustExec()` functions if you don't want to deal w
 
 ## Context
 
-The rendering context can contain any type of objects, including `array`, `slice`, `map`, `struc`t and `func`.
+The rendering context can contain any type of objects, including `array`, `slice`, `map`, `struct` and `func`.
 
-When using struct, be warned that only exported fields are accessible:
+When using structs, be warned that only exported fields are accessible:
 
 ```go
 package main
@@ -273,7 +273,7 @@ Output:
 
 ## Helpers
 
-Helpers can be accessed from any context in a template. You can register a helper with the raymond.RegisterHelper function.
+Helpers can be accessed from any context in a template. You can register a helper with the `RegisterHelper` function.
 
 For example:
 
@@ -293,7 +293,7 @@ For example:
 
 With this context and helper:
 
-``go
+```go
 ctx := map[string]interface{}{
   "author": map[string]string{"firstName": "Jean", "lastName": "Valjean"},
   "body":   "Life is difficult",
@@ -306,7 +306,7 @@ ctx := map[string]interface{}{
 raymond.RegisterHelper("fullName", func(person map[string]string) string {
   return person["firstName"] + " " + person["lastName"]
 })
-``
+```
 
 Outputs:
 
@@ -324,7 +324,7 @@ Outputs:
 
 Helper arguments can be any type. Following example uses structs instead of maps and produces the same output as the previous one:
 
-``go
+```go
   type Person struct {
     FirstName string
     LastName  string
@@ -355,7 +355,7 @@ Helper arguments can be any type. Following example uses structs instead of maps
   RegisterHelper("fullName", func(person Person) string {
     return person.FirstName + " " + person.LastName
   })
-``
+```
 
 ### Template Helpers
 
