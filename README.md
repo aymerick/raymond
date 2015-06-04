@@ -766,7 +766,7 @@ When calling a helper in a template, raymond expects to find the same number of 
 So this template:
 
 ```html
-`{{add a}}`
+{{add a}}
 ```
 
 With this helper:
@@ -782,7 +782,7 @@ Will simply panics, because we call it with one argument, and it expects two.
 
 #### Automatic conversion
 
-Let's create a `concat` helper that expectes two strings and concat them:
+Let's create a `concat` helper that expects two strings and concat them:
 
 ```go
 source := `{{concat a b}}`
@@ -797,7 +797,7 @@ raymond.RegisterHelper("concat", func(val1, val2 string) string {
 })
 ```
 
-Everything goes well, two strings are passed as arguments to the helper:
+Everything goes well, two strings are passed as arguments to the helper that outputs:
 
 ```html
 Jean VALJEAN
@@ -812,22 +812,22 @@ ctx := map[string]interface{}{
 }
 ```
 
-Actually, raymond will perfom automatic string conversion, so helper will get the `"10"` string as its first argument, and outputs:
+Actually, raymond will perfom automatic string conversion, so helper will get the `"10"` string as its first argument is a `string`, and outputs:
 
 ```html
 10 VALJEAN
 ```
 
-Note that this kind of automatic conversion is done with `bool` type, thanks to `IsTruth()` function.
+Note that this kind of automatic conversion is done with `bool` type too, thanks to the `IsTruth()` function.
 
 
 ### Options Argument
 
-Actually, if a helper needs the `Options` argument, it can define it as the end of its parameters:
+If a helper needs the `Options` argument, just add it as the end of helper parameters:
 
 ```go
 raymond.RegisterHelper("add", func(val1, val2 int, options *raymond.Options) string {
-    return strconv.Itoa(val1 + val2)
+    return strconv.Itoa(val1 + val2) + " " + options.ValueStr("bananas")
 })
 ```
 
@@ -845,6 +845,8 @@ Helpers fetch current context values with `options.Value()` and `options.ValuesS
 For example:
 
 ```go
+source := `{{concat a b}}`
+
 ctx := map[string]interface{}{
     "a":      "Marcel",
     "b":      "Beliveau",
@@ -867,7 +869,7 @@ Helpers can get the entire current context with `options.Ctx()` that returns an 
 
 #### Helper Hash Arguments
 
-Helpers access to hash arguments with `options.HashProp()` and `options.HashStr()`.
+Helpers access hash arguments with `options.HashProp()` and `options.HashStr()`.
 
 `HashProp()` returns an `interface{}` and lets the helper do the type assertions whereas `HashStr()` automatically converts the value to a `string`.
 
@@ -898,14 +900,89 @@ Helpers can get the full hash with `options.Hash()` that returns a `map[string]i
 
 #### Private Data
 
-@todo doc
+Helpers access private data variables with `options.Data()` and `options.DataStr()`.
+
+`Data()` returns an `interface{}` and lets the helper do the type assertions whereas `DataStr()` automatically converts the value to a `string`.
+
+Helpers can get the entire current data frame with `options.DataFrame()` that returns a `*DataFrame`.
+
+For helpers that need to inject their own private data frame, use `options.NewDataFrame()` to create the frame and `options.FnData()` to evaluate the block with that frame.
+
+For example:
+
+```go
+source := `{{#voodoo kind=a}}Voodoo is {{@magix}}{{/voodoo}}`
+
+ctx := map[string]interface{}{
+    "a": "awesome",
+}
+
+raymond.RegisterHelper("voodoo", func(options *raymond.Options) string {
+    // create data frame with @magix data
+    frame := options.NewDataFrame()
+    frame.Set("magix", options.HashProp("kind"))
+
+    // evaluates block with new data frame
+    return options.FnData(frame)
+})
+```
+
+Helpers that need to evaluate the block with a private data frame and a new context can call `options.FnCtxData()`.
 
 
 ### Utilites
 
-@todo doc for `Str()`
+In addition to the `Escape()`, raymond provides utility functions that can be usefull for helpers.
 
-@todo doc for `IsTruth()`... describes boolean conversion
+
+#### `Str()`
+
+`Str()` converts its parameter to a `string`.
+
+Booleans:
+
+```go
+raymond.Str(3) + " foos and " + raymond.Str(-1.25) + " bars"
+// Outputs: "3 foos and -1.25 bars"
+```
+
+Numbers:
+
+``` go
+"everything is " + raymond.Str(true) + " and nothing is " + raymond.Str(false)
+// Outputs: "everything is true and nothing is false"
+```
+
+Maps:
+
+```go
+raymond.Str(map[string]string{"foo": "bar"})
+// Outputs: "map[foo:bar]"
+```
+
+Arrays and Slices:
+
+```go
+raymond.Str([]interface{}{true, 10, "foo", 5, "bar"})
+// Outputs: "true10foo5bar"
+```
+
+
+#### `IsTruth()`
+
+`IsTruth()` returns a `bool` representing the truthy version of the parameter.
+
+It returns `false` when parameter is either:
+
+  - an empty array
+  - an empty slice
+  - an empty map
+  - `""`
+  - `nil`
+  - `0`
+  - `false`
+
+For all others values, `IsTruth()` returns `true`.
 
 
 ## Context Functions
