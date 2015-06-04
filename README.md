@@ -129,13 +129,43 @@ Displays:
 You can use `MustParse()` and `MustExec()` functions if you don't want to deal with errors:
 
 ```go
-    // parse template
-    tpl := raymond.MustParse(source)
+// parse template
+tpl := raymond.MustParse(source)
 
-    // render template
-    result := tpl.MustExec(ctx)
+// render template
+result := tpl.MustExec(ctx)
 ```
 
+And you can create your own helpers, like this `uppercase` helper:
+
+```go
+raymond.RegisterHelper("uppercase", func(value string) string {
+  return strings.ToUpper(value)
+})
+```
+
+With this template:
+
+```html
+<p>{{user.firstName}} {{uppercase user.lastName}}</p>
+```
+
+And this context:
+
+```go
+ctx := map[string]interface{}{
+  "user": map[string]string{
+    "firstName": "Jean",
+    "lastName":  "Valjean",
+  },
+}
+```
+
+Outputs:
+
+```html
+<p>Jean VALJEAN</p>
+```
 
 ## Context
 
@@ -153,7 +183,7 @@ import (
 )
 
 func main() {
-  source := `<div class="post">
+    source := `<div class="post">
   <h1>By {{Author.FirstName}} {{Author.LastName}}</h1>
   <div class="body">{{Body}}</div>
 
@@ -165,36 +195,36 @@ func main() {
   {{/each}}
 </div>`
 
-  type Person struct {
-    FirstName string
-    LastName  string
-  }
+    type Person struct {
+      FirstName string
+      LastName  string
+    }
 
-  type Comment struct {
-    Author Person
-    Body   string
-  }
+    type Comment struct {
+      Author Person
+      Body   string
+    }
 
-  type Post struct {
-    Author   Person
-    Body     string
-    Comments []Comment
-  }
+    type Post struct {
+      Author   Person
+      Body     string
+      Comments []Comment
+    }
 
-  ctx := Post{
-    Person{"Jean", "Valjean"},
-    "Life is difficult",
-    []Comment{
-      Comment{
-        Person{"Marcel", "Beliveau"},
-        "LOL!",
+    ctx := Post{
+      Person{"Jean", "Valjean"},
+      "Life is difficult",
+      []Comment{
+        Comment{
+          Person{"Marcel", "Beliveau"},
+          "LOL!",
+        },
       },
-    },
-  }
+    }
 
-  output := raymond.MustRender(source, ctx)
+    output := raymond.MustRender(source, ctx)
 
-  fmt.Print(output)
+    fmt.Print(output)
 }
 ```
 
@@ -218,7 +248,7 @@ Output:
 By default, the result of a mustache expression is HTML escaped. Use the triple mustache `{{{` to output unescaped values.
 
 ```go
-  source := `<div class="entry">
+source := `<div class="entry">
   <h1>{{title}}</h1>
   <div class="body">
     {{{body}}}
@@ -226,15 +256,15 @@ By default, the result of a mustache expression is HTML escaped. Use the triple 
 </div>
 `
 
-  ctx := map[string]string{
+ctx := map[string]string{
     "title": "All about <p> Tags",
     "body":  "<p>This is a post about &lt;p&gt; tags</p>",
-  }
+}
 
-  tpl := raymond.MustParse(source)
-  result := tpl.MustExec(ctx)
+tpl := raymond.MustParse(source)
+result := tpl.MustExec(ctx)
 
-  fmt.Print(result)
+fmt.Print(result)
 ```
 
 Output:
@@ -251,19 +281,19 @@ Output:
 When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
 
 ```go
-  raymond.RegisterHelper("link", func(url, text string) raymond.SafeString {
+raymond.RegisterHelper("link", func(url, text string) raymond.SafeString {
     return raymond.SafeString("<a href='" + raymond.Escape(url) + "'>" + raymond.Escape(text) + "</a>")
-  })
+})
 
-  tpl := raymond.MustParse("{{link url text}}")
+tpl := raymond.MustParse("{{link url text}}")
 
-  ctx := map[string]string{
+ctx := map[string]string{
     "url":  "http://www.aymerick.com/",
     "text": "This is a <em>cool</em> website",
-  }
+}
 
-  result := tpl.MustExec(ctx)
-  fmt.Print(result)
+result := tpl.MustExec(ctx)
+fmt.Print(result)
 ```
 
 Output:
@@ -297,16 +327,16 @@ With this context and helper:
 
 ```go
 ctx := map[string]interface{}{
-  "author": map[string]string{"firstName": "Jean", "lastName": "Valjean"},
-  "body":   "Life is difficult",
-  "comments": []map[string]interface{}{{
-    "author": map[string]string{"firstName": "Marcel", "lastName": "Beliveau"},
-    "body":   "LOL!",
-  }},
+    "author": map[string]string{"firstName": "Jean", "lastName": "Valjean"},
+    "body":   "Life is difficult",
+    "comments": []map[string]interface{}{{
+        "author": map[string]string{"firstName": "Marcel", "lastName": "Beliveau"},
+        "body":   "LOL!",
+    }},
 }
 
 raymond.RegisterHelper("fullName", func(person map[string]string) string {
-  return person["firstName"] + " " + person["lastName"]
+    return person["firstName"] + " " + person["lastName"]
 })
 ```
 
@@ -327,36 +357,36 @@ Outputs:
 Helper arguments can be any type. Following example uses structs instead of maps and produces the same output as the previous one:
 
 ```go
-  type Person struct {
+type Person struct {
     FirstName string
     LastName  string
-  }
+}
 
-  type Comment struct {
+type Comment struct {
     Author Person
     Body   string
-  }
+}
 
-  type Post struct {
+type Post struct {
     Author   Person
     Body     string
     Comments []Comment
-  }
+}
 
-  ctx := Post{
+ctx := Post{
     Person{"Jean", "Valjean"},
     "Life is difficult",
     []Comment{
-      Comment{
-        Person{"Marcel", "Beliveau"},
-        "LOL!",
-      },
+        Comment{
+            Person{"Marcel", "Beliveau"},
+            "LOL!",
+        },
     },
-  }
+}
 
-  RegisterHelper("fullName", func(person Person) string {
+RegisterHelper("fullName", func(person Person) string {
     return person.FirstName + " " + person.LastName
-  })
+})
 ```
 
 
@@ -365,11 +395,11 @@ Helper arguments can be any type. Following example uses structs instead of maps
 You can register a helper on a specific template, and in that case that helper will be only available to that template:
 
 ```go
-  tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
+tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
 
-  tpl.RegisterHelper("fullName", func(firstName, lastName string) string {
-    return firstName + " " + lastName
-  })
+tpl.RegisterHelper("fullName", func(firstName, lastName string) string {
+  return firstName + " " + lastName
+})
 ```
 
 
@@ -434,9 +464,9 @@ With this context:
 
 ```go
 map[string]interface{}{
-  "people": []string{
-    "Marcel", "Jean-Claude", "Yvette",
-  },
+    "people": []string{
+        "Marcel", "Jean-Claude", "Yvette",
+    },
 }
 ```
 
@@ -444,9 +474,9 @@ Outputs:
 
 ```html
 <ul class="people">
-    <li>Marcel</li>
-    <li>Jean-Claude</li>
-    <li>Yvette</li>
+  <li>Marcel</li>
+  <li>Jean-Claude</li>
+  <li>Yvette</li>
 </ul>
 ```
 
@@ -496,13 +526,13 @@ You can shift the context for a section of a template by using the built-in `wit
 With this context:
 
 ```go
-  map[string]interface{}{
+map[string]interface{}{
     "title": "My first post!",
     "author": map[string]string{
-      "firstName": "Jean",
-      "lastName":  "Valjean",
+        "firstName": "Jean",
+        "lastName":  "Valjean",
     },
-  }
+}
 ```
 
 Outputs:
@@ -539,7 +569,7 @@ The `lookup` helper allows for dynamic parameter resolution using handlebars var
 
 #### The `log` helper
 
-The `log` helper allows for logging while evaluating a template.
+The `log` helper allows for logging while rendering a template.
 
 ```html
 {{log "Look at me!"}}
@@ -569,9 +599,9 @@ As an example, let's define a block helper that adds some markup to the wrapped 
 The `bold` helper will add markup to make its text bold.
 
 ```go
-  raymond.RegisterHelper("bold", func(options *raymond.Options) raymond.SafeString {
+raymond.RegisterHelper("bold", func(options *raymond.Options) raymond.SafeString {
     return raymond.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
-  })
+})
 ```
 
 A helper evaluates the block content with current context by calling `options.Fn()`.
@@ -579,9 +609,9 @@ A helper evaluates the block content with current context by calling `options.Fn
 If you want to evaluate the block with another context, then use `options.FnWith(ctx)`, like this french version of built-in `with` block helper:
 
 ```go
-  raymond.RegisterHelper("avec", func(context interface{}, options *raymond.Options) string {
+raymond.RegisterHelper("avec", func(context interface{}, options *raymond.Options) string {
     return options.FnWith(context)
-  })
+})
 ```
 
 With that template:
@@ -596,25 +626,25 @@ With that template:
 Let's write a french version of `if` block helper:
 
 ```go
-  source := `{{#si yep}}YEP !{{/si}}`
+source := `{{#si yep}}YEP !{{/si}}`
 
-  ctx := map[string]interface{}{"yep": true}
+ctx := map[string]interface{}{"yep": true}
 
-  raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
+raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
     if conditional {
-      return options.Fn()
+        return options.Fn()
     }
     return ""
-  })
+})
 ```
 
 Note that as the first parameter of the helper is typed as `bool` an automatic conversion is made if corresponding context value is not a boolean. So this helper works with that context too:
 
 ```go
-  ctx := map[string]interface{}{"yep": "message"}
+ctx := map[string]interface{}{"yep": "message"}
 ```
 
-See `IsTruth()` function for more informations on boolean conversion.
+Here, `"message"` is converted to `true` because it is an non-empty string. See `IsTruth()` function for more informations on boolean conversion.
 
 
 #### Else Block Evaluation
@@ -622,16 +652,16 @@ See `IsTruth()` function for more informations on boolean conversion.
 We can enhance the `si` block helper to evaluate the `else block` by calling `options.Inverse()` if conditional is false:
 
 ```go
-  source := `{{#si yep}}YEP !{{else}}NOP !{{/si}}`
+source := `{{#si yep}}YEP !{{else}}NOP !{{/si}}`
 
-  ctx := map[string]interface{}{"yep": false}
+ctx := map[string]interface{}{"yep": false}
 
-  raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
+raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
     if conditional {
-      return options.Fn()
+        return options.Fn()
     }
     return options.Inverse()
-  })
+})
 ```
 
 Outputs:
@@ -645,9 +675,9 @@ NOP !
 It's possible to receive named parameters from supporting helpers.
 
 ```html
-  {{#each users as |user userId|}}
-    Id: {{userId}} Name: {{user.name}}
-  {{/each}}
+{{#each users as |user userId|}}
+  Id: {{userId}} Name: {{user.name}}
+{{/each}}
 ```
 
 In this particular example, `user` will have the same value as the current context and `userId` will have the index/key value for the iteration.
@@ -667,22 +697,22 @@ For example:
 With this context:
 
 ```go
-  ctx := map[string]interface{}{
+ctx := map[string]interface{}{
     "users": map[string]interface{}{
-      "marcel": map[string]interface{}{
-        "book": map[string]interface{}{
-          "book1": "My first book",
-          "book2": "My second book",
+        "marcel": map[string]interface{}{
+            "book": map[string]interface{}{
+                "book1": "My first book",
+                "book2": "My second book",
+            },
         },
-      },
-      "didier": map[string]interface{}{
-        "book": map[string]interface{}{
-          "bookA": "Good book",
-          "bookB": "Bad book",
+        "didier": map[string]interface{}{
+            "book": map[string]interface{}{
+                "bookA": "Good book",
+                "bookB": "Bad book",
+            },
         },
-      },
     },
-  }
+}
 ```
 
 Outputs:
@@ -699,24 +729,24 @@ As you can see, the second block parameter is the map key. When using structs, i
 When using arrays the second parameter is element index:
 
 ```go
-  ctx := map[string]interface{}{
+ctx := map[string]interface{}{
     "users": []map[string]interface{}{
-      {
-        "id": "marcel",
-        "book": []map[string]interface{}{
-          {"id": "book1", "title": "My first book"},
-          {"id": "book2", "title": "My second book"},
+        {
+            "id": "marcel",
+            "book": []map[string]interface{}{
+                {"id": "book1", "title": "My first book"},
+                {"id": "book2", "title": "My second book"},
+            },
         },
-      },
-      {
-        "id": "didier",
-        "book": []map[string]interface{}{
-          {"id": "bookA", "title": "Good book"},
-          {"id": "bookB", "title": "Bad book"},
+        {
+            "id": "didier",
+            "book": []map[string]interface{}{
+                {"id": "bookA", "title": "Good book"},
+                {"id": "bookB", "title": "Bad book"},
+            },
         },
-      },
     },
-  }
+}
 ```
 
 Outputs:
@@ -770,11 +800,11 @@ Outputs:
 You can register template partials before execution:
 
 ```go
-  tpl := raymond.MustParse("{{> foo}} baz")
-  tpl.RegisterPartial("foo", "<span>bar</span>")
+tpl := raymond.MustParse("{{> foo}} baz")
+tpl.RegisterPartial("foo", "<span>bar</span>")
 
-  result := tpl.MustExec(nil)
-  fmt.Print(result)
+result := tpl.MustExec(nil)
+fmt.Print(result)
 ```
 
 Output:
@@ -788,8 +818,8 @@ You can register several partials at once:
 ```go
 tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
 tpl.RegisterPartials(map[string]string{
-  "foo": "<span>bar</span>",
-  "baz": "<span>bat</span>",
+    "foo": "<span>bar</span>",
+    "baz": "<span>bat</span>",
 })
 
 result := tpl.MustExec(nil)
@@ -808,24 +838,24 @@ Output:
 You can registers global partials that will be accessible by all templates:
 
 ```go
-  raymond.RegisterPartial("foo", "<span>bar</span>")
+raymond.RegisterPartial("foo", "<span>bar</span>")
 
-  tpl := raymond.MustParse("{{> foo}} baz")
-  result := tpl.MustExec(nil)
-  fmt.Print(result)
+tpl := raymond.MustParse("{{> foo}} baz")
+result := tpl.MustExec(nil)
+fmt.Print(result)
 ```
 
 Or:
 
 ```go
-  raymond.RegisterPartials(map[string]string{
+raymond.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
-  })
+})
 
-  tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
-  result := tpl.MustExec(nil)
-  fmt.Print(result)
+tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
+result := tpl.MustExec(nil)
+fmt.Print(result)
 ```
 
 
@@ -836,23 +866,23 @@ It's possible to dynamically select the partial to be executed by using sub expr
 For example, that template randomly evaluates the `foo` or `baz` partial:
 
 ```go
-  tpl := raymond.MustParse("{{> (whichPartial) }}")
-  tpl.RegisterPartials(map[string]string{
+tpl := raymond.MustParse("{{> (whichPartial) }}")
+tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
-  })
+})
 
-  ctx := map[string]interface{}{
+ctx := map[string]interface{}{
     "whichPartial": func() string {
-      rand.Seed(time.Now().UTC().UnixNano())
+        rand.Seed(time.Now().UTC().UnixNano())
 
-      names := []string{"foo", "baz"}
-      return names[rand.Intn(len(names))]
+        names := []string{"foo", "baz"}
+        return names[rand.Intn(len(names))]
     },
-  }
+}
 
-  result := tpl.MustExec(ctx)
-  fmt.Print(result)
+result := tpl.MustExec(ctx)
+fmt.Print(result)
 ```
 
 
@@ -863,18 +893,18 @@ It's possible to execute partials on a custom context by passing in the context 
 For example:
 
 ```go
-  tpl := raymond.MustParse("User: {{> userDetails user }}")
-  tpl.RegisterPartial("userDetails", "{{firstname}} {{lastname}}")
+tpl := raymond.MustParse("User: {{> userDetails user }}")
+tpl.RegisterPartial("userDetails", "{{firstname}} {{lastname}}")
 
-  ctx := map[string]interface{}{
+ctx := map[string]interface{}{
     "user": map[string]string{
-      "firstname": "Jean",
-      "lastname":  "Valjean",
+        "firstname": "Jean",
+        "lastname":  "Valjean",
     },
-  }
+}
 
-  result := tpl.MustExec(ctx)
-  fmt.Print(result)
+result := tpl.MustExec(ctx)
+fmt.Print(result)
 ```
 
 Displays:
@@ -891,15 +921,15 @@ Custom data can be passed to partials through hash parameters.
 For example:
 
 ```go
-  tpl := raymond.MustParse("{{> myPartial name=hero }}")
-  tpl.RegisterPartial("myPartial", "his name is: {{name}}")
+tpl := raymond.MustParse("{{> myPartial name=hero }}")
+tpl.RegisterPartial("myPartial", "his name is: {{name}}")
 
-  ctx := map[string]interface{}{
+ctx := map[string]interface{}{
     "hero": "Goldorak",
-  }
+}
 
-  result := tpl.MustExec(ctx)
-  fmt.Print(result)
+result := tpl.MustExec(ctx)
+fmt.Print(result)
 ```
 
 Displays:
@@ -961,24 +991,24 @@ import (
 )
 
 func main() {
-  source := "You know {{nothing}} John Snow"
+    source := "You know {{nothing}} John Snow"
 
-  output := ""
+    output := ""
 
-  lex := lexer.Scan(source)
-  for {
-    // consume next token
-    token := lex.NextToken()
+    lex := lexer.Scan(source)
+    for {
+        // consume next token
+        token := lex.NextToken()
 
-    output += fmt.Sprintf(" %s", token)
+        output += fmt.Sprintf(" %s", token)
 
-    // stops when all tokens have been consumed, or on error
-    if token.Kind == lexer.TokenEOF || token.Kind == lexer.TokenError {
-      break
+        // stops when all tokens have been consumed, or on error
+        if token.Kind == lexer.TokenEOF || token.Kind == lexer.TokenError {
+            break
+        }
     }
-  }
 
-  fmt.Print(output)
+    fmt.Print(output)
 }
 ```
 
@@ -997,25 +1027,25 @@ You should not use the parser directly, but for your information here is an exam
 package main
 
 import (
-  "fmt"
+    "fmt"
 
-  "github.com/aymerick/raymond/ast"
-  "github.com/aymerick/raymond/parser"
+    "github.com/aymerick/raymond/ast"
+    "github.com/aymerick/raymond/parser"
 )
 
-func main() {
-  source := "You know {{nothing}} John Snow"
+fu  nc main() {
+    source := "You know {{nothing}} John Snow"
 
-  // parse template
-  program, err := parser.Parse(source)
-  if err != nil {
-    panic(err)
-  }
+    // parse template
+    program, err := parser.Parse(source)
+    if err != nil {
+        panic(err)
+    }
 
-  // print AST
-  output := ast.Print(program)
+    // print AST
+    output := ast.Print(program)
 
-  fmt.Print(output)
+    fmt.Print(output)
 }
 ```
 
