@@ -17,7 +17,7 @@ var dataTests = []Test{
 		map[string]string{"noun": "cat"},
 		map[string]interface{}{"adjective": "happy"},
 		map[string]interface{}{"hello": func(options *raymond.Options) string {
-			return options.DataStr("adjective") + " " + options.FieldStr("noun")
+			return options.DataStr("adjective") + " " + options.ValueStr("noun")
 		}},
 		nil,
 		"happy cat",
@@ -135,7 +135,7 @@ var dataTests = []Test{
 		map[string]string{"noun": "cat"},
 		map[string]interface{}{"adjective": "happy"},
 		map[string]interface{}{"hello": func(options *raymond.Options) string {
-			return options.DataStr("adjective") + " " + options.FieldStr("noun")
+			return options.DataStr("adjective") + " " + options.ValueStr("noun")
 		}},
 		map[string]string{
 			"myPartial": "{{hello}}",
@@ -149,7 +149,7 @@ var dataTests = []Test{
 		map[string]interface{}{"adjective": "happy"},
 		map[string]interface{}{"hello": func(context string, options *raymond.Options) string {
 			str := "error"
-			if b, ok := options.Field("exclaim").(bool); ok {
+			if b, ok := options.Value("exclaim").(bool); ok {
 				if b {
 					str = "!"
 				} else {
@@ -173,7 +173,7 @@ var dataTests = []Test{
 			},
 			"world": func(options *raymond.Options) string {
 				str := "error"
-				if b, ok := options.Field("exclaim").(bool); ok {
+				if b, ok := options.Value("exclaim").(bool); ok {
 					if b {
 						str = "!"
 					} else {
@@ -197,7 +197,7 @@ var dataTests = []Test{
 				return options.FnWith(map[string]string{"exclaim": "?"})
 			},
 			"world": func(context string, options *raymond.Options) string {
-				return options.DataStr("adjective") + " " + context + options.FieldStr("exclaim")
+				return options.DataStr("adjective") + " " + context + options.ValueStr("exclaim")
 			},
 		},
 		nil,
@@ -213,7 +213,7 @@ var dataTests = []Test{
 				return options.DataStr("accessData") + " " + options.FnWith(map[string]string{"exclaim": "?"})
 			},
 			"world": func(context string, options *raymond.Options) string {
-				return options.DataStr("adjective") + " " + context + options.FieldStr("exclaim")
+				return options.DataStr("adjective") + " " + context + options.ValueStr("exclaim")
 			},
 		},
 		nil,
@@ -233,7 +233,7 @@ var dataTests = []Test{
 				return options.FnCtxData(ctx, data)
 			},
 			"world": func(context string, options *raymond.Options) string {
-				return options.DataStr("adjective") + " " + context + options.FieldStr("exclaim")
+				return options.DataStr("adjective") + " " + context + options.ValueStr("exclaim")
 			},
 		},
 		nil,
@@ -253,7 +253,7 @@ var dataTests = []Test{
 				return options.FnCtxData(ctx, data)
 			},
 			"world": func(context string, options *raymond.Options) string {
-				return options.DataStr("adjective") + " " + context + options.FieldStr("exclaim")
+				return options.DataStr("adjective") + " " + context + options.ValueStr("exclaim")
 			},
 		},
 		nil,

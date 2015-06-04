@@ -142,8 +142,8 @@ func (options *Options) Ctx() interface{} {
 	return options.eval.curCtx()
 }
 
-// Field returns current context field value.
-func (options *Options) Field(name string) interface{} {
+// ValueStr returns given field value from current context.
+func (options *Options) Value(name string) interface{} {
 	value := options.eval.evalField(options.eval.curCtx(), name, false)
 	if !value.IsValid() {
 		return nil
@@ -152,9 +152,9 @@ func (options *Options) Field(name string) interface{} {
 	return value.Interface()
 }
 
-// FieldStr returns string representation of current context field value.
-func (options *Options) FieldStr(name string) string {
-	return Str(options.Field(name))
+// ValueStr returns string representation of given field value from current context.
+func (options *Options) ValueStr(name string) string {
+	return Str(options.Value(name))
 }
 
 // Data returns private data value.

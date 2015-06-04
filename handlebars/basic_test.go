@@ -280,7 +280,7 @@ var basicTests = []Test{
 		"functions (2)",
 		"{{awesome}}",
 		map[string]interface{}{"awesome": func(options *raymond.Options) string {
-			return options.FieldStr("more")
+			return options.ValueStr("more")
 		}, "more": "More awesome"},
 		nil, nil, nil,
 		"More awesome",

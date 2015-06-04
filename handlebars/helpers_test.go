@@ -31,7 +31,7 @@ func echoNbHelper(str string, nb int) string {
 }
 
 func linkHelper(prefix string, options *raymond.Options) string {
-	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, options.FieldStr("url"), options.FieldStr("text"))
+	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, options.ValueStr("url"), options.ValueStr("text"))
 }
 
 func rawHelper(options *raymond.Options) string {
@@ -200,7 +200,7 @@ var helpersTests = []Test{
 		map[string]interface{}{"people": []map[string]interface{}{{"name": "Alan", "id": 1}, {"name": "Yehuda", "id": 2}}},
 		nil,
 		map[string]interface{}{"link": func(options *raymond.Options) string {
-			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", options.FieldStr("id"), options.Fn())
+			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", options.ValueStr("id"), options.Fn())
 		}},
 		nil,
 		`<ul><li><a href="/people/1">Alan</a></li><li><a href="/people/2">Yehuda</a></li></ul>`,
@@ -235,7 +235,7 @@ var helpersTests = []Test{
 		map[string]map[string]string{"yehuda": {"name": "Yehuda"}},
 		nil,
 		map[string]interface{}{"link": func(options *raymond.Options) string {
-			return fmt.Sprintf("<a href=\"%s\">%s</a>", options.FieldStr("name"), options.Fn())
+			return fmt.Sprintf("<a href=\"%s\">%s</a>", options.ValueStr("name"), options.Fn())
 		}, "form": formCtxHelper},
 		nil,
 		`<form><p>Yehuda</p><a href="Yehuda">Hello</a></form>`,
@@ -604,7 +604,7 @@ var helpersTests = []Test{
 		nil,
 		map[string]interface{}{
 			"goodbye": func(options *raymond.Options) string {
-				return strings.ToUpper(options.FieldStr("goodbye"))
+				return strings.ToUpper(options.ValueStr("goodbye"))
 			},
 			"cruel": func(world string) string {
 				return "cruel " + strings.ToUpper(world)
@@ -620,7 +620,7 @@ var helpersTests = []Test{
 		nil,
 		map[string]interface{}{
 			"goodbye": func(options *raymond.Options) string {
-				return strings.ToUpper(options.FieldStr("goodbye")) + options.Fn()
+				return strings.ToUpper(options.ValueStr("goodbye")) + options.Fn()
 			},
 			"cruel": func(world string) string {
 				return "cruel " + strings.ToUpper(world)
@@ -636,7 +636,7 @@ var helpersTests = []Test{
 		nil,
 		map[string]interface{}{
 			"goodbye": func(options *raymond.Options) string {
-				return strings.ToUpper(options.FieldStr("goodbye"))
+				return strings.ToUpper(options.ValueStr("goodbye"))
 			},
 			"cruel": func(world string) string {
 				return "cruel " + strings.ToUpper(world)
@@ -652,7 +652,7 @@ var helpersTests = []Test{
 		nil,
 		map[string]interface{}{
 			"goodbye": func(options *raymond.Options) string {
-				return strings.ToUpper(options.FieldStr("goodbye")) + options.Fn()
+				return strings.ToUpper(options.ValueStr("goodbye")) + options.Fn()
 			},
 			"cruel": func(world string) string {
 				return "cruel " + strings.ToUpper(world)
