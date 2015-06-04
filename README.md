@@ -987,7 +987,26 @@ For all others values, `IsTruth()` returns `true`.
 
 ## Context Functions
 
-@todo doc
+In addition to helpers, lambdas are resolved in evaluation context.
+
+For example, that template and context:
+
+``go
+source := "I {{feeling}} you"
+
+ctx := map[string]interface{}{
+    "feeling": func() string {
+        rand.Seed(time.Now().UTC().UnixNano())
+
+        feelings := []string{"hate", "love"}
+        return feelings[rand.Intn(len(feelings))]
+    },
+}
+```
+
+Render randomly `I hate you` or `I love you`.
+
+Those context functions behave like helper functions: they can be called with parameters and they can have an `Options` argument.
 
 
 ## Partials
@@ -1169,6 +1188,7 @@ These handlebars features are currently NOT implemented:
 
 ## Todo
 
+- [ ] test and document when lambdas/helpers return a second boolean value set to `false`
 - [ ] add a test for inverse statement with the `each` helper
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
 - [ ] benchmarks
