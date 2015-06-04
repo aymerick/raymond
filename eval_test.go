@@ -51,8 +51,21 @@ var evalTests = []Test{
 		nil, nil, nil,
 		" baz",
 	},
+	{
+		"block helper returns a SafeString",
+		"{{title}} - {{#bold}}{{body}}{{/bold}}",
+		map[string]string{
+			"title": "My new blog post",
+			"body":  "I have so many things to say!",
+		},
+		nil,
+		map[string]interface{}{"bold": func(options *Options) SafeString {
+			return SafeString(`<div class="mybold">` + options.Fn() + "</div>")
+		}},
+		nil,
+		`My new blog post - <div class="mybold">I have so many things to say!</div>`,
+	},
 
-	// @todo Test with a struct for data
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
 }
 

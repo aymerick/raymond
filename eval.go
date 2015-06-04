@@ -604,6 +604,7 @@ func (v *evalVisitor) callHelper(name string, helper reflect.Value, node *ast.Ex
 		return nil
 	}
 
+	// @todo We maybe want to ensure here that helper returned a string or a SafeString
 	return result.Interface()
 }
 
@@ -768,14 +769,14 @@ func (v *evalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 
 	v.pushBlock(node)
 
-	result := ""
+	var result interface{}
 
 	// evaluate expression
 	expr := node.Expression.Accept(v)
 
 	if v.isHelperCall(node.Expression) || v.wasFuncCall(node.Expression) {
 		// it is the responsability of the helper/function to evaluate block
-		result, _ = expr.(string)
+		result = expr
 	} else {
 		val := reflect.ValueOf(expr)
 
@@ -784,14 +785,18 @@ func (v *evalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 			if node.Program != nil {
 				switch val.Kind() {
 				case reflect.Array, reflect.Slice:
+					concat := ""
+
 					// Array context
 					for i := 0; i < val.Len(); i++ {
 						// Computes new private data frame
 						frame := v.dataFrame.newIterDataFrame(val.Len(), i, nil)
 
 						// Evaluate program
-						result += v.evalProgram(node.Program, val.Index(i).Interface(), frame, i)
+						concat += v.evalProgram(node.Program, val.Index(i).Interface(), frame, i)
 					}
+
+					result = concat
 				default:
 					// NOT array
 					result = v.evalProgram(node.Program, expr, nil, nil)
