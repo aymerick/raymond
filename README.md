@@ -761,22 +761,142 @@ Outputs:
 
 ### Helper Parameters
 
-@todo doc
+When calling a helper in a template, raymond expects to find the same number of arguments as the number of helper function parameters.
 
-@todo doc automatic string conversion
+So this template:
+
+```html
+`{{add a}}`
+```
+
+With this helper:
+
+```go
+raymond.RegisterHelper("add", func(val1, val2 int) string {
+    return strconv.Itoa(val1 + val2)
+})
+```
+
+Will simply panics, because we call it with one argument, and it expects two.
+
+
+#### Automatic conversion
+
+Let's create a `concat` helper that expectes two strings and concat them:
+
+```go
+source := `{{concat a b}}`
+
+ctx := map[string]interface{}{
+    "a": "Jean",
+    "b": "Valjean",
+}
+
+raymond.RegisterHelper("concat", func(val1, val2 string) string {
+    return val1 + " " + val2
+})
+```
+
+Everything goes well, two strings are passed as arguments to the helper:
+
+```html
+Jean VALJEAN
+```
+
+But what happens if we fetch another type from the context ? For example with this context:
+
+```go
+ctx := map[string]interface{}{
+    "a": 10,
+    "b": "Valjean",
+}
+```
+
+Actually, raymond will perfom automatic string conversion, so helper will get the `"10"` string as its first argument, and outputs:
+
+```html
+10 VALJEAN
+```
+
+Note that this kind of automatic conversion is done with `bool` type, thanks to `IsTruth()` function.
 
 
 ### Options Argument
 
-@todo doc
+Actually, if a helper needs the `Options` argument, it can define it as the end of its parameters:
+
+```go
+raymond.RegisterHelper("add", func(val1, val2 int, options *raymond.Options) string {
+    return strconv.Itoa(val1 + val2)
+})
+```
+
+Thanks to the `options` argument, helpers have access to the current evaluation context, to the `Hash` arguments, and they can manipulate the private data variables.
+
+The `Options` argument is even necessary for Block Helpers to evaluate block and "else block".
 
 
-### Helper Hash Arguments
+#### Context Values
 
-@todo doc
+Helpers fetch current context values with `options.Value()` and `options.ValuesStr()`.
+
+`Value()` returns an `interface{}` and lets the helper do the type assertions whereas `ValueStr()` automatically converts the value to a `string`.
+
+For example:
+
+```go
+ctx := map[string]interface{}{
+    "a":      "Marcel",
+    "b":      "Beliveau",
+    "suffix": "FOREVER !",
+}
+
+raymond.RegisterHelper("concat", func(val1, val2 string, options *raymond.Options) string {
+    return val1 + " " + val2 + " " + options.ValueStr("suffix")
+})
+```
+
+Outputs:
+
+```html
+Marcel Beliveau FOREVER !
+```
+
+Helpers can get the entire current context with `options.Ctx()` that returns an `interface{}`.
 
 
-### Private Data
+#### Helper Hash Arguments
+
+Helpers access to hash arguments with `options.HashProp()` and `options.HashStr()`.
+
+`HashProp()` returns an `interface{}` and lets the helper do the type assertions whereas `HashStr()` automatically converts the value to a `string`.
+
+For example:
+
+```go
+source := `{{concat suffix first=a second=b}}`
+
+ctx := map[string]interface{}{
+    "a":      "Marcel",
+    "b":      "Beliveau",
+    "suffix": "FOREVER !",
+}
+
+raymond.RegisterHelper("concat", func(suffix string, options *raymond.Options) string {
+    return options.HashStr("first") + " " + options.HashStr("second") + " " + suffix
+})
+```
+
+Outputs:
+
+```html
+Marcel Beliveau FOREVER !
+```
+
+Helpers can get the full hash with `options.Hash()` that returns a `map[string]interface{}`.
+
+
+#### Private Data
 
 @todo doc
 
