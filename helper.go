@@ -302,8 +302,7 @@ func withHelper(context interface{}, options *Options) interface{} {
 // #each block helper
 func eachHelper(context interface{}, options *Options) interface{} {
 	if !IsTruth(context) {
-		options.Inverse()
-		return ""
+		return options.Inverse()
 	}
 
 	result := ""
