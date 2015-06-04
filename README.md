@@ -136,6 +136,7 @@ You can use `MustParse()` and `MustExec()` functions if you don't want to deal w
     result := tpl.MustExec(ctx)
 ```
 
+
 ## Context
 
 The rendering context can contain any type of objects, including `array`, `slice`, `map`, `struct` and `func`.
@@ -210,6 +211,7 @@ Output:
   <div class="body">LOL!</div>
 </div>
 ```
+
 
 ## HTML Escaping
 
@@ -357,6 +359,7 @@ Helper arguments can be any type. Following example uses structs instead of maps
   })
 ```
 
+
 ### Template Helpers
 
 You can register a helper on a specific template, and in that case that helper will be only available to that template:
@@ -369,9 +372,11 @@ You can register a helper on a specific template, and in that case that helper w
   })
 ```
 
+
 ### Built-In Helpers
 
 Those built-in helpers are available to all templates.
+
 
 #### The `if` block helper
 
@@ -409,6 +414,7 @@ You can use the `unless` helper as the inverse of the `if` helper. Its block wil
   {{/unless}}
 </div>
 ```
+
 
 #### The `each` block helper
 
@@ -519,6 +525,7 @@ You can optionally provide an `{{else}}` section which will display only when th
 {{/with}}
 ```
 
+
 #### The `lookup` helper
 
 The `lookup` helper allows for dynamic parameter resolution using handlebars variables.
@@ -528,6 +535,7 @@ The `lookup` helper allows for dynamic parameter resolution using handlebars var
   {{lookup ../foo @index}}
 {{/each}}
 ```
+
 
 #### The `log` helper
 
@@ -540,7 +548,199 @@ The `log` helper allows for logging while evaluating a template.
 Note that the handlebars.js `@level` variable is not supported.
 
 
-### Helper Arguments
+### Block Helpers
+
+Block helpers make it possible to define custom iterators and other functionality that can invoke the passed block with a new context.
+
+
+#### Block Evaluation
+
+As an example, let's define a block helper that adds some markup to the wrapped text.
+
+```html
+<div class="entry">
+  <h1>{{title}}</h1>
+  <div class="body">
+    {{#bold}}{{body}}{{/bold}}
+  </div>
+</div>
+```
+
+The `bold` helper will add markup to make its text bold.
+
+```go
+  raymond.RegisterHelper("bold", func(options *raymond.Options) raymond.SafeString {
+    return raymond.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
+  })
+```
+
+As you can see, an helper evaluates the block content by calling `options.Fn()`.
+
+If you want to evaluate the block with another context, then use `options.FnWithCtx(ctx)`, like this french version of built-in `with` block helper:
+
+```go
+  raymond.RegisterHelper("avec", func(context interface{}, options *raymond.Options) string {
+    return options.FnWithCtx(context)
+  })
+```
+
+With that template:
+
+```html
+{{#avec obj.text}}{{this}}{{/avec}}
+```
+
+
+#### Conditional
+
+Let's write a french version of `if` block helper:
+
+```go
+  source := `{{#si yep}}YEP !{{/si}}`
+
+  ctx := map[string]interface{}{"yep": true}
+
+  raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
+    if conditional {
+      return options.Fn()
+    }
+    return ""
+  })
+```
+
+Note that as the first parameter of the helper is typed as `bool` an automatic conversion is made if corresponding context value is not a boolean. So this helper works with that context too:
+
+```go
+  ctx := map[string]interface{}{"yep": "message"}
+```
+
+See `IsTruth()` function for more informations on boolean conversion.
+
+
+#### Else Block Evaluation
+
+We can enhance the `si` block helper to evaluate the `else block` by calling `options.Inverse()` if conditional is false:
+
+```go
+  source := `{{#si yep}}YEP !{{else}}NOP !{{/si}}`
+
+  ctx := map[string]interface{}{"yep": false}
+
+  raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
+    if conditional {
+      return options.Fn()
+    }
+    return options.Inverse()
+  })
+```
+
+Outputs:
+```
+NOP !
+```
+
+
+#### Block Parameters
+
+It's possible to receive named parameters from supporting helpers
+
+```html
+  {{#each users as |user userId|}}
+    Id: {{userId}} Name: {{user.name}}
+  {{/each}}
+```
+
+In this particular example, `user` will have the same value as the current context and `userId` will have the index value for the iteration.
+
+This allows for nested helpers to avoid name conflicts that can occur with private variables.
+
+For example:
+
+```html
+{{#each users as |user userId|}}
+  {{#each user.book as |book bookId|}}
+    User: {{userId}} Book: {{bookId}}
+  {{/each}}
+{{/each}}
+```
+
+With this context:
+
+```go
+  ctx := map[string]interface{}{
+    "users": map[string]interface{}{
+      "marcel": map[string]interface{}{
+        "book": map[string]interface{}{
+          "book1": "My first book",
+          "book2": "My second book",
+        },
+      },
+      "didier": map[string]interface{}{
+        "book": map[string]interface{}{
+          "bookA": "Good book",
+          "bookB": "Bad book",
+        },
+      },
+    },
+  }
+```
+
+Outputs:
+
+```html
+  User: marcel Book: book1
+  User: marcel Book: book2
+  User: didier Book: bookA
+  User: didier Book: bookB
+```
+
+As you can see, the second block parameter is the map key. When using structs, it is the struct field name.
+
+When using arrays the second parameter is element index:
+
+```go
+  ctx := map[string]interface{}{
+    "users": []map[string]interface{}{
+      {
+        "id": "marcel",
+        "book": []map[string]interface{}{
+          {"id": "book1", "title": "My first book"},
+          {"id": "book2", "title": "My second book"},
+        },
+      },
+      {
+        "id": "didier",
+        "book": []map[string]interface{}{
+          {"id": "bookA", "title": "Good book"},
+          {"id": "bookB", "title": "Bad book"},
+        },
+      },
+    },
+  }
+```
+
+Outputs:
+
+```html
+    User: 0 Book: 0
+    User: 0 Book: 1
+    User: 1 Book: 0
+    User: 1 Book: 1
+```
+
+### Helper Parameters
+
+@todo doc
+
+@todo doc automatique string conversion
+
+
+### Options Argument
+
+@todo doc
+
+
+### Helper Hash Arguments
 
 @todo doc
 
@@ -548,6 +748,13 @@ Note that the handlebars.js `@level` variable is not supported.
 ### Private Data
 
 @todo doc
+
+
+### Utilites
+
+@todo doc for `Str()`
+
+@todo doc for `IsTruth()`... describes boolean conversion
 
 
 ## Context Functions
@@ -594,6 +801,7 @@ Output:
 <span>bar</span> and <span>bat</span>
 ```
 
+
 ### Global Partials
 
 You can registers global partials that will be accessible by all templates:
@@ -618,6 +826,7 @@ Or:
   result := tpl.MustExec(nil)
   fmt.Print(result)
 ```
+
 
 ### Dynamic Partials
 
@@ -644,6 +853,7 @@ For example, that template randomly evaluates the `foo` or `baz` partial:
   result := tpl.MustExec(ctx)
   fmt.Print(result)
 ```
+
 
 ### Partial Contexts
 
@@ -672,6 +882,7 @@ Displays:
 User: Jean Valjean
 ```
 
+
 ### Partial Parameters
 
 Custom data can be passed to partials through hash parameters.
@@ -695,12 +906,6 @@ Displays:
 ```html
 his name is: Goldorak
 ```
-
-## Utilities
-
-@todo doc for `Str()`
-
-@todo doc for `IsTruth()`
 
 
 ## Mustache
@@ -727,6 +932,7 @@ These handlebars options are currently NOT implemented:
 
 These handlebars features are currently NOT implemented:
 
+- raw block content is not passed as a parameter to helper
 - `blockHelperMissing` - helper called when a helper can not be directly resolved
 - `helperMissing` - helper called when a potential helper expression was not found
 - `@contextPath` - value set in `trackIds` mode that records the lookup path for the current context
@@ -780,6 +986,7 @@ Outputs:
 ```
 Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
 ```
+
 
 ## Handlebars Parser
 
