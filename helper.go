@@ -208,18 +208,18 @@ func (options *Options) Fn() string {
 	return options.evalBlock(nil, nil, nil)
 }
 
-// FnWith evaluates block with given context and private data frame.
-func (options *Options) FnWith(ctx interface{}, data *DataFrame) string {
+// FnCtxData evaluates block with given context and private data frame.
+func (options *Options) FnCtxData(ctx interface{}, data *DataFrame) string {
 	return options.evalBlock(ctx, data, nil)
 }
 
-// FnWithCtx evaluates block with given context.
-func (options *Options) FnWithCtx(ctx interface{}) string {
+// FnWith evaluates block with given context.
+func (options *Options) FnWith(ctx interface{}) string {
 	return options.evalBlock(ctx, nil, nil)
 }
 
-// FnWithData evaluates block with given private data frame.
-func (options *Options) FnWithData(data *DataFrame) string {
+// FnData evaluates block with given private data frame.
+func (options *Options) FnData(data *DataFrame) string {
 	return options.evalBlock(nil, data, nil)
 }
 
@@ -293,7 +293,7 @@ func unlessHelper(conditional interface{}, options *Options) interface{} {
 // #with block helper
 func withHelper(context interface{}, options *Options) interface{} {
 	if IsTruth(context) {
-		return options.FnWithCtx(context)
+		return options.FnWith(context)
 	}
 
 	return options.Inverse()

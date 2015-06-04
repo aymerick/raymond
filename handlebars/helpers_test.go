@@ -47,7 +47,7 @@ func formHelper(options *raymond.Options) string {
 }
 
 func formCtxHelper(context interface{}, options *raymond.Options) string {
-	return "<form>" + options.FnWithCtx(context) + "</form>"
+	return "<form>" + options.FnWith(context) + "</form>"
 }
 
 func listHelper(context interface{}, options *raymond.Options) string {
@@ -58,7 +58,7 @@ func listHelper(context interface{}, options *raymond.Options) string {
 			result := "<ul>"
 			for i := 0; i < val.Len(); i++ {
 				result += "<li>"
-				result += options.FnWithCtx(val.Index(i).Interface())
+				result += options.FnWith(val.Index(i).Interface())
 				result += "</li>"
 			}
 			result += "</ul>"
@@ -134,7 +134,7 @@ var helpersTests = []Test{
 		map[string]interface{}{"goodbyes": func(options *raymond.Options) string {
 			out := ""
 			for _, str := range []string{"Goodbye", "goodbye", "GOODBYE"} {
-				out += str + " " + options.FnWithCtx(str) + "! "
+				out += str + " " + options.FnWith(str) + "! "
 			}
 			return out
 		}},
@@ -180,7 +180,7 @@ var helpersTests = []Test{
 		map[string]interface{}{"world": "world"},
 		nil,
 		map[string]interface{}{"goodbyes": func(options *raymond.Options) string {
-			return options.FnWithCtx(map[string]string{"text": "GOODBYE"})
+			return options.FnWith(map[string]string{"text": "GOODBYE"})
 		}},
 		nil,
 		"GOODBYE! cruel world!",
@@ -452,7 +452,7 @@ var helpersTests = []Test{
 		map[string]string{"cruel": "cruel", "world": "world"},
 		nil,
 		map[string]interface{}{"goodbye": func(cruel, world string, options *raymond.Options) string {
-			return options.FnWithCtx(map[string]interface{}{"greeting": "Goodbye", "adj": cruel, "noun": world})
+			return options.FnWith(map[string]interface{}{"greeting": "Goodbye", "adj": cruel, "noun": world})
 		}},
 		nil,
 		"Message: Goodbye cruel world",

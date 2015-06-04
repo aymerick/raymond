@@ -574,13 +574,13 @@ The `bold` helper will add markup to make its text bold.
   })
 ```
 
-As you can see, an helper evaluates the block content by calling `options.Fn()`.
+A helper evaluates the block content with current context by calling `options.Fn()`.
 
-If you want to evaluate the block with another context, then use `options.FnWithCtx(ctx)`, like this french version of built-in `with` block helper:
+If you want to evaluate the block with another context, then use `options.FnWith(ctx)`, like this french version of built-in `with` block helper:
 
 ```go
   raymond.RegisterHelper("avec", func(context interface{}, options *raymond.Options) string {
-    return options.FnWithCtx(context)
+    return options.FnWith(context)
   })
 ```
 
@@ -642,7 +642,7 @@ NOP !
 
 #### Block Parameters
 
-It's possible to receive named parameters from supporting helpers
+It's possible to receive named parameters from supporting helpers.
 
 ```html
   {{#each users as |user userId|}}
@@ -650,9 +650,9 @@ It's possible to receive named parameters from supporting helpers
   {{/each}}
 ```
 
-In this particular example, `user` will have the same value as the current context and `userId` will have the index value for the iteration.
+In this particular example, `user` will have the same value as the current context and `userId` will have the index/key value for the iteration.
 
-This allows for nested helpers to avoid name conflicts that can occur with private variables.
+This allows for nested helpers to avoid name conflicts.
 
 For example:
 
@@ -728,11 +728,12 @@ Outputs:
     User: 1 Book: 1
 ```
 
+
 ### Helper Parameters
 
 @todo doc
 
-@todo doc automatique string conversion
+@todo doc automatic string conversion
 
 
 ### Options Argument

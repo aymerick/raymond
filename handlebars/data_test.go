@@ -42,7 +42,7 @@ var dataTests = []Test{
 				frame.Set(k, v)
 			}
 
-			return options.FnWithData(frame)
+			return options.FnData(frame)
 		}},
 		nil,
 		"Hello world",
@@ -124,7 +124,7 @@ var dataTests = []Test{
 				frame.Set(k, v)
 			}
 
-			return options.FnWithData(frame)
+			return options.FnData(frame)
 		}},
 		nil,
 		"2hello world1",
@@ -194,7 +194,7 @@ var dataTests = []Test{
 		map[string]interface{}{"adjective": "happy"},
 		map[string]interface{}{
 			"hello": func(options *raymond.Options) string {
-				return options.FnWithCtx(map[string]string{"exclaim": "?"})
+				return options.FnWith(map[string]string{"exclaim": "?"})
 			},
 			"world": func(context string, options *raymond.Options) string {
 				return options.DataStr("adjective") + " " + context + options.FieldStr("exclaim")
@@ -210,7 +210,7 @@ var dataTests = []Test{
 		map[string]interface{}{"adjective": "happy", "accessData": "#win"},
 		map[string]interface{}{
 			"hello": func(options *raymond.Options) string {
-				return options.DataStr("accessData") + " " + options.FnWithCtx(map[string]string{"exclaim": "?"})
+				return options.DataStr("accessData") + " " + options.FnWith(map[string]string{"exclaim": "?"})
 			},
 			"world": func(context string, options *raymond.Options) string {
 				return options.DataStr("adjective") + " " + context + options.FieldStr("exclaim")
@@ -230,7 +230,7 @@ var dataTests = []Test{
 				data := options.NewDataFrame()
 				data.Set("adjective", "sad")
 
-				return options.FnWith(ctx, data)
+				return options.FnCtxData(ctx, data)
 			},
 			"world": func(context string, options *raymond.Options) string {
 				return options.DataStr("adjective") + " " + context + options.FieldStr("exclaim")
@@ -250,7 +250,7 @@ var dataTests = []Test{
 				data := options.NewDataFrame()
 				data.Set("adjective", "sad")
 
-				return options.FnWith(ctx, data)
+				return options.FnCtxData(ctx, data)
 			},
 			"world": func(context string, options *raymond.Options) string {
 				return options.DataStr("adjective") + " " + context + options.FieldStr("exclaim")
@@ -287,7 +287,7 @@ var dataTests = []Test{
 					data.Set("depth", depth+1)
 				}
 
-				return options.FnWithData(data)
+				return options.FnData(data)
 			},
 		},
 		nil,

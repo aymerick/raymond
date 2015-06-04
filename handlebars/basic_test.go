@@ -316,7 +316,7 @@ var basicTests = []Test{
 		"block functions with context argument",
 		"{{#awesome 1}}inner {{.}}{{/awesome}}",
 		map[string]interface{}{"awesome": func(context interface{}, options *raymond.Options) string {
-			return options.FnWithCtx(context)
+			return options.FnWith(context)
 		}},
 		nil, nil, nil,
 		"inner 1",
@@ -326,7 +326,7 @@ var basicTests = []Test{
 		"{{#with value}}{{#../awesome 1}}inner {{.}}{{/../awesome}}{{/with}}",
 		map[string]interface{}{
 			"awesome": func(context interface{}, options *raymond.Options) string {
-				return options.FnWithCtx(context)
+				return options.FnWith(context)
 			},
 			"value": true,
 		},
