@@ -175,11 +175,11 @@ Output:
 When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
 
 ```go
-  tpl := raymond.MustParse("{{link url text}}")
-
-  tpl.RegisterHelper("link", func(url, text string) raymond.SafeString {
+  raymond.RegisterHelper("link", func(url, text string) raymond.SafeString {
     return raymond.SafeString("<a href='" + raymond.Escape(url) + "'>" + raymond.Escape(text) + "</a>")
   })
+
+  tpl := raymond.MustParse("{{link url text}}")
 
   ctx := map[string]string{
     "url":  "http://www.aymerick.com/",
@@ -199,15 +199,193 @@ Output:
 
 ## Helpers
 
+@todo What is a helper ?
+
+
+### Helper Registration
+
+To register a global helper, use the `raymond.RegisterHelper` function: that helper will be available to all templates.
+
+```go
+  raymond.RegisterHelper("fullName", func(firstName, lastName string) string {
+    return firstName + " " + lastName
+  })
+```
+
+But you can can too register a helper on a specific template, and in that case that helper will be only available to that template:
+
+```go
+  tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
+
+  tpl.RegisterHelper("fullName", func(firstName, lastName string) string {
+    return firstName + " " + lastName
+  })
+```
+
+### Built-In Helpers
+
+Those built-in helpers are available to all templates.
+
+#### The `if` block helper
+
+You can use the `if` helper to conditionally render a block. If its argument returns `false`, `nil`, `0`, `""`, an empty array or an empty map, then raymond will not render the block.
+
+```html
+<div class="entry">
+  {{#if author}}
+    <h1>{{firstName}} {{lastName}}</h1>
+  {{else}}
+    <h1>Unknown Author</h1>
+  {{/if}}
+</div>
+```
+
+#### The `unless` block helper
+
+You can use the `unless` helper as the inverse of the `if` helper. Its block will be rendered if the expression returns a falsy value.
+
+```html
+<div class="entry">
+  {{#unless license}}
+  <h3 class="warning">WARNING: This entry does not have a license!</h3>
+  {{/unless}}
+</div>
+```
+
+#### The `each` block helper
+
+You can iterate over an array, a map or a struct instance using the built-in each helper. Inside the block, you can use `this` to reference the element being iterated over.
+
+For example:
+
+```html
+<ul class="people">
+  {{#each people}}
+    <li>{{this}}</li>
+  {{/each}}
+</ul>
+```
+
+With this context:
+
+```go
+map[string]interface{}{
+  "people": []string{
+    "Marcel", "Jean-Claude", "Yvette",
+  },
+}
+```
+
+Outputs:
+
+```html
+<ul class="people">
+    <li>Marcel</li>
+    <li>Jean-Claude</li>
+    <li>Yvette</li>
+</ul>
+```
+
+You can optionally provide an `{{else}}` section which will display only when the passed argument is empty.
+
+```html
+{{#each paragraphs}}
+  <p>{{this}}</p>
+{{else}}
+  <p class="empty">No content</p>
+{{/each}}
+```
+
+When looping through items in `each`, you can optionally reference the current loop index via `{{@index}}`.
+
+```html
+{{#each array}}
+  {{@index}}: {{this}}
+{{/each}}
+```
+
+Additionally for map and struct instance iteration, `{{@key}}` references the current key name:
+
+```html
+{{#each map}}
+  {{@key}}: {{this}}
+{{/each}}
+```
+
+The first and last steps of iteration are noted via the `@first` and `@last` variables.
+
+
+#### The `with` block helper
+
+You can shift the context for a section of a template by using the built-in `with` block helper.
+
+```html
+<div class="entry">
+  <h1>{{title}}</h1>
+
+  {{#with author}}
+  <h2>By {{firstName}} {{lastName}}</h2>
+  {{/with}}
+</div>
+```
+
+With this context:
+
+```go
+  map[string]interface{}{
+    "title": "My first post!",
+    "author": map[string]string{
+      "firstName": "Jean",
+      "lastName":  "Valjean",
+    },
+  }
+```
+
+Outputs:
+
+```html
+<div class="entry">
+  <h1>My first post!</h1>
+
+  <h2>By Jean Valjean</h2>
+</div>
+```
+
+You can optionally provide an `{{else}}` section which will display only when the passed argument is empty.
+
+```html
+{{#with author}}
+  <p>{{name}}</p>
+{{else}}
+  <p class="empty">No content</p>
+{{/with}}
+```
+
+#### The `lookup` helper
+
+The `lookup` helper allows for dynamic parameter resolution using handlebars variables.
+
+```html
+{{#each bar}}
+  {{lookup ../foo @index}}
+{{/each}}
+```
+
+#### The `log` helper
+
+The `log` helper allows for logging while evaluating a template.
+
+```html
+{{log "Look at me!"}}
+```
+
+Note that the handlebars.js `@level` variable is not supported.
+
+
+### Helper Parameters
+
 @todo doc
 
-### Helper Argument
-
-@todo doc
-
-### Global Partials
-
-@todo doc
 
 ### Private Data
 
@@ -399,11 +577,12 @@ These handlebars features are currently NOT implemented:
 
 ## Todo
 
+- [ ] add a test for inverse statement with the `each` helper
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
 - [ ] benchmarks
 
 
-## Lexer
+## Handlebars Lexer
 
 You should not use the lexer directly, but for your information here is an example:
 
@@ -444,7 +623,7 @@ Outputs:
 Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
 ```
 
-## Parser
+## Handlebars Parser
 
 You should not use the parser directly, but for your information here is an example:
 
