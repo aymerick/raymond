@@ -13,18 +13,15 @@ import (
 // Helpers
 //
 
-func barSuffixHelper(h *raymond.HelperArg) interface{} {
-	str, _ := h.Param(0).(string)
-	return "bar " + str
+func barSuffixHelper(context string) string {
+	return "bar " + context
 }
 
-func echoHelper(h *raymond.HelperArg) interface{} {
-	str, _ := h.Param(0).(string)
-	nb, ok := h.Param(1).(int)
-	if !ok {
-		nb = 1
-	}
+func echoHelper(str string) string {
+	return str
+}
 
+func echoNbHelper(str string, nb int) string {
 	result := ""
 	for i := 0; i < nb; i++ {
 		result += str
@@ -33,41 +30,35 @@ func echoHelper(h *raymond.HelperArg) interface{} {
 	return result
 }
 
-func linkHelper(h *raymond.HelperArg) interface{} {
-	prefix, _ := h.Param(0).(string)
-
-	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, h.FieldStr("url"), h.FieldStr("text"))
+func linkHelper(prefix string, options *raymond.Options) string {
+	return fmt.Sprintf(`<a href="%s/%s">%s</a>`, prefix, options.FieldStr("url"), options.FieldStr("text"))
 }
 
-func rawHelper(h *raymond.HelperArg) interface{} {
-	result := h.Block()
-
-	for _, param := range h.Params() {
-		result += raymond.Str(param)
-	}
-
-	return result
+func rawHelper(options *raymond.Options) string {
+	return options.Fn()
 }
 
-func formHelper(h *raymond.HelperArg) interface{} {
-	return "<form>" + h.Block() + "</form>"
+func rawThreeHelper(a, b, c string, options *raymond.Options) string {
+	return options.Fn() + a + b + c
 }
 
-func formCtxHelper(h *raymond.HelperArg) interface{} {
-	return "<form>" + h.BlockWithCtx(h.Param(0)) + "</form>"
+func formHelper(options *raymond.Options) string {
+	return "<form>" + options.Fn() + "</form>"
 }
 
-func listHelper(h *raymond.HelperArg) interface{} {
-	ctx := h.Param(0)
+func formCtxHelper(context interface{}, options *raymond.Options) string {
+	return "<form>" + options.FnWithCtx(context) + "</form>"
+}
 
-	val := reflect.ValueOf(ctx)
+func listHelper(context interface{}, options *raymond.Options) string {
+	val := reflect.ValueOf(context)
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
 		if val.Len() > 0 {
 			result := "<ul>"
 			for i := 0; i < val.Len(); i++ {
 				result += "<li>"
-				result += h.BlockWithCtx(val.Index(i).Interface())
+				result += options.FnWithCtx(val.Index(i).Interface())
 				result += "</li>"
 			}
 			result += "</ul>"
@@ -76,27 +67,27 @@ func listHelper(h *raymond.HelperArg) interface{} {
 		}
 	}
 
-	return "<p>" + h.Inverse() + "</p>"
+	return "<p>" + options.Inverse() + "</p>"
 }
 
-func blogHelper(h *raymond.HelperArg) interface{} {
-	return "val is " + h.ParamStr(0)
+func blogHelper(val string) string {
+	return "val is " + val
 }
 
-func equalHelper(h *raymond.HelperArg) interface{} {
-	return raymond.Str(h.ParamStr(0) == h.ParamStr(1))
+func equalHelper(a, b string) string {
+	return raymond.Str(a == b)
 }
 
-func dashHelper(h *raymond.HelperArg) interface{} {
-	return h.ParamStr(0) + "-" + h.ParamStr(1)
+func dashHelper(a, b string) string {
+	return a + "-" + b
 }
 
-func concatHelper(h *raymond.HelperArg) interface{} {
-	return h.ParamStr(0) + h.ParamStr(1)
+func concatHelper(a, b string) string {
+	return a + b
 }
 
-func detectDataHelper(h *raymond.HelperArg) interface{} {
-	if val, ok := h.DataFrame().Get("exclaim").(string); ok {
+func detectDataHelper(options *raymond.Options) string {
+	if val, ok := options.DataFrame().Get("exclaim").(string); ok {
 		return val
 	}
 
@@ -113,7 +104,7 @@ var helpersTests = []Test{
 		"{{#goodbyes}}{{{link ../prefix}}}{{/goodbyes}}",
 		map[string]interface{}{"prefix": "/root", "goodbyes": []map[string]string{{"text": "Goodbye", "url": "goodbye"}}},
 		nil,
-		map[string]raymond.Helper{"link": linkHelper},
+		map[string]interface{}{"link": linkHelper},
 		nil,
 		`<a href="/root/goodbye">Goodbye</a>`,
 	},
@@ -122,7 +113,7 @@ var helpersTests = []Test{
 		"{{{{raw}}}} {{test}} {{{{/raw}}}}",
 		map[string]interface{}{"test": "hello"},
 		nil,
-		map[string]raymond.Helper{"raw": rawHelper},
+		map[string]interface{}{"raw": rawHelper},
 		nil,
 		" {{test}} ",
 	},
@@ -131,7 +122,7 @@ var helpersTests = []Test{
 		"{{{{raw 1 2 3}}}} {{test}} {{{{/raw}}}}",
 		map[string]interface{}{"test": "hello"},
 		nil,
-		map[string]raymond.Helper{"raw": rawHelper},
+		map[string]interface{}{"raw": rawThreeHelper},
 		nil,
 		" {{test}} 123",
 	},
@@ -140,10 +131,10 @@ var helpersTests = []Test{
 		"{{#goodbyes}}{{../name}}{{/goodbyes}}",
 		map[string]interface{}{"name": "Alan"},
 		nil,
-		map[string]raymond.Helper{"goodbyes": func(h *raymond.HelperArg) interface{} {
+		map[string]interface{}{"goodbyes": func(options *raymond.Options) string {
 			out := ""
 			for _, str := range []string{"Goodbye", "goodbye", "GOODBYE"} {
-				out += str + " " + h.BlockWithCtx(str) + "! "
+				out += str + " " + options.FnWithCtx(str) + "! "
 			}
 			return out
 		}},
@@ -155,7 +146,7 @@ var helpersTests = []Test{
 		"{{#goodbyes}}{{#link ../prefix}}{{text}}{{/link}}{{/goodbyes}}",
 		map[string]interface{}{"prefix": "/root", "goodbyes": []map[string]string{{"text": "Goodbye", "url": "goodbye"}}},
 		nil,
-		map[string]raymond.Helper{"link": linkHelper},
+		map[string]interface{}{"link": linkHelper},
 		nil,
 		`<a href="/root/goodbye">Goodbye</a>`,
 	},
@@ -165,7 +156,7 @@ var helpersTests = []Test{
 		" {{nothere}}",
 		map[string]interface{}{},
 		nil,
-		map[string]raymond.Helper{"nothere": func(h *raymond.HelperArg) interface{} {
+		map[string]interface{}{"nothere": func() string {
 			return ""
 		}},
 		nil,
@@ -177,7 +168,7 @@ var helpersTests = []Test{
 		" {{#nothere}}{{/nothere}}",
 		map[string]interface{}{},
 		nil,
-		map[string]raymond.Helper{"nothere": func(h *raymond.HelperArg) interface{} {
+		map[string]interface{}{"nothere": func() string {
 			return ""
 		}},
 		nil,
@@ -188,8 +179,8 @@ var helpersTests = []Test{
 		"{{#goodbyes}}{{text}}! {{/goodbyes}}cruel {{world}}!",
 		map[string]interface{}{"world": "world"},
 		nil,
-		map[string]raymond.Helper{"goodbyes": func(h *raymond.HelperArg) interface{} {
-			return h.BlockWithCtx(map[string]string{"text": "GOODBYE"})
+		map[string]interface{}{"goodbyes": func(options *raymond.Options) string {
+			return options.FnWithCtx(map[string]string{"text": "GOODBYE"})
 		}},
 		nil,
 		"GOODBYE! cruel world!",
@@ -199,7 +190,7 @@ var helpersTests = []Test{
 		"{{#form}}<p>{{name}}</p>{{/form}}",
 		map[string]interface{}{"name": "Yehuda"},
 		nil,
-		map[string]raymond.Helper{"form": formHelper},
+		map[string]interface{}{"form": formHelper},
 		nil,
 		"<form><p>Yehuda</p></form>",
 	},
@@ -208,8 +199,8 @@ var helpersTests = []Test{
 		"<ul>{{#people}}<li>{{#link}}{{name}}{{/link}}</li>{{/people}}</ul>",
 		map[string]interface{}{"people": []map[string]interface{}{{"name": "Alan", "id": 1}, {"name": "Yehuda", "id": 2}}},
 		nil,
-		map[string]raymond.Helper{"link": func(h *raymond.HelperArg) interface{} {
-			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", h.FieldStr("id"), h.Block())
+		map[string]interface{}{"link": func(options *raymond.Options) string {
+			return fmt.Sprintf("<a href=\"/people/%s\">%s</a>", options.FieldStr("id"), options.Fn())
 		}},
 		nil,
 		`<ul><li><a href="/people/1">Alan</a></li><li><a href="/people/2">Yehuda</a></li></ul>`,
@@ -225,7 +216,7 @@ var helpersTests = []Test{
 		"{{#form yehuda}}<p>{{name}}</p>{{/form}}",
 		map[string]map[string]string{"yehuda": {"name": "Yehuda"}},
 		nil,
-		map[string]raymond.Helper{"form": formCtxHelper},
+		map[string]interface{}{"form": formCtxHelper},
 		nil,
 		"<form><p>Yehuda</p></form>",
 	},
@@ -234,7 +225,7 @@ var helpersTests = []Test{
 		"{{#form yehuda/cat}}<p>{{name}}</p>{{/form}}",
 		map[string]map[string]interface{}{"yehuda": {"name": "Yehuda", "cat": map[string]string{"name": "Harold"}}},
 		nil,
-		map[string]raymond.Helper{"form": formCtxHelper},
+		map[string]interface{}{"form": formCtxHelper},
 		nil,
 		"<form><p>Harold</p></form>",
 	},
@@ -243,8 +234,8 @@ var helpersTests = []Test{
 		"{{#form yehuda}}<p>{{name}}</p>{{#link}}Hello{{/link}}{{/form}}",
 		map[string]map[string]string{"yehuda": {"name": "Yehuda"}},
 		nil,
-		map[string]raymond.Helper{"link": func(h *raymond.HelperArg) interface{} {
-			return fmt.Sprintf("<a href=\"%s\">%s</a>", h.FieldStr("name"), h.Block())
+		map[string]interface{}{"link": func(options *raymond.Options) string {
+			return fmt.Sprintf("<a href=\"%s\">%s</a>", options.FieldStr("name"), options.Fn())
 		}, "form": formCtxHelper},
 		nil,
 		`<form><p>Yehuda</p><a href="Yehuda">Hello</a></form>`,
@@ -254,7 +245,7 @@ var helpersTests = []Test{
 		"{{#list people}}{{name}}{{^}}<em>Nobody's here</em>{{/list}}",
 		map[string][]map[string]string{"people": {{"name": "Alan"}, {"name": "Yehuda"}}},
 		nil,
-		map[string]raymond.Helper{"list": listHelper},
+		map[string]interface{}{"list": listHelper},
 		nil,
 		`<ul><li>Alan</li><li>Yehuda</li></ul>`,
 	},
@@ -263,7 +254,7 @@ var helpersTests = []Test{
 		"{{#list people}}{{name}}{{^}}<em>Nobody's here</em>{{/list}}",
 		map[string][]map[string]string{"people": {}},
 		nil,
-		map[string]raymond.Helper{"list": listHelper},
+		map[string]interface{}{"list": listHelper},
 		nil,
 		`<p><em>Nobody's here</em></p>`,
 	},
@@ -272,7 +263,7 @@ var helpersTests = []Test{
 		"{{#list people}}Hello{{^}}{{message}}{{/list}}",
 		map[string]interface{}{"people": []interface{}{}, "message": "Nobody's here"},
 		nil,
-		map[string]raymond.Helper{"list": listHelper},
+		map[string]interface{}{"list": listHelper},
 		nil,
 		`<p>Nobody&apos;s here</p>`,
 	},
@@ -281,12 +272,12 @@ var helpersTests = []Test{
 		"pathed lambdas with parameters (1)",
 		"{{./helper 1}}",
 		map[string]interface{}{
-			"helper": func() string { return "winning" },
+			"helper": func(param int) string { return "winning" },
 			"hash": map[string]interface{}{
-				"helper": func() string { return "winning" },
+				"helper": func(param int) string { return "winning" },
 			}},
 		nil,
-		map[string]raymond.Helper{"./helper": func(h *raymond.HelperArg) interface{} { return "fail" }},
+		map[string]interface{}{"./helper": func(param int) string { return "fail" }},
 		nil,
 		"winning",
 	},
@@ -294,12 +285,12 @@ var helpersTests = []Test{
 		"pathed lambdas with parameters (2)",
 		"{{hash/helper 1}}",
 		map[string]interface{}{
-			"helper": func() string { return "winning" },
+			"helper": func(param int) string { return "winning" },
 			"hash": map[string]interface{}{
-				"helper": func() string { return "winning" },
+				"helper": func(param int) string { return "winning" },
 			}},
 		nil,
-		map[string]raymond.Helper{"./helper": func(h *raymond.HelperArg) interface{} { return "fail" }},
+		map[string]interface{}{"./helper": func(param int) string { return "fail" }},
 		nil,
 		"winning",
 	},
@@ -309,7 +300,7 @@ var helpersTests = []Test{
 		"Goodbye {{cruel}} {{world}}!",
 		map[string]interface{}{"cruel": "cruel"},
 		nil,
-		map[string]raymond.Helper{"world": func(h *raymond.HelperArg) interface{} { return "world" }},
+		map[string]interface{}{"world": func() string { return "world" }},
 		nil,
 		"Goodbye cruel world!",
 	},
@@ -318,7 +309,7 @@ var helpersTests = []Test{
 		"Goodbye {{#iter}}{{cruel}} {{world}}{{/iter}}!",
 		map[string]interface{}{"iter": []map[string]string{{"cruel": "cruel"}}},
 		nil,
-		map[string]raymond.Helper{"world": func(h *raymond.HelperArg) interface{} { return "world" }},
+		map[string]interface{}{"world": func() string { return "world" }},
 		nil,
 		"Goodbye cruel world!",
 	},
@@ -327,7 +318,7 @@ var helpersTests = []Test{
 		"{{{lookup}}}",
 		map[string]interface{}{"lookup": "Explicit"},
 		nil,
-		map[string]raymond.Helper{"lookup": func(h *raymond.HelperArg) interface{} { return "helpers" }},
+		map[string]interface{}{"lookup": func() string { return "helpers" }},
 		nil,
 		"helpers",
 	},
@@ -336,7 +327,7 @@ var helpersTests = []Test{
 		"{{lookup}}",
 		map[string]interface{}{"lookup": "Explicit"},
 		nil,
-		map[string]raymond.Helper{"lookup": func(h *raymond.HelperArg) interface{} { return "helpers" }},
+		map[string]interface{}{"lookup": func() string { return "helpers" }},
 		nil,
 		"helpers",
 	},
@@ -345,7 +336,7 @@ var helpersTests = []Test{
 		"{{#outer}}{{#inner}}{{helper}}{{/inner}}{{/outer}}",
 		map[string]interface{}{"outer": map[string]interface{}{"inner": map[string]interface{}{"unused": []string{}}}},
 		nil,
-		map[string]raymond.Helper{"helper": func(h *raymond.HelperArg) interface{} { return "helper" }},
+		map[string]interface{}{"helper": func() string { return "helper" }},
 		nil,
 		"helper",
 	},
@@ -358,14 +349,14 @@ var helpersTests = []Test{
 		"decimal number literals work",
 		"Message: {{hello -1.2 1.2}}",
 		nil, nil,
-		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
+		map[string]interface{}{"hello": func(times, times2 interface{}) string {
 			ts, t2s := "NaN", "NaN"
 
-			if v, ok := h.Param(0).(float64); ok {
+			if v, ok := times.(float64); ok {
 				ts = raymond.Str(v)
 			}
 
-			if v, ok := h.Param(1).(float64); ok {
+			if v, ok := times2.(float64); ok {
 				t2s = raymond.Str(v)
 			}
 
@@ -378,14 +369,14 @@ var helpersTests = []Test{
 		"negative number literals work",
 		"Message: {{hello -12}}",
 		nil, nil,
-		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
-			times := "NaN"
+		map[string]interface{}{"hello": func(times interface{}) string {
+			ts := "NaN"
 
-			if v, ok := h.Param(0).(int); ok {
-				times = raymond.Str(v)
+			if v, ok := times.(int); ok {
+				ts = raymond.Str(v)
 			}
 
-			return "Hello " + times + " times"
+			return "Hello " + ts + " times"
 		}},
 		nil,
 		"Message: Hello -12 times",
@@ -395,23 +386,23 @@ var helpersTests = []Test{
 		"String literal parameters - simple literals work",
 		`Message: {{hello "world" 12 true false}}`,
 		nil, nil,
-		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
+		map[string]interface{}{"hello": func(p, t, b, b2 interface{}) string {
 			times, bool1, bool2 := "NaN", "NaB", "NaB"
 
-			param, ok := h.Param(0).(string)
+			param, ok := p.(string)
 			if !ok {
 				param = "NaN"
 			}
 
-			if v, ok := h.Param(1).(int); ok {
+			if v, ok := t.(int); ok {
 				times = raymond.Str(v)
 			}
 
-			if v, ok := h.Param(2).(bool); ok {
+			if v, ok := b.(bool); ok {
 				bool1 = raymond.Str(v)
 			}
 
-			if v, ok := h.Param(3).(bool); ok {
+			if v, ok := b2.(bool); ok {
 				bool2 = raymond.Str(v)
 			}
 
@@ -427,8 +418,8 @@ var helpersTests = []Test{
 		"String literal parameters - escaping a String is possible",
 		"Message: {{{hello \"\\\"world\\\"\"}}}",
 		nil, nil,
-		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
-			return "Hello " + h.ParamStr(0)
+		map[string]interface{}{"hello": func(param string) string {
+			return "Hello " + param
 		}},
 		nil,
 		`Message: Hello "world"`,
@@ -437,8 +428,8 @@ var helpersTests = []Test{
 		"String literal parameters - it works with ' marks",
 		"Message: {{{hello \"Alan's world\"}}}",
 		nil, nil,
-		map[string]raymond.Helper{"hello": func(h *raymond.HelperArg) interface{} {
-			return "Hello " + h.ParamStr(0)
+		map[string]interface{}{"hello": func(param string) string {
+			return "Hello " + param
 		}},
 		nil,
 		`Message: Hello Alan's world`,
@@ -449,8 +440,8 @@ var helpersTests = []Test{
 		"Message: {{goodbye cruel world}}",
 		map[string]string{"cruel": "cruel", "world": "world"},
 		nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			return "Goodbye " + h.ParamStr(0) + " " + h.ParamStr(1)
+		map[string]interface{}{"goodbye": func(cruel, world string) string {
+			return "Goodbye " + cruel + " " + world
 		}},
 		nil,
 		"Message: Goodbye cruel world",
@@ -460,8 +451,8 @@ var helpersTests = []Test{
 		"Message: {{#goodbye cruel world}}{{greeting}} {{adj}} {{noun}}{{/goodbye}}",
 		map[string]string{"cruel": "cruel", "world": "world"},
 		nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			return h.BlockWithCtx(map[string]interface{}{"greeting": "Goodbye", "adj": h.Param(0), "noun": h.Param(1)})
+		map[string]interface{}{"goodbye": func(cruel, world string, options *raymond.Options) string {
+			return options.FnWithCtx(map[string]interface{}{"greeting": "Goodbye", "adj": cruel, "noun": world})
 		}},
 		nil,
 		"Message: Goodbye cruel world",
@@ -471,8 +462,8 @@ var helpersTests = []Test{
 		"hash - helpers can take an optional hash",
 		`{{goodbye cruel="CRUEL" world="WORLD" times=12}}`,
 		nil, nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			return "GOODBYE " + h.HashStr("cruel") + " " + h.HashStr("world") + " " + h.HashStr("times") + " TIMES"
+		map[string]interface{}{"goodbye": func(options *raymond.Options) string {
+			return "GOODBYE " + options.HashStr("cruel") + " " + options.HashStr("world") + " " + options.HashStr("times") + " TIMES"
 		}},
 		nil,
 		"GOODBYE CRUEL WORLD 12 TIMES",
@@ -481,11 +472,11 @@ var helpersTests = []Test{
 		"hash - helpers can take an optional hash with booleans (1)",
 		`{{goodbye cruel="CRUEL" world="WORLD" print=true}}`,
 		nil, nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			p, ok := h.HashProp("print").(bool)
+		map[string]interface{}{"goodbye": func(options *raymond.Options) string {
+			p, ok := options.HashProp("print").(bool)
 			if ok {
 				if p {
-					return "GOODBYE " + h.HashStr("cruel") + " " + h.HashStr("world")
+					return "GOODBYE " + options.HashStr("cruel") + " " + options.HashStr("world")
 				} else {
 					return "NOT PRINTING"
 				}
@@ -500,11 +491,11 @@ var helpersTests = []Test{
 		"hash - helpers can take an optional hash with booleans (2)",
 		`{{goodbye cruel="CRUEL" world="WORLD" print=false}}`,
 		nil, nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			p, ok := h.HashProp("print").(bool)
+		map[string]interface{}{"goodbye": func(options *raymond.Options) string {
+			p, ok := options.HashProp("print").(bool)
 			if ok {
 				if p {
-					return "GOODBYE " + h.HashStr("cruel") + " " + h.HashStr("world")
+					return "GOODBYE " + options.HashStr("cruel") + " " + options.HashStr("world")
 				} else {
 					return "NOT PRINTING"
 				}
@@ -519,8 +510,8 @@ var helpersTests = []Test{
 		"block helpers can take an optional hash",
 		`{{#goodbye cruel="CRUEL" times=12}}world{{/goodbye}}`,
 		nil, nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			return "GOODBYE " + h.HashStr("cruel") + " " + h.Block() + " " + h.HashStr("times") + " TIMES"
+		map[string]interface{}{"goodbye": func(options *raymond.Options) string {
+			return "GOODBYE " + options.HashStr("cruel") + " " + options.Fn() + " " + options.HashStr("times") + " TIMES"
 		}},
 		nil,
 		"GOODBYE CRUEL world 12 TIMES",
@@ -529,8 +520,8 @@ var helpersTests = []Test{
 		"block helpers can take an optional hash with single quoted stings",
 		`{{#goodbye cruel='CRUEL' times=12}}world{{/goodbye}}`,
 		nil, nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			return "GOODBYE " + h.HashStr("cruel") + " " + h.Block() + " " + h.HashStr("times") + " TIMES"
+		map[string]interface{}{"goodbye": func(options *raymond.Options) string {
+			return "GOODBYE " + options.HashStr("cruel") + " " + options.Fn() + " " + options.HashStr("times") + " TIMES"
 		}},
 		nil,
 		"GOODBYE CRUEL world 12 TIMES",
@@ -539,11 +530,11 @@ var helpersTests = []Test{
 		"block helpers can take an optional hash with booleans (1)",
 		`{{#goodbye cruel="CRUEL" print=true}}world{{/goodbye}}`,
 		nil, nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			p, ok := h.HashProp("print").(bool)
+		map[string]interface{}{"goodbye": func(options *raymond.Options) string {
+			p, ok := options.HashProp("print").(bool)
 			if ok {
 				if p {
-					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()
+					return "GOODBYE " + options.HashStr("cruel") + " " + options.Fn()
 				} else {
 					return "NOT PRINTING"
 				}
@@ -558,11 +549,11 @@ var helpersTests = []Test{
 		"block helpers can take an optional hash with booleans (1)",
 		`{{#goodbye cruel="CRUEL" print=false}}world{{/goodbye}}`,
 		nil, nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			p, ok := h.HashProp("print").(bool)
+		map[string]interface{}{"goodbye": func(options *raymond.Options) string {
+			p, ok := options.HashProp("print").(bool)
 			if ok {
 				if p {
-					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()
+					return "GOODBYE " + options.HashStr("cruel") + " " + options.Fn()
 				} else {
 					return "NOT PRINTING"
 				}
@@ -584,11 +575,11 @@ var helpersTests = []Test{
 		"block helpers can take an optional hash with booleans (1)",
 		`{{#goodbye cruel="CRUEL" print=false}}world{{/goodbye}}`,
 		nil, nil,
-		map[string]raymond.Helper{"goodbye": func(h *raymond.HelperArg) interface{} {
-			p, ok := h.HashProp("print").(bool)
+		map[string]interface{}{"goodbye": func(options *raymond.Options) string {
+			p, ok := options.HashProp("print").(bool)
 			if ok {
 				if p {
-					return "GOODBYE " + h.HashStr("cruel") + " " + h.Block()
+					return "GOODBYE " + options.HashStr("cruel") + " " + options.Fn()
 				} else {
 					return "NOT PRINTING"
 				}
@@ -611,12 +602,12 @@ var helpersTests = []Test{
 		`{{goodbye}} {{cruel world}}`,
 		map[string]string{"goodbye": "goodbye", "world": "world"},
 		nil,
-		map[string]raymond.Helper{
-			"goodbye": func(h *raymond.HelperArg) interface{} {
-				return strings.ToUpper(h.FieldStr("goodbye"))
+		map[string]interface{}{
+			"goodbye": func(options *raymond.Options) string {
+				return strings.ToUpper(options.FieldStr("goodbye"))
 			},
-			"cruel": func(h *raymond.HelperArg) interface{} {
-				return "cruel " + strings.ToUpper(h.ParamStr(0))
+			"cruel": func(world string) string {
+				return "cruel " + strings.ToUpper(world)
 			},
 		},
 		nil,
@@ -627,12 +618,12 @@ var helpersTests = []Test{
 		`{{#goodbye}} {{cruel world}}{{/goodbye}}`,
 		map[string]string{"goodbye": "goodbye", "world": "world"},
 		nil,
-		map[string]raymond.Helper{
-			"goodbye": func(h *raymond.HelperArg) interface{} {
-				return strings.ToUpper(h.FieldStr("goodbye")) + h.Block()
+		map[string]interface{}{
+			"goodbye": func(options *raymond.Options) string {
+				return strings.ToUpper(options.FieldStr("goodbye")) + options.Fn()
 			},
-			"cruel": func(h *raymond.HelperArg) interface{} {
-				return "cruel " + strings.ToUpper(h.ParamStr(0))
+			"cruel": func(world string) string {
+				return "cruel " + strings.ToUpper(world)
 			},
 		},
 		nil,
@@ -643,12 +634,12 @@ var helpersTests = []Test{
 		`{{this.goodbye}} {{cruel world}} {{cruel this.goodbye}}`,
 		map[string]string{"goodbye": "goodbye", "world": "world"},
 		nil,
-		map[string]raymond.Helper{
-			"goodbye": func(h *raymond.HelperArg) interface{} {
-				return strings.ToUpper(h.FieldStr("goodbye"))
+		map[string]interface{}{
+			"goodbye": func(options *raymond.Options) string {
+				return strings.ToUpper(options.FieldStr("goodbye"))
 			},
-			"cruel": func(h *raymond.HelperArg) interface{} {
-				return "cruel " + strings.ToUpper(h.ParamStr(0))
+			"cruel": func(world string) string {
+				return "cruel " + strings.ToUpper(world)
 			},
 		},
 		nil,
@@ -659,12 +650,12 @@ var helpersTests = []Test{
 		`{{#goodbye}} {{cruel world}}{{/goodbye}} {{this.goodbye}}`,
 		map[string]string{"goodbye": "goodbye", "world": "world"},
 		nil,
-		map[string]raymond.Helper{
-			"goodbye": func(h *raymond.HelperArg) interface{} {
-				return strings.ToUpper(h.FieldStr("goodbye")) + h.Block()
+		map[string]interface{}{
+			"goodbye": func(options *raymond.Options) string {
+				return strings.ToUpper(options.FieldStr("goodbye")) + options.Fn()
 			},
-			"cruel": func(h *raymond.HelperArg) interface{} {
-				return "cruel " + strings.ToUpper(h.ParamStr(0))
+			"cruel": func(world string) string {
+				return "cruel " + strings.ToUpper(world)
 			},
 		},
 		nil,

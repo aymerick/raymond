@@ -265,7 +265,7 @@ var basicTests = []Test{
 	{
 		"functions returning safestrings shouldn't be escaped",
 		"{{awesome}}",
-		map[string]interface{}{"awesome": func() interface{} { return raymond.SafeString("&'\\<>") }},
+		map[string]interface{}{"awesome": func() raymond.SafeString { return raymond.SafeString("&'\\<>") }},
 		nil, nil, nil,
 		"&'\\<>",
 	},
@@ -279,8 +279,8 @@ var basicTests = []Test{
 	{
 		"functions (2)",
 		"{{awesome}}",
-		map[string]interface{}{"awesome": func(h *raymond.HelperArg) string {
-			return h.FieldStr("more")
+		map[string]interface{}{"awesome": func(options *raymond.Options) string {
+			return options.FieldStr("more")
 		}, "more": "More awesome"},
 		nil, nil, nil,
 		"More awesome",
@@ -288,8 +288,8 @@ var basicTests = []Test{
 	{
 		"functions with context argument",
 		"{{awesome frank}}",
-		map[string]interface{}{"awesome": func(h *raymond.HelperArg) string {
-			return h.ParamStr(0)
+		map[string]interface{}{"awesome": func(context string) string {
+			return context
 		}, "frank": "Frank"},
 		nil, nil, nil,
 		"Frank",
@@ -297,8 +297,8 @@ var basicTests = []Test{
 	{
 		"pathed functions with context argument",
 		"{{bar.awesome frank}}",
-		map[string]interface{}{"bar": map[string]interface{}{"awesome": func(h *raymond.HelperArg) string {
-			return h.ParamStr(0)
+		map[string]interface{}{"bar": map[string]interface{}{"awesome": func(context string) string {
+			return context
 		}}, "frank": "Frank"},
 		nil, nil, nil,
 		"Frank",
@@ -306,8 +306,8 @@ var basicTests = []Test{
 	{
 		"depthed functions with context argument",
 		"{{#with frank}}{{../awesome .}}{{/with}}",
-		map[string]interface{}{"awesome": func(h *raymond.HelperArg) string {
-			return h.ParamStr(0)
+		map[string]interface{}{"awesome": func(context string) string {
+			return context
 		}, "frank": "Frank"},
 		nil, nil, nil,
 		"Frank",
@@ -315,8 +315,8 @@ var basicTests = []Test{
 	{
 		"block functions with context argument",
 		"{{#awesome 1}}inner {{.}}{{/awesome}}",
-		map[string]interface{}{"awesome": func(h *raymond.HelperArg) string {
-			return h.BlockWithCtx(h.Param(0))
+		map[string]interface{}{"awesome": func(context interface{}, options *raymond.Options) string {
+			return options.FnWithCtx(context)
 		}},
 		nil, nil, nil,
 		"inner 1",
@@ -325,8 +325,8 @@ var basicTests = []Test{
 		"depthed block functions with context argument",
 		"{{#with value}}{{#../awesome 1}}inner {{.}}{{/../awesome}}{{/with}}",
 		map[string]interface{}{
-			"awesome": func(h *raymond.HelperArg) string {
-				return h.BlockWithCtx(h.Param(0))
+			"awesome": func(context interface{}, options *raymond.Options) string {
+				return options.FnWithCtx(context)
 			},
 			"value": true,
 		},
@@ -337,8 +337,8 @@ var basicTests = []Test{
 		"block functions without context argument",
 		"{{#awesome}}inner{{/awesome}}",
 		map[string]interface{}{
-			"awesome": func(h *raymond.HelperArg) string {
-				return h.Block()
+			"awesome": func(options *raymond.Options) string {
+				return options.Fn()
 			},
 		},
 		nil, nil, nil,
@@ -351,8 +351,8 @@ var basicTests = []Test{
 	// 	"{{#foo.awesome}}inner{{/foo.awesome}}",
 	// 	map[string]map[string]interface{}{
 	// 		"foo": {
-	// 			"awesome": func(h *raymond.HelperArg) interface{} {
-	// 				return h.Ctx()
+	// 			"awesome": func(options *raymond.Options) interface{} {
+	// 				return options.Ctx()
 	// 			},
 	// 		},
 	// 	},
@@ -366,8 +366,8 @@ var basicTests = []Test{
 	// 	"{{#with value}}{{#../awesome}}inner{{/../awesome}}{{/with}}",
 	// 	map[string]interface{}{
 	// 		"value": true,
-	// 		"awesome": func(h *raymond.HelperArg) interface{} {
-	// 			return h.Ctx()
+	// 		"awesome": func(options *raymond.Options) interface{} {
+	// 			return options.Ctx()
 	// 		},
 	// 	},
 	// 	nil, nil, nil,
@@ -434,7 +434,7 @@ var basicTests = []Test{
 		"that current context path ({{.}}) doesn't hit helpers",
 		"test: {{.}}",
 		nil, nil,
-		map[string]raymond.Helper{"helper": func(h *raymond.HelperArg) interface{} {
+		map[string]interface{}{"helper": func() string {
 			panic("fail")
 			return ""
 		}},
@@ -492,7 +492,7 @@ var basicTests = []Test{
 		"{{#goodbyes}}{{foo this}}{{/goodbyes}}",
 		map[string]interface{}{"goodbyes": []string{"goodbye", "Goodbye", "GOODBYE"}},
 		nil,
-		map[string]raymond.Helper{"foo": barSuffixHelper},
+		map[string]interface{}{"foo": barSuffixHelper},
 		nil,
 		"bar goodbyebar Goodbyebar GOODBYE",
 	},
@@ -501,7 +501,7 @@ var basicTests = []Test{
 		"{{#hellos}}{{foo this/text}}{{/hellos}}",
 		map[string]interface{}{"hellos": []map[string]string{{"text": "hello"}, {"text": "Hello"}, {"text": "HELLO"}}},
 		nil,
-		map[string]raymond.Helper{"foo": barSuffixHelper},
+		map[string]interface{}{"foo": barSuffixHelper},
 		nil,
 		"bar hellobar Hellobar HELLO",
 	},
@@ -510,7 +510,7 @@ var basicTests = []Test{
 		"{{foo [this]}}",
 		map[string]interface{}{"this": "bar"},
 		nil,
-		map[string]raymond.Helper{"foo": echoHelper},
+		map[string]interface{}{"foo": echoHelper},
 		nil,
 		"bar",
 	},
@@ -519,7 +519,7 @@ var basicTests = []Test{
 		"{{foo text/[this]}}",
 		map[string]map[string]string{"text": {"this": "bar"}},
 		nil,
-		map[string]raymond.Helper{"foo": echoHelper},
+		map[string]interface{}{"foo": echoHelper},
 		nil,
 		"bar",
 	},
@@ -575,8 +575,8 @@ var basicTests = []Test{
 	{
 		"pass number literals (5)",
 		"{{12.34 1}}",
-		map[string]interface{}{"12.34": func(h *raymond.HelperArg) string {
-			return "bar" + h.ParamStr(0)
+		map[string]interface{}{"12.34": func(context string) string {
+			return "bar" + context
 		}},
 		nil, nil, nil,
 		"bar1",
@@ -607,8 +607,8 @@ var basicTests = []Test{
 		"{{foo (false)}}",
 		map[string]interface{}{"false": func() string { return "bar" }},
 		nil,
-		map[string]raymond.Helper{"foo": func(h *raymond.HelperArg) interface{} {
-			return h.ParamStr(0)
+		map[string]interface{}{"foo": func(context string) string {
+			return context
 		}},
 		nil,
 		"bar",

@@ -12,7 +12,7 @@ type Test struct {
 	input    string
 	data     interface{}
 	privData map[string]interface{}
-	helpers  map[string]raymond.Helper
+	helpers  map[string]interface{}
 	partials map[string]string
 	output   interface{}
 }

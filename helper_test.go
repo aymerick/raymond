@@ -10,15 +10,9 @@ const (
 // Helpers
 //
 
-func barHelper(h *HelperArg) interface{} { return "bar" }
+func barHelper(options *Options) interface{} { return "bar" }
 
-func echoHelper(h *HelperArg) interface{} {
-	str, _ := h.Param(0).(string)
-	nb, ok := h.Param(1).(int)
-	if !ok {
-		nb = 1
-	}
-
+func echoHelper(str string, nb int) interface{} {
 	result := ""
 	for i := 0; i < nb; i++ {
 		result += str
@@ -27,8 +21,7 @@ func echoHelper(h *HelperArg) interface{} {
 	return result
 }
 
-func boolHelper(h *HelperArg) interface{} {
-	b, _ := h.Param(0).(bool)
+func boolHelper(b bool) interface{} {
 	if b {
 		return "yes it is"
 	}
@@ -36,12 +29,7 @@ func boolHelper(h *HelperArg) interface{} {
 	return "absolutely not"
 }
 
-func gnakHelper(h *HelperArg) interface{} {
-	nb, ok := h.Param(0).(int)
-	if !ok {
-		nb = 1
-	}
-
+func gnakHelper(nb int) interface{} {
 	result := ""
 	for i := 0; i < nb; i++ {
 		result += "GnAK!"
@@ -59,24 +47,24 @@ var helperTests = []Test{
 		"simple helper",
 		`{{foo}}`,
 		nil, nil,
-		map[string]Helper{"foo": barHelper},
+		map[string]interface{}{"foo": barHelper},
 		nil,
 		`bar`,
 	},
 	{
 		"helper with literal string param",
-		`{{echo "foo"}}`,
+		`{{echo "foo" 1}}`,
 		nil, nil,
-		map[string]Helper{"echo": echoHelper},
+		map[string]interface{}{"echo": echoHelper},
 		nil,
 		`foo`,
 	},
 	{
 		"helper with identifier param",
-		`{{echo foo}}`,
+		`{{echo foo 1}}`,
 		map[string]interface{}{"foo": "bar"},
 		nil,
-		map[string]Helper{"echo": echoHelper},
+		map[string]interface{}{"echo": echoHelper},
 		nil,
 		`bar`,
 	},
@@ -84,7 +72,7 @@ var helperTests = []Test{
 		"helper with literal boolean param",
 		`{{bool true}}`,
 		nil, nil,
-		map[string]Helper{"bool": boolHelper},
+		map[string]interface{}{"bool": boolHelper},
 		nil,
 		`yes it is`,
 	},
@@ -92,7 +80,7 @@ var helperTests = []Test{
 		"helper with literal boolean param",
 		`{{bool false}}`,
 		nil, nil,
-		map[string]Helper{"bool": boolHelper},
+		map[string]interface{}{"bool": boolHelper},
 		nil,
 		`absolutely not`,
 	},
@@ -100,7 +88,7 @@ var helperTests = []Test{
 		"helper with literal boolean param",
 		`{{gnak 5}}`,
 		nil, nil,
-		map[string]Helper{"gnak": gnakHelper},
+		map[string]interface{}{"gnak": gnakHelper},
 		nil,
 		`GnAK!GnAK!GnAK!GnAK!GnAK!`,
 	},
@@ -108,7 +96,7 @@ var helperTests = []Test{
 		"helper with several parameters",
 		`{{echo "GnAK!" 3}}`,
 		nil, nil,
-		map[string]Helper{"echo": echoHelper},
+		map[string]interface{}{"echo": echoHelper},
 		nil,
 		`GnAK!GnAK!GnAK!`,
 	},

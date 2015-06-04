@@ -19,11 +19,20 @@ func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
 	return v, false
 }
 
-// isTruth reports whether the value is 'true', in the sense of not the zero of its type,
+// IsTruth returns true if obj is a truthy value.
+func IsTruth(obj interface{}) bool {
+	thruth, ok := isTruthValue(reflect.ValueOf(obj))
+	if !ok {
+		return false
+	}
+	return thruth
+}
+
+// isTruthValue reports whether the value is 'true', in the sense of not the zero of its type,
 // and whether the value has a meaningful truth value
 //
 // NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
-func isTruth(val reflect.Value) (truth, ok bool) {
+func isTruthValue(val reflect.Value) (truth, ok bool) {
 	if !val.IsValid() {
 		// Something like var x interface{}, never set. It's a form of nil.
 		return false, true
@@ -49,4 +58,15 @@ func isTruth(val reflect.Value) (truth, ok bool) {
 		return
 	}
 	return truth, true
+}
+
+// canBeNil reports whether an untyped nil can be assigned to the type. See reflect.Zero.
+//
+// NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
+func canBeNil(typ reflect.Type) bool {
+	switch typ.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		return true
+	}
+	return false
 }

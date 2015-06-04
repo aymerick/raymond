@@ -44,6 +44,13 @@ var evalTests = []Test{
 		nil, nil, nil,
 		"bat",
 	},
+	{
+		"falsy block evaluation",
+		"{{#foo}}bar{{/foo}} baz",
+		map[string]interface{}{"foo": false},
+		nil, nil, nil,
+		" baz",
+	},
 
 	// @todo Test with a struct for data
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
@@ -56,24 +63,31 @@ func TestEval(t *testing.T) {
 var evalErrors = []Test{
 	{
 		"functions with wrong number of arguments",
-		"{{foo}}",
-		map[string]interface{}{"foo": func(a, b *HelperArg) string { return "foo" }},
+		`{{foo "bar"}}`,
+		map[string]interface{}{"foo": func(a string, b string) string { return "foo" }},
 		nil, nil, nil,
-		"Function can only have a uniq argument",
+		"Helper called with wrong number of arguments, needed 2 but got 1",
 	},
 	{
-		"functions with wrong argument type",
-		"{{foo}}",
-		map[string]interface{}{"foo": func(a string) string { return "foo" }},
-		nil, nil, nil,
-		"Function argument must be a *HelperArg",
-	},
-	{
-		"functions with wrong number of returned values",
+		"functions returning a non boolean second value",
 		"{{foo}}",
 		map[string]interface{}{"foo": func() (string, string) { return "foo", "bar" }},
 		nil, nil, nil,
-		"Function must return a uniq value",
+		"Second returned value of helper function must be a boolean",
+	},
+	{
+		"functions with wrong number of returned values (1)",
+		"{{foo}}",
+		map[string]interface{}{"foo": func() {}},
+		nil, nil, nil,
+		"Helper function must return a string or a SafeString",
+	},
+	{
+		"functions with wrong number of returned values (2)",
+		"{{foo}}",
+		map[string]interface{}{"foo": func() (string, bool, string) { return "foo", true, "bar" }},
+		nil, nil, nil,
+		"Helper function must not return more than two values",
 	},
 }
 

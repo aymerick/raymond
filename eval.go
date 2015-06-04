@@ -335,53 +335,31 @@ func (v *evalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 	result, _ = indirect(result)
 	if result.Kind() == reflect.Func {
 		// in that code path, we know we can't be an expression root
-		result = v.evalFunc(result, exprRoot)
+		result = v.evalFieldFunc(fieldName, result, exprRoot)
 	}
 
 	return result
 }
 
-// evalFunc evaluates given function
-func (v *evalVisitor) evalFunc(funcVal reflect.Value, exprRoot bool) reflect.Value {
-	funcType := funcVal.Type()
+// evalFieldFunc evaluates given function
+func (v *evalVisitor) evalFieldFunc(name string, funcVal reflect.Value, exprRoot bool) reflect.Value {
+	ensureValidHelper(name, funcVal)
 
-	if funcType.NumOut() != 1 {
-		v.errorf("Function must return a uniq value: %q", funcVal)
+	var options *Options
+	if exprRoot {
+		// create function arg with all params/hash
+		expr := v.curExpr()
+		options = v.helperOptions(expr)
+
+		// ok, that expression was a function call
+		v.exprFunc[expr] = true
+	} else {
+		// we are not at root of expression, so we are a parameter... and we don't like
+		// infinite loops caused by trying to parse ourself forever
+		options = newEmptyOptions(v)
 	}
 
-	if funcType.NumIn() > 1 {
-		v.errorf("Function can only have a uniq argument: %q", funcVal)
-	}
-
-	args := []reflect.Value{}
-	if funcType.NumIn() == 1 {
-		var arg *HelperArg
-
-		if exprRoot {
-			// create function arg with all params/hash
-			expr := v.curExpr()
-			arg = v.helperArg(expr)
-
-			// ok, that expression was a function call
-			v.exprFunc[expr] = true
-		} else {
-			// we are not at root of expression, so we are a parameter... and we don't like
-			// infinite loops caused by trying to parse ourself forever
-			arg = newEmptyHelperArg(v)
-		}
-
-		if !reflect.TypeOf(arg).AssignableTo(funcType.In(0)) {
-			v.errorf("Function argument must be a *HelperArg: %q", funcVal)
-		}
-
-		args = append(args, reflect.ValueOf(arg))
-	}
-
-	// call function
-	resArr := funcVal.Call(args)
-
-	// we already checked that func returns only one value
-	return resArr[0]
+	return v.callFunc(funcVal, options)
 }
 
 // findBlockParam returns node's block parameter
@@ -537,15 +515,15 @@ func (v *evalVisitor) evalCtxPath(ctx reflect.Value, parts []string, exprRoot bo
 // isHelperCall returns true if given expression is a helper call
 func (v *evalVisitor) isHelperCall(node *ast.Expression) bool {
 	if helperName := node.HelperName(); helperName != "" {
-		return v.findHelper(helperName) != nil
+		return v.findHelper(helperName) != zero
 	}
 	return false
 }
 
 // findHelper finds given helper
-func (v *evalVisitor) findHelper(name string) Helper {
+func (v *evalVisitor) findHelper(name string) reflect.Value {
 	// check template helpers
-	if v.tpl.helpers[name] != nil {
+	if v.tpl.helpers[name] != zero {
 		return v.tpl.helpers[name]
 	}
 
@@ -553,8 +531,81 @@ func (v *evalVisitor) findHelper(name string) Helper {
 	return findHelper(name)
 }
 
-// helperArg computes helper argument from an expression
-func (v *evalVisitor) helperArg(node *ast.Expression) *HelperArg {
+// callFunc calls function with given options
+func (v *evalVisitor) callFunc(funcVal reflect.Value, options *Options) reflect.Value {
+	params := options.Params()
+
+	funcType := funcVal.Type()
+
+	// @todo Is there a better way to do that ?
+	strType := reflect.TypeOf("")
+
+	// check parameters number
+	addOptions := false
+	numIn := funcType.NumIn()
+
+	if numIn == len(params)+1 {
+		lastArgType := funcType.In(numIn - 1)
+		if reflect.TypeOf(options).AssignableTo(lastArgType) {
+			addOptions = true
+		}
+	}
+
+	if !addOptions && (len(params) != numIn) {
+		v.errorf("Helper called with wrong number of arguments, needed %d but got %d", numIn, len(params))
+	}
+
+	// check and collect arguments
+	args := make([]reflect.Value, numIn)
+	for i, param := range params {
+		arg := reflect.ValueOf(param)
+		argType := funcType.In(i)
+
+		if !arg.IsValid() {
+			if canBeNil(argType) {
+				arg = reflect.Zero(argType)
+			} else if argType.Kind() == reflect.String {
+				arg = reflect.ValueOf("")
+			}
+		}
+
+		if !arg.Type().AssignableTo(argType) {
+			if strType.AssignableTo(argType) {
+				// convert parameter to string
+				arg = reflect.ValueOf(strValue(arg))
+			} else {
+				v.errorf("Helper called with argument %d with type %s but it should be %s", i, arg.Type(), argType)
+			}
+		}
+
+		args[i] = arg
+	}
+
+	if addOptions {
+		args[numIn-1] = reflect.ValueOf(options)
+	}
+
+	result := funcVal.Call(args)
+	if len(result) == 2 && !result[1].IsNil() {
+		err, _ := result[1].Interface().(error)
+		v.errPanic(err)
+	}
+
+	return result[0]
+}
+
+// callHelper invoqs helper function for given expression node
+func (v *evalVisitor) callHelper(helper reflect.Value, node *ast.Expression) interface{} {
+	result := v.callFunc(helper, v.helperOptions(node))
+	if !result.IsValid() {
+		return nil
+	}
+
+	return result.Interface()
+}
+
+// helperOptions computes helper options argument from an expression
+func (v *evalVisitor) helperOptions(node *ast.Expression) *Options {
 	var params []interface{}
 	var hash map[string]interface{}
 
@@ -567,7 +618,7 @@ func (v *evalVisitor) helperArg(node *ast.Expression) *HelperArg {
 		hash, _ = node.Hash.Accept(v).(map[string]interface{})
 	}
 
-	return newHelperArg(v, params, hash)
+	return newOptions(v, params, hash)
 }
 
 //
@@ -725,7 +776,7 @@ func (v *evalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	} else {
 		val := reflect.ValueOf(expr)
 
-		truth, _ := isTruth(val)
+		truth, _ := isTruthValue(val)
 		if truth {
 			if node.Program != nil {
 				switch val.Kind() {
@@ -806,8 +857,8 @@ func (v *evalVisitor) VisitExpression(node *ast.Expression) interface{} {
 
 	// helper call
 	if helperName := node.HelperName(); helperName != "" {
-		if helper := v.findHelper(helperName); helper != nil {
-			result = helper(v.helperArg(node))
+		if helper := v.findHelper(helperName); helper != zero {
+			result = v.callHelper(helper, node)
 			done = true
 		}
 	}

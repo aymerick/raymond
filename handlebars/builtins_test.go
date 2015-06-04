@@ -1,10 +1,6 @@
 package handlebars
 
-import (
-	"testing"
-
-	"github.com/aymerick/raymond"
-)
+import "testing"
 
 //
 // Those tests come from:
@@ -81,7 +77,7 @@ var builtinsTests = []Test{
 		"#if - if with function shows the contents when function returns string",
 		"{{#if goodbye}}GOODBYE {{/if}}cruel {{world}}!",
 		map[string]interface{}{
-			"goodbye": func(h *raymond.HelperArg) string { return "world" },
+			"goodbye": func() string { return "world" },
 			"world":   "world",
 		},
 		nil, nil, nil,
@@ -276,7 +272,7 @@ var builtinsTests = []Test{
 		"{{#each letters}}{{this}}{{detectDataInsideEach}}{{/each}}",
 		map[string][]string{"letters": {"a", "b", "c"}},
 		map[string]interface{}{"exclaim": "!"},
-		map[string]raymond.Helper{"detectDataInsideEach": detectDataHelper},
+		map[string]interface{}{"detectDataInsideEach": detectDataHelper},
 		nil,
 		"a!b!c!",
 	},

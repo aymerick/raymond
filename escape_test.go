@@ -5,11 +5,8 @@ import "fmt"
 func ExampleEscape() {
 	tpl := MustParse("{{link url text}}")
 
-	tpl.RegisterHelper("link", func(h *HelperArg) interface{} {
-		url := Escape(h.ParamStr(0))
-		text := Escape(h.ParamStr(1))
-
-		return SafeString("<a href='" + url + "'>" + text + "</a>")
+	tpl.RegisterHelper("link", func(url string, text string) interface{} {
+		return SafeString("<a href='" + Escape(url) + "'>" + Escape(text) + "</a>")
 	})
 
 	ctx := map[string]string{

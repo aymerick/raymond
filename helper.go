@@ -6,8 +6,8 @@ import (
 	"reflect"
 )
 
-// HelperArg represents the argument provided to helpers and context functions.
-type HelperArg struct {
+// Options represents the options argument provided to helpers and context functions.
+type Options struct {
 	// evaluation visitor
 	eval *evalVisitor
 
@@ -16,15 +16,10 @@ type HelperArg struct {
 	hash   map[string]interface{}
 }
 
-// Helper represents a helper function. It returns a string or a SafeString.
-type Helper func(h *HelperArg) interface{}
-
 // helpers stores all globally registered helpers
-var helpers map[string]Helper
+var helpers = make(map[string]reflect.Value)
 
 func init() {
-	helpers = make(map[string]Helper)
-
 	// register builtin helpers
 	RegisterHelper("if", ifHelper)
 	RegisterHelper("unless", unlessHelper)
@@ -35,38 +30,70 @@ func init() {
 }
 
 // RegisterHelper registers a global helper. That helper will be available to all templates.
-func RegisterHelper(name string, helper Helper) {
-	if helpers[name] != nil {
+func RegisterHelper(name string, helper interface{}) {
+	if helpers[name] != zero {
 		panic(fmt.Errorf("Helper already registered: %s", name))
 	}
 
-	helpers[name] = helper
+	val := reflect.ValueOf(helper)
+	ensureValidHelper(name, val)
+
+	helpers[name] = val
 }
 
 // RegisterHelpers registers several global helpers. Those helpers will be available to all templates.
-func RegisterHelpers(helpers map[string]Helper) {
+func RegisterHelpers(helpers map[string]interface{}) {
 	for name, helper := range helpers {
 		RegisterHelper(name, helper)
 	}
 }
 
+// ensureValidHelper panics if given helper is not valid
+func ensureValidHelper(name string, funcValue reflect.Value) {
+	if funcValue.Kind() != reflect.Func {
+		panic(fmt.Errorf("Helper must be a function: %s", name))
+	}
+
+	funcType := funcValue.Type()
+
+	if funcType.NumOut() == 0 {
+		panic(fmt.Errorf("Helper function must return a string or a SafeString: %s", name))
+	}
+
+	if funcType.NumOut() > 2 {
+		panic(fmt.Errorf("Helper function must not return more than two values: %s", name))
+	}
+
+	if funcType.NumOut() == 2 {
+		retType := funcType.Out(1)
+
+		// @todo Is there a better way to do that ?
+		boolType := reflect.TypeOf(true)
+		if !boolType.AssignableTo(retType) {
+			panic(fmt.Errorf("Second returned value of helper function must be a boolean: %s", name))
+		}
+	}
+
+	// @todo Check if first returned value is a string, SafeString or interface{} ?
+}
+
 // findHelper finds a globally registered helper
-func findHelper(name string) Helper {
+func findHelper(name string) reflect.Value {
 	return helpers[name]
 }
 
-// newHelperArg instanciates a new HelperArg
-func newHelperArg(eval *evalVisitor, params []interface{}, hash map[string]interface{}) *HelperArg {
-	return &HelperArg{
+// newOptions instanciates a new Options
+func newOptions(eval *evalVisitor, params []interface{}, hash map[string]interface{}) *Options {
+	return &Options{
 		eval:   eval,
 		params: params,
 		hash:   hash,
 	}
 }
 
-// newEmptyHelperArg instanciates a new empty HelperArg
-func newEmptyHelperArg(eval *evalVisitor) *HelperArg {
-	return &HelperArg{
+// newEmptyOptions instanciates a new empty Options
+func newEmptyOptions(eval *evalVisitor) *Options {
+	return &Options{
 		eval: eval,
 		hash: make(map[string]interface{}),
 	}
@@ -77,47 +104,47 @@ func newEmptyHelperArg(eval *evalVisitor) *HelperArg {
 //
 
 // Params returns all parameters.
-func (h *HelperArg) Params() []interface{} {
-	return h.params
+func (options *Options) Params() []interface{} {
+	return options.params
 }
 
 // Param returns parameter at given position.
-func (h *HelperArg) Param(pos int) interface{} {
-	if len(h.params) > pos {
-		return h.params[pos]
+func (options *Options) Param(pos int) interface{} {
+	if len(options.params) > pos {
+		return options.params[pos]
 	} else {
 		return nil
 	}
 }
 
 // ParamStr returns string representation of parameter at given position.
-func (h *HelperArg) ParamStr(pos int) string {
-	return Str(h.Param(pos))
+func (options *Options) ParamStr(pos int) string {
+	return Str(options.Param(pos))
 }
 
 // Hash returns entire hash.
-func (h *HelperArg) Hash() map[string]interface{} {
-	return h.hash
+func (options *Options) Hash() map[string]interface{} {
+	return options.hash
 }
 
 // HashProp returns hash property.
-func (h *HelperArg) HashProp(name string) interface{} {
-	return h.hash[name]
+func (options *Options) HashProp(name string) interface{} {
+	return options.hash[name]
 }
 
 // HashStr returns string representation of hash property.
-func (h *HelperArg) HashStr(name string) string {
-	return Str(h.hash[name])
+func (options *Options) HashStr(name string) string {
+	return Str(options.hash[name])
 }
 
 // Ctx returns current evaluation context.
-func (h *HelperArg) Ctx() interface{} {
-	return h.eval.curCtx()
+func (options *Options) Ctx() interface{} {
+	return options.eval.curCtx()
 }
 
 // Field returns current context field value.
-func (h *HelperArg) Field(name string) interface{} {
-	value := h.eval.evalField(h.eval.curCtx(), name, false)
+func (options *Options) Field(name string) interface{} {
+	value := options.eval.evalField(options.eval.curCtx(), name, false)
 	if !value.IsValid() {
 		return nil
 	}
@@ -126,18 +153,18 @@ func (h *HelperArg) Field(name string) interface{} {
 }
 
 // FieldStr returns string representation of current context field value.
-func (h *HelperArg) FieldStr(name string) string {
-	return Str(h.Field(name))
+func (options *Options) FieldStr(name string) string {
+	return Str(options.Field(name))
 }
 
-// Data returns private data value by name.
-func (h *HelperArg) Data(name string) interface{} {
-	return h.eval.dataFrame.Get(name)
+// Data returns private data as map.
+func (options *Options) Data(name string) interface{} {
+	return options.eval.dataFrame.Get(name)
 }
 
 // DataStr returns string representation of private data value by name.
-func (h *HelperArg) DataStr(name string) string {
-	return Str(h.eval.dataFrame.Get(name))
+func (options *Options) DataStr(name string) string {
+	return Str(options.eval.dataFrame.Get(name))
 }
 
 //
@@ -145,69 +172,69 @@ func (h *HelperArg) DataStr(name string) string {
 //
 
 // DataFrame returns current private data frame.
-func (h *HelperArg) DataFrame() *DataFrame {
-	return h.eval.dataFrame
+func (options *Options) DataFrame() *DataFrame {
+	return options.eval.dataFrame
 }
 
 // NewDataFrame instanciates a new data frame that is a copy of current evaluation data frame.
 //
 // Parent of returned data frame is set to current evaluation data frame.
-func (h *HelperArg) NewDataFrame() *DataFrame {
-	return h.eval.dataFrame.Copy()
+func (options *Options) NewDataFrame() *DataFrame {
+	return options.eval.dataFrame.Copy()
 }
 
 // newIterDataFrame instanciates a new data frame and set iteration specific vars
-func (h *HelperArg) newIterDataFrame(length int, i int, key interface{}) *DataFrame {
-	return h.eval.dataFrame.newIterDataFrame(length, i, key)
+func (options *Options) newIterDataFrame(length int, i int, key interface{}) *DataFrame {
+	return options.eval.dataFrame.newIterDataFrame(length, i, key)
 }
 
 //
 // Evaluation
 //
 
-// blockWith evaluates block with given context, private data and iteration key
-func (h *HelperArg) evalBlock(ctx interface{}, data *DataFrame, key interface{}) string {
+// evalBlock evaluates block with given context, private data and iteration key
+func (options *Options) evalBlock(ctx interface{}, data *DataFrame, key interface{}) string {
 	result := ""
 
-	if block := h.eval.curBlock(); (block != nil) && (block.Program != nil) {
-		result = h.eval.evalProgram(block.Program, ctx, data, key)
+	if block := options.eval.curBlock(); (block != nil) && (block.Program != nil) {
+		result = options.eval.evalProgram(block.Program, ctx, data, key)
 	}
 
 	return result
 }
 
-// Block evaluates block.
-func (h *HelperArg) Block() string {
-	return h.evalBlock(nil, nil, nil)
+// Fn evaluates block with current evaluation context.
+func (options *Options) Fn() string {
+	return options.evalBlock(nil, nil, nil)
 }
 
-// BlockWith evaluates block with given context and private data frame.
-func (h *HelperArg) BlockWith(ctx interface{}, data *DataFrame) string {
-	return h.evalBlock(ctx, data, nil)
+// FnWith evaluates block with given context and private data frame.
+func (options *Options) FnWith(ctx interface{}, data *DataFrame) string {
+	return options.evalBlock(ctx, data, nil)
 }
 
-// BlockWithCtx evaluates block with given context.
-func (h *HelperArg) BlockWithCtx(ctx interface{}) string {
-	return h.evalBlock(ctx, nil, nil)
+// FnWithCtx evaluates block with given context.
+func (options *Options) FnWithCtx(ctx interface{}) string {
+	return options.evalBlock(ctx, nil, nil)
 }
 
-// BlockWithData evaluates block with given private data frame.
-func (h *HelperArg) BlockWithData(data *DataFrame) string {
-	return h.evalBlock(nil, data, nil)
+// FnWithData evaluates block with given private data frame.
+func (options *Options) FnWithData(data *DataFrame) string {
+	return options.evalBlock(nil, data, nil)
 }
 
 // Inverse evaluates block inverse.
-func (h *HelperArg) Inverse() string {
+func (options *Options) Inverse() string {
 	result := ""
-	if block := h.eval.curBlock(); (block != nil) && (block.Inverse != nil) {
-		result, _ = block.Inverse.Accept(h.eval).(string)
+	if block := options.eval.curBlock(); (block != nil) && (block.Inverse != nil) {
+		result, _ = block.Inverse.Accept(options.eval).(string)
 	}
 
 	return result
 }
 
 // Eval evaluates field for given context.
-func (h *HelperArg) Eval(ctx interface{}, field string) interface{} {
+func (options *Options) Eval(ctx interface{}, field string) interface{} {
 	if ctx == nil {
 		return nil
 	}
@@ -216,7 +243,7 @@ func (h *HelperArg) Eval(ctx interface{}, field string) interface{} {
 		return nil
 	}
 
-	val := h.eval.evalField(reflect.ValueOf(ctx), field, false)
+	val := options.eval.evalField(reflect.ValueOf(ctx), field, false)
 	if !val.IsValid() {
 		return nil
 	}
@@ -228,26 +255,11 @@ func (h *HelperArg) Eval(ctx interface{}, field string) interface{} {
 // Misc
 //
 
-// truthFirstParam returns true if first param is truthy
-func (h *HelperArg) truthFirstParam() bool {
-	val := h.Param(0)
-	if val == nil {
-		return false
-	}
-
-	thruth, ok := isTruth(reflect.ValueOf(val))
-	if !ok {
-		return false
-	}
-
-	return thruth
-}
-
 // isIncludableZero returns true if 'includeZero' option is set and first param is the number 0
-func (h *HelperArg) isIncludableZero() bool {
-	b, ok := h.HashProp("includeZero").(bool)
+func (options *Options) isIncludableZero() bool {
+	b, ok := options.HashProp("includeZero").(bool)
 	if ok && b {
-		nb, ok := h.Param(0).(int)
+		nb, ok := options.Param(0).(int)
 		if ok && nb == 0 {
 			return true
 		}
@@ -261,50 +273,50 @@ func (h *HelperArg) isIncludableZero() bool {
 //
 
 // #if block helper
-func ifHelper(h *HelperArg) interface{} {
-	if h.isIncludableZero() || h.truthFirstParam() {
-		return h.Block()
+func ifHelper(conditional interface{}, options *Options) interface{} {
+	if options.isIncludableZero() || IsTruth(conditional) {
+		return options.Fn()
 	}
 
-	return h.Inverse()
+	return options.Inverse()
 }
 
 // #unless block helper
-func unlessHelper(h *HelperArg) interface{} {
-	if h.isIncludableZero() || h.truthFirstParam() {
-		return h.Inverse()
+func unlessHelper(conditional interface{}, options *Options) interface{} {
+	if options.isIncludableZero() || IsTruth(conditional) {
+		return options.Inverse()
 	}
 
-	return h.Block()
+	return options.Fn()
 }
 
 // #with block helper
-func withHelper(h *HelperArg) interface{} {
-	if h.truthFirstParam() {
-		return h.BlockWithCtx(h.Param(0))
+func withHelper(context interface{}, options *Options) interface{} {
+	if IsTruth(context) {
+		return options.FnWithCtx(context)
 	}
 
-	return h.Inverse()
+	return options.Inverse()
 }
 
 // #each block helper
-func eachHelper(h *HelperArg) interface{} {
-	if !h.truthFirstParam() {
-		h.Inverse()
+func eachHelper(context interface{}, options *Options) interface{} {
+	if !IsTruth(context) {
+		options.Inverse()
 		return ""
 	}
 
 	result := ""
 
-	val := reflect.ValueOf(h.Param(0))
+	val := reflect.ValueOf(context)
 	switch val.Kind() {
 	case reflect.Array, reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
 			// computes private data
-			data := h.newIterDataFrame(val.Len(), i, nil)
+			data := options.newIterDataFrame(val.Len(), i, nil)
 
 			// evaluates block
-			result += h.evalBlock(val.Index(i).Interface(), data, i)
+			result += options.evalBlock(val.Index(i).Interface(), data, i)
 		}
 	case reflect.Map:
 		// note: a go hash is not ordered, so result may vary, this behaviour differs from the JS implementation
@@ -314,10 +326,10 @@ func eachHelper(h *HelperArg) interface{} {
 			ctx := val.MapIndex(keys[i]).Interface()
 
 			// computes private data
-			data := h.newIterDataFrame(len(keys), i, key)
+			data := options.newIterDataFrame(len(keys), i, key)
 
 			// evaluates block
-			result += h.evalBlock(ctx, data, key)
+			result += options.evalBlock(ctx, data, key)
 		}
 	case reflect.Struct:
 		var exportedFields []int
@@ -334,10 +346,10 @@ func eachHelper(h *HelperArg) interface{} {
 			ctx := val.Field(fieldIndex).Interface()
 
 			// computes private data
-			data := h.newIterDataFrame(len(exportedFields), i, key)
+			data := options.newIterDataFrame(len(exportedFields), i, key)
 
 			// evaluates block
-			result += h.evalBlock(ctx, data, key)
+			result += options.evalBlock(ctx, data, key)
 		}
 	}
 
@@ -345,12 +357,12 @@ func eachHelper(h *HelperArg) interface{} {
 }
 
 // #log helper
-func logHelper(h *HelperArg) interface{} {
-	log.Print(h.ParamStr(0))
+func logHelper(message string) interface{} {
+	log.Print(message)
 	return ""
 }
 
 // #lookup helper
-func lookupHelper(h *HelperArg) interface{} {
-	return Str(h.Eval(h.Param(0), h.ParamStr(1)))
+func lookupHelper(obj interface{}, field string, options *Options) interface{} {
+	return Str(options.Eval(obj, field))
 }

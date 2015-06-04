@@ -177,10 +177,7 @@ When returning HTML from a helper, you should return a `SafeString` if you don't
 ```go
   tpl := raymond.MustParse("{{link url text}}")
 
-  tpl.RegisterHelper("link", func(h *raymond.HelperArg) interface{} {
-    url := raymond.Escape(h.ParamStr(0))
-    text := raymond.Escape(h.ParamStr(1))
-
+  tpl.RegisterHelper("link", func(url, text string) interface{} {
     return raymond.SafeString("<a href='" + url + "'>" + text + "</a>")
   })
 

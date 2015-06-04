@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"fmt"
+	"reflect"
 	"runtime"
 
 	"github.com/aymerick/raymond/ast"
@@ -12,7 +13,7 @@ import (
 type Template struct {
 	source   string
 	program  *ast.Program
-	helpers  map[string]Helper
+	helpers  map[string]reflect.Value
 	partials map[string]*partial
 }
 
@@ -20,7 +21,7 @@ type Template struct {
 func newTemplate(source string) *Template {
 	return &Template{
 		source:   source,
-		helpers:  make(map[string]Helper),
+		helpers:  make(map[string]reflect.Value),
 		partials: make(map[string]*partial),
 	}
 }
@@ -63,16 +64,19 @@ func (tpl *Template) parse() error {
 }
 
 // RegisterHelper registers a helper for that template.
-func (tpl *Template) RegisterHelper(name string, helper Helper) {
-	if tpl.helpers[name] != nil {
+func (tpl *Template) RegisterHelper(name string, helper interface{}) {
+	if tpl.helpers[name] != zero {
 		panic(fmt.Sprintf("Helper %s already registered", name))
 	}
 
-	tpl.helpers[name] = helper
+	val := reflect.ValueOf(helper)
+	ensureValidHelper(name, val)
+
+	tpl.helpers[name] = val
 }
 
 // RegisterHelpers registers several helpers for that template.
-func (tpl *Template) RegisterHelpers(helpers map[string]Helper) {
+func (tpl *Template) RegisterHelpers(helpers map[string]interface{}) {
 	for name, helper := range helpers {
 		tpl.RegisterHelper(name, helper)
 	}

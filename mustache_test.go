@@ -178,8 +178,8 @@ var mustacheLambdasTests = []Test{
 	// {
 	// 	"Section",
 	// 	"<{{#lambda}}{{x}}{{/lambda}}>",
-	// 	map[string]interface{}{"lambda": func(h *HelperArg) string {
-	// 		if h.ParamStr(0) == "{{x}}" {
+	// 	map[string]interface{}{"lambda": func(param string) string {
+	// 		if param == "{{x}}" {
 	// 			return "yes"
 	// 		}
 
@@ -193,8 +193,8 @@ var mustacheLambdasTests = []Test{
 	// {
 	// 	"Section - Expansion",
 	// 	"<{{#lambda}}-{{/lambda}}>",
-	// 	map[string]interface{}{"lambda": func(h *HelperArg) string {
-	// 		return h.ParamStr(0) + "{{planet}}" + h.ParamStr(0)
+	// 	map[string]interface{}{"lambda": func(param string) string {
+	// 		return param + "{{planet}}" + param
 	// 	}, "planet": "Earth"},
 	// 	nil, nil, nil,
 	// 	"<-Earth->",
@@ -205,8 +205,8 @@ var mustacheLambdasTests = []Test{
 	{
 		"Section - Multiple Calls",
 		"{{#lambda}}FILE{{/lambda}} != {{#lambda}}LINE{{/lambda}}",
-		map[string]interface{}{"lambda": func(h *HelperArg) string {
-			return "__" + h.Block() + "__"
+		map[string]interface{}{"lambda": func(options *Options) string {
+			return "__" + options.Fn() + "__"
 		}},
 		nil, nil, nil,
 		"__FILE__ != __LINE__",

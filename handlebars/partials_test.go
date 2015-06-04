@@ -1,10 +1,6 @@
 package handlebars
 
-import (
-	"testing"
-
-	"github.com/aymerick/raymond"
-)
+import "testing"
 
 //
 // Those tests come from:
@@ -24,7 +20,7 @@ var partialsTests = []Test{
 		"Dudes: {{#dudes}}{{> (partial)}}{{/dudes}}",
 		map[string]interface{}{"dudes": []map[string]string{{"name": "Yehuda", "url": "http://yehuda"}, {"name": "Alan", "url": "http://alan"}}},
 		nil,
-		map[string]raymond.Helper{"partial": func(h *raymond.HelperArg) interface{} {
+		map[string]interface{}{"partial": func() string {
 			return "dude"
 		}},
 		map[string]string{"dude": "{{name}} ({{url}}) "},
