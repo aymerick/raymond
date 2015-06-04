@@ -45,7 +45,7 @@ func ExampleStr() {
 }
 
 func ExampleSafeString() {
-	RegisterHelper("em", func() interface{} {
+	RegisterHelper("em", func() SafeString {
 		return SafeString("<em>FOO BAR</em>")
 	})
 

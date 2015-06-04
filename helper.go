@@ -157,12 +157,12 @@ func (options *Options) FieldStr(name string) string {
 	return Str(options.Field(name))
 }
 
-// Data returns private data as map.
+// Data returns private data value.
 func (options *Options) Data(name string) interface{} {
 	return options.eval.dataFrame.Get(name)
 }
 
-// DataStr returns string representation of private data value by name.
+// DataStr returns string representation of private data value.
 func (options *Options) DataStr(name string) string {
 	return Str(options.eval.dataFrame.Get(name))
 }

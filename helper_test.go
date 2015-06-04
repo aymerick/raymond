@@ -10,9 +10,9 @@ const (
 // Helpers
 //
 
-func barHelper(options *Options) interface{} { return "bar" }
+func barHelper(options *Options) string { return "bar" }
 
-func echoHelper(str string, nb int) interface{} {
+func echoHelper(str string, nb int) string {
 	result := ""
 	for i := 0; i < nb; i++ {
 		result += str
@@ -21,7 +21,7 @@ func echoHelper(str string, nb int) interface{} {
 	return result
 }
 
-func boolHelper(b bool) interface{} {
+func boolHelper(b bool) string {
 	if b {
 		return "yes it is"
 	}
@@ -29,7 +29,7 @@ func boolHelper(b bool) interface{} {
 	return "absolutely not"
 }
 
-func gnakHelper(nb int) interface{} {
+func gnakHelper(nb int) string {
 	result := ""
 	for i := 0; i < nb; i++ {
 		result += "GnAK!"
