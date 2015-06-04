@@ -178,7 +178,7 @@ func TestParserErrors(t *testing.T) {
 
 // package example
 func Example() {
-	source := "<h1>{{title}}</h1>"
+	source := "You know {{nothing}} John Snow"
 
 	// parse template
 	program, err := Parse(source)
@@ -190,7 +190,7 @@ func Example() {
 	output := ast.Print(program)
 
 	fmt.Print(output)
-	// Output: CONTENT[ '<h1>' ]
-	// {{ PATH:title [] }}
-	// CONTENT[ '</h1>' ]
+	// CONTENT[ 'You know ' ]
+	// {{ PATH:nothing [] }}
+	// CONTENT[ ' John Snow' ]
 }
