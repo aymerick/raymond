@@ -136,6 +136,80 @@ You can use `MustParse()` and `MustExec()` functions if you don't want to deal w
     result := tpl.MustExec(ctx)
 ```
 
+## Context
+
+The rendering context can contain any type of objects, including `array`, `slice`, `map`, `struc`t and `func`.
+
+When using struct, be warned that only exported fields are accessible:
+
+```go
+package main
+
+import (
+  "fmt"
+
+  "github.com/aymerick/raymond"
+)
+
+func main() {
+  source := `<div class="post">
+  <h1>By {{Author.FirstName}} {{Author.LastName}}</h1>
+  <div class="body">{{Body}}</div>
+
+  <h1>Comments</h1>
+
+  {{#each Comments}}
+  <h2>By {{Author.FirstName}} {{Author.LastName}}</h2>
+  <div class="body">{{Body}}</div>
+  {{/each}}
+</div>`
+
+  type Person struct {
+    FirstName string
+    LastName  string
+  }
+
+  type Comment struct {
+    Author Person
+    Body   string
+  }
+
+  type Post struct {
+    Author   Person
+    Body     string
+    Comments []Comment
+  }
+
+  ctx := Post{
+    Person{"Jean", "Valjean"},
+    "Life is difficult",
+    []Comment{
+      Comment{
+        Person{"Marcel", "Beliveau"},
+        "LOL!",
+      },
+    },
+  }
+
+  output := raymond.MustRender(source, ctx)
+
+  fmt.Print(output)
+}
+```
+
+Output:
+
+```html
+<div class="post">
+  <h1>By Jean Valjean</h1>
+  <div class="body">Life is difficult</div>
+
+  <h1>Comments</h1>
+
+  <h2>By Marcel Beliveau</h2>
+  <div class="body">LOL!</div>
+</div>
+```
 
 ## HTML Escaping
 
@@ -199,20 +273,93 @@ Output:
 
 ## Helpers
 
-@todo What is a helper ?
+Helpers can be accessed from any context in a template. You can register a helper with the raymond.RegisterHelper function.
 
+For example:
 
-### Helper Registration
+```html
+<div class="post">
+  <h1>By {{fullName author}}</h1>
+  <div class="body">{{body}}</div>
 
-To register a global helper, use the `raymond.RegisterHelper` function: that helper will be available to all templates.
+  <h1>Comments</h1>
 
-```go
-  raymond.RegisterHelper("fullName", func(firstName, lastName string) string {
-    return firstName + " " + lastName
-  })
+  {{#each comments}}
+  <h2>By {{fullName author}}</h2>
+  <div class="body">{{body}}</div>
+  {{/each}}
+</div>
 ```
 
-You can too register a helper on a specific template, and in that case that helper will be only available to that template:
+With this context and helper:
+
+``go
+ctx := map[string]interface{}{
+  "author": map[string]string{"firstName": "Jean", "lastName": "Valjean"},
+  "body":   "Life is difficult",
+  "comments": []map[string]interface{}{{
+    "author": map[string]string{"firstName": "Marcel", "lastName": "Beliveau"},
+    "body":   "LOL!",
+  }},
+}
+
+raymond.RegisterHelper("fullName", func(person map[string]string) string {
+  return person["firstName"] + " " + person["lastName"]
+})
+``
+
+Outputs:
+
+```html
+<div class="post">
+  <h1>By Jean Valjean</h1>
+  <div class="body">Life is difficult</div>
+
+  <h1>Comments</h1>
+
+  <h2>By Marcel Beliveau</h2>
+  <div class="body">LOL!</div>
+</div>
+```
+
+Helper arguments can be any type. Following example uses structs instead of maps and produces the same output as the previous one:
+
+``go
+  type Person struct {
+    FirstName string
+    LastName  string
+  }
+
+  type Comment struct {
+    Author Person
+    Body   string
+  }
+
+  type Post struct {
+    Author   Person
+    Body     string
+    Comments []Comment
+  }
+
+  ctx := Post{
+    Person{"Jean", "Valjean"},
+    "Life is difficult",
+    []Comment{
+      Comment{
+        Person{"Marcel", "Beliveau"},
+        "LOL!",
+      },
+    },
+  }
+
+  RegisterHelper("fullName", func(person Person) string {
+    return person.FirstName + " " + person.LastName
+  })
+``
+
+### Template Helpers
+
+You can register a helper on a specific template, and in that case that helper will be only available to that template:
 
 ```go
   tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
@@ -238,7 +385,7 @@ You can use the `if` helper to conditionally render a block. If its argument ret
 </div>
 ```
 
-When using a block expression, you can specify a template section to run if the expression returns a falsy value. The section, marked by `{{else}}` is called an "else section".
+When using a block expression, you can specify a template section to run if the expression returns a falsy value. That section, marked by `{{else}}` is called an "else section".
 
 ```html
 <div class="entry">
@@ -393,7 +540,7 @@ The `log` helper allows for logging while evaluating a template.
 Note that the handlebars.js `@level` variable is not supported.
 
 
-### Helper Parameters
+### Helper Arguments
 
 @todo doc
 

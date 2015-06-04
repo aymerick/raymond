@@ -23,6 +23,64 @@ func Example() {
 	// Output: <h1>foo</h1><p>bar</p>
 }
 
+func Example_struct() {
+	source := `<div class="post">
+  <h1>By {{fullName Author}}</h1>
+  <div class="body">{{Body}}</div>
+
+  <h1>Comments</h1>
+
+  {{#each Comments}}
+  <h2>By {{fullName Author}}</h2>
+  <div class="body">{{Body}}</div>
+  {{/each}}
+</div>`
+
+	type Person struct {
+		FirstName string
+		LastName  string
+	}
+
+	type Comment struct {
+		Author Person
+		Body   string
+	}
+
+	type Post struct {
+		Author   Person
+		Body     string
+		Comments []Comment
+	}
+
+	ctx := Post{
+		Person{"Jean", "Valjean"},
+		"Life is difficult",
+		[]Comment{
+			Comment{
+				Person{"Marcel", "Beliveau"},
+				"LOL!",
+			},
+		},
+	}
+
+	RegisterHelper("fullName", func(person Person) string {
+		return person.FirstName + " " + person.LastName
+	})
+
+	output := MustRender(source, ctx)
+
+	fmt.Print(output)
+	// Output: <div class="post">
+	//   <h1>By Jean Valjean</h1>
+	//   <div class="body">Life is difficult</div>
+	//
+	//   <h1>Comments</h1>
+	//
+	//   <h2>By Marcel Beliveau</h2>
+	//   <div class="body">LOL!</div>
+	// </div>
+}
+
 func ExampleRender() {
 	tpl := "<h1>{{title}}</h1><p>{{body.content}}</p>"
 
