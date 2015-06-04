@@ -403,6 +403,51 @@ These handlebars features are currently NOT implemented:
 - [ ] benchmarks
 
 
+## Lexer
+
+Here is how the lexer work:
+
+```go
+package main
+
+import (
+    "fmt"
+
+    "github.com/aymerick/raymond/lexer"
+)
+
+func main() {
+  source := "You know {{nothing}} John Snow"
+
+  output := ""
+
+  lex := lexer.Scan(source)
+  for {
+    // consume next token
+    token := lex.NextToken()
+
+    output += fmt.Sprintf(" %s", token)
+
+    // stops when all tokens have been consumed, or on error
+    if token.Kind == lexer.TokenEOF || token.Kind == lexer.TokenError {
+      break
+    }
+  }
+
+  fmt.Print(output)
+}
+```
+
+Outputs:
+
+  Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
+
+
+## Parser
+
+@todo !!!
+
+
 ## Test
 
     $ go test ./...
