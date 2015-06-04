@@ -100,47 +100,8 @@ func newEmptyOptions(eval *evalVisitor) *Options {
 }
 
 //
-// Getters
+// Context Values
 //
-
-// Params returns all parameters.
-func (options *Options) Params() []interface{} {
-	return options.params
-}
-
-// Param returns parameter at given position.
-func (options *Options) Param(pos int) interface{} {
-	if len(options.params) > pos {
-		return options.params[pos]
-	} else {
-		return nil
-	}
-}
-
-// ParamStr returns string representation of parameter at given position.
-func (options *Options) ParamStr(pos int) string {
-	return Str(options.Param(pos))
-}
-
-// Hash returns entire hash.
-func (options *Options) Hash() map[string]interface{} {
-	return options.hash
-}
-
-// HashProp returns hash property.
-func (options *Options) HashProp(name string) interface{} {
-	return options.hash[name]
-}
-
-// HashStr returns string representation of hash property.
-func (options *Options) HashStr(name string) string {
-	return Str(options.hash[name])
-}
-
-// Ctx returns current evaluation context.
-func (options *Options) Ctx() interface{} {
-	return options.eval.curCtx()
-}
 
 // ValueStr returns given field value from current context.
 func (options *Options) Value(name string) interface{} {
@@ -157,6 +118,57 @@ func (options *Options) ValueStr(name string) string {
 	return Str(options.Value(name))
 }
 
+// Ctx returns current evaluation context.
+func (options *Options) Ctx() interface{} {
+	return options.eval.curCtx()
+}
+
+//
+// Hash Arguments
+//
+
+// HashProp returns hash property.
+func (options *Options) HashProp(name string) interface{} {
+	return options.hash[name]
+}
+
+// HashStr returns string representation of hash property.
+func (options *Options) HashStr(name string) string {
+	return Str(options.hash[name])
+}
+
+// Hash returns entire hash.
+func (options *Options) Hash() map[string]interface{} {
+	return options.hash
+}
+
+//
+// Parameters
+//
+
+// Param returns parameter at given position.
+func (options *Options) Param(pos int) interface{} {
+	if len(options.params) > pos {
+		return options.params[pos]
+	} else {
+		return nil
+	}
+}
+
+// ParamStr returns string representation of parameter at given position.
+func (options *Options) ParamStr(pos int) string {
+	return Str(options.Param(pos))
+}
+
+// Params returns all parameters.
+func (options *Options) Params() []interface{} {
+	return options.params
+}
+
+//
+// Private data
+//
+
 // Data returns private data value.
 func (options *Options) Data(name string) interface{} {
 	return options.eval.dataFrame.Get(name)
@@ -166,10 +178,6 @@ func (options *Options) Data(name string) interface{} {
 func (options *Options) DataStr(name string) string {
 	return Str(options.eval.dataFrame.Get(name))
 }
-
-//
-// Private data frame
-//
 
 // DataFrame returns current private data frame.
 func (options *Options) DataFrame() *DataFrame {
