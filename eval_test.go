@@ -66,7 +66,7 @@ var evalErrors = []Test{
 		`{{foo "bar"}}`,
 		map[string]interface{}{"foo": func(a string, b string) string { return "foo" }},
 		nil, nil, nil,
-		"Helper called with wrong number of arguments, needed 2 but got 1",
+		"Helper foo called with wrong number of arguments, needed 2 but got 1",
 	},
 	{
 		"functions returning a non boolean second value",
