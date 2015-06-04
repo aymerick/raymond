@@ -19,7 +19,7 @@ func Example() {
 	// alternatively, for one shots:
 	// output :=  MustRender(source, ctx)
 
-	fmt.Printf(output)
+	fmt.Print(output)
 	// Output: <h1>foo</h1><p>bar</p>
 }
 
@@ -37,7 +37,7 @@ func ExampleRender() {
 		panic(err)
 	}
 
-	fmt.Printf(output)
+	fmt.Print(output)
 	// Output: <h1>foo</h1><p>bar</p>
 }
 
@@ -52,6 +52,6 @@ func ExampleMustRender() {
 	// render template with context
 	output := MustRender(tpl, ctx)
 
-	fmt.Printf(output)
+	fmt.Print(output)
 	// Output: <h1>foo</h1><p>bar</p>
 }

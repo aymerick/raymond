@@ -59,7 +59,7 @@ func ExampleTemplate_Exec() {
 		panic(err)
 	}
 
-	fmt.Printf(output)
+	fmt.Print(output)
 	// Output: <h1>foo</h1><p>bar</p>
 }
 
@@ -77,7 +77,7 @@ func ExampleTemplate_MustExec() {
 	// evaluate template with context
 	output := tpl.MustExec(ctx)
 
-	fmt.Printf(output)
+	fmt.Print(output)
 	// Output: <h1>foo</h1><p>bar</p>
 }
 
@@ -102,7 +102,7 @@ func ExampleTemplate_ExecWith() {
 		panic(err)
 	}
 
-	fmt.Printf(output)
+	fmt.Print(output)
 	// Output: <h1>foo</h1><p>bar and unicorns</p>
 }
 
@@ -115,7 +115,7 @@ func ExampleTemplate_PrintAST() {
 	// print AST
 	output := tpl.PrintAST()
 
-	fmt.Printf(output)
+	fmt.Print(output)
 	// Output: CONTENT[ '<h1>' ]
 	// {{ PATH:title [] }}
 	// CONTENT[ '</h1><p>' ]
