@@ -359,7 +359,7 @@ func (v *evalVisitor) evalFieldFunc(name string, funcVal reflect.Value, exprRoot
 		options = newEmptyOptions(v)
 	}
 
-	return v.callFunc(funcVal, options)
+	return v.callFunc(name, funcVal, options)
 }
 
 // findBlockParam returns node's block parameter
@@ -532,7 +532,7 @@ func (v *evalVisitor) findHelper(name string) reflect.Value {
 }
 
 // callFunc calls function with given options
-func (v *evalVisitor) callFunc(funcVal reflect.Value, options *Options) reflect.Value {
+func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Options) reflect.Value {
 	params := options.Params()
 
 	funcType := funcVal.Type()
@@ -552,7 +552,7 @@ func (v *evalVisitor) callFunc(funcVal reflect.Value, options *Options) reflect.
 	}
 
 	if !addOptions && (len(params) != numIn) {
-		v.errorf("Helper called with wrong number of arguments, needed %d but got %d", numIn, len(params))
+		v.errorf("Helper %s called with wrong number of arguments, needed %d but got %d", name, numIn, len(params))
 	}
 
 	// check and collect arguments
@@ -567,7 +567,8 @@ func (v *evalVisitor) callFunc(funcVal reflect.Value, options *Options) reflect.
 			} else if argType.Kind() == reflect.String {
 				arg = reflect.ValueOf("")
 			} else {
-				v.errorf("Invalid parameter passed to helper function: %q", funcVal)
+				// @todo Maybe we can panic on that
+				return reflect.Zero(strType)
 			}
 		}
 
@@ -576,7 +577,7 @@ func (v *evalVisitor) callFunc(funcVal reflect.Value, options *Options) reflect.
 				// convert parameter to string
 				arg = reflect.ValueOf(strValue(arg))
 			} else {
-				v.errorf("Helper called with argument %d with type %s but it should be %s", i, arg.Type(), argType)
+				v.errorf("Helper %s called with argument %d with type %s but it should be %s", name, i, arg.Type(), argType)
 			}
 		}
 
@@ -597,8 +598,8 @@ func (v *evalVisitor) callFunc(funcVal reflect.Value, options *Options) reflect.
 }
 
 // callHelper invoqs helper function for given expression node
-func (v *evalVisitor) callHelper(helper reflect.Value, node *ast.Expression) interface{} {
-	result := v.callFunc(helper, v.helperOptions(node))
+func (v *evalVisitor) callHelper(name string, helper reflect.Value, node *ast.Expression) interface{} {
+	result := v.callFunc(name, helper, v.helperOptions(node))
 	if !result.IsValid() {
 		return nil
 	}
@@ -860,7 +861,7 @@ func (v *evalVisitor) VisitExpression(node *ast.Expression) interface{} {
 	// helper call
 	if helperName := node.HelperName(); helperName != "" {
 		if helper := v.findHelper(helperName); helper != zero {
-			result = v.callHelper(helper, node)
+			result = v.callHelper(helperName, helper, node)
 			done = true
 		}
 	}
