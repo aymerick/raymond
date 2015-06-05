@@ -975,7 +975,7 @@ For all others values, `IsTruth()` returns `true`.
 
 ## Context Functions
 
-In addition to helpers, lambdas found in evaluation context are evaluated.
+In addition to helpers, lambdas found in context are evaluated.
 
 For example, that template and context:
 
@@ -992,7 +992,7 @@ ctx := map[string]interface{}{
 }
 ```
 
-Render randomly `I hate you` or `I love you`.
+Randomly renders `I hate you` or `I love you`.
 
 Those context functions behave like helper functions: they can be called with parameters and they can have an `Options` argument.
 
@@ -1126,7 +1126,7 @@ For example:
 
 ```go
 tpl := raymond.MustParse("{{> myPartial name=hero }}")
-tpl.RegisterPartial("myPartial", "his name is: {{name}}")
+tpl.RegisterPartial("myPartial", "My hero is {{name}}")
 
 ctx := map[string]interface{}{
     "hero": "Goldorak",
@@ -1139,7 +1139,7 @@ fmt.Print(result)
 Displays:
 
 ```html
-his name is: Goldorak
+My hero is Goldorak
 ```
 
 
