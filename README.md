@@ -632,7 +632,7 @@ Note that as the first parameter of the helper is typed as `bool` an automatic c
 ctx := map[string]interface{}{"yep": "message"}
 ```
 
-Here, `"message"` is converted to `true` because it is an non-empty string. See `IsTruth()` function for more informations on boolean conversion.
+Here, `"message"` is converted to `true` because it is an non-empty string. See `IsTrue()` function for more informations on boolean conversion.
 
 
 #### Else Block Evaluation
@@ -806,7 +806,7 @@ Actually, raymond perfoms automatic string conversion. So because the first para
 10 VALJEAN
 ```
 
-Note that this kind of automatic conversion is done with `bool` type too, thanks to the `IsTruth()` function.
+Note that this kind of automatic conversion is done with `bool` type too, thanks to the `IsTrue()` function.
 
 
 ### Options Argument
@@ -956,9 +956,9 @@ raymond.Str([]interface{}{true, 10, "foo", 5, "bar"})
 ```
 
 
-#### `IsTruth()`
+#### `IsTrue()`
 
-`IsTruth()` returns a `bool` representing the truthy version of the parameter.
+`IsTrue()` returns the truthy version of the parameter.
 
 It returns `false` when parameter is either:
 
@@ -970,7 +970,7 @@ It returns `false` when parameter is either:
   - `0`
   - `false`
 
-For all others values, `IsTruth()` returns `true`.
+For all others values, `IsTrue()` returns `true`.
 
 
 ## Context Functions

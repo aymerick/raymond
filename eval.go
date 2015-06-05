@@ -579,7 +579,7 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 				arg = reflect.ValueOf(strValue(arg))
 			} else if boolType.AssignableTo(argType) {
 				// convert parameter to bool
-				val, _ := isTruthValue(arg)
+				val, _ := isTrueValue(arg)
 				arg = reflect.ValueOf(val)
 			} else {
 				v.errorf("Helper %s called with argument %d with type %s but it should be %s", name, i, arg.Type(), argType)
@@ -785,7 +785,7 @@ func (v *evalVisitor) VisitBlock(node *ast.BlockStatement) interface{} {
 	} else {
 		val := reflect.ValueOf(expr)
 
-		truth, _ := isTruthValue(val)
+		truth, _ := isTrueValue(val)
 		if truth {
 			if node.Program != nil {
 				switch val.Kind() {

@@ -282,7 +282,7 @@ func (options *Options) isIncludableZero() bool {
 
 // #if block helper
 func ifHelper(conditional interface{}, options *Options) interface{} {
-	if options.isIncludableZero() || IsTruth(conditional) {
+	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Fn()
 	}
 
@@ -291,7 +291,7 @@ func ifHelper(conditional interface{}, options *Options) interface{} {
 
 // #unless block helper
 func unlessHelper(conditional interface{}, options *Options) interface{} {
-	if options.isIncludableZero() || IsTruth(conditional) {
+	if options.isIncludableZero() || IsTrue(conditional) {
 		return options.Inverse()
 	}
 
@@ -300,7 +300,7 @@ func unlessHelper(conditional interface{}, options *Options) interface{} {
 
 // #with block helper
 func withHelper(context interface{}, options *Options) interface{} {
-	if IsTruth(context) {
+	if IsTrue(context) {
 		return options.FnWith(context)
 	}
 
@@ -309,7 +309,7 @@ func withHelper(context interface{}, options *Options) interface{} {
 
 // #each block helper
 func eachHelper(context interface{}, options *Options) interface{} {
-	if !IsTruth(context) {
+	if !IsTrue(context) {
 		return options.Inverse()
 	}
 

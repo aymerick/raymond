@@ -19,20 +19,20 @@ func indirect(v reflect.Value) (rv reflect.Value, isNil bool) {
 	return v, false
 }
 
-// IsTruth returns true if obj is a truthy value.
-func IsTruth(obj interface{}) bool {
-	thruth, ok := isTruthValue(reflect.ValueOf(obj))
+// IsTrue returns true if obj is a truthy value.
+func IsTrue(obj interface{}) bool {
+	thruth, ok := isTrueValue(reflect.ValueOf(obj))
 	if !ok {
 		return false
 	}
 	return thruth
 }
 
-// isTruthValue reports whether the value is 'true', in the sense of not the zero of its type,
+// isTrueValue reports whether the value is 'true', in the sense of not the zero of its type,
 // and whether the value has a meaningful truth value
 //
 // NOTE: borrowed from https://github.com/golang/go/tree/master/src/text/template/exec.go
-func isTruthValue(val reflect.Value) (truth, ok bool) {
+func isTrueValue(val reflect.Value) (truth, ok bool) {
 	if !val.IsValid() {
 		// Something like var x interface{}, never set. It's a form of nil.
 		return false, true
