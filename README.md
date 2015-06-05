@@ -59,7 +59,7 @@ Please note that the template will be parsed everytime you call `Render()` funct
 
 ## Correct Usage
 
-To avoid parsing a template several times, use the `Parse()` and `Exec()` function:
+To avoid parsing a template several times, use the `Parse()` and `Exec()` functions:
 
 ```go
 package main
@@ -136,36 +136,6 @@ tpl := raymond.MustParse(source)
 result := tpl.MustExec(ctx)
 ```
 
-And you can create your own helpers, like this `uppercase` helper:
-
-```go
-raymond.RegisterHelper("uppercase", func(value string) string {
-  return strings.ToUpper(value)
-})
-```
-
-With this template:
-
-```html
-<p>{{user.firstName}} {{uppercase user.lastName}}</p>
-```
-
-And this context:
-
-```go
-ctx := map[string]interface{}{
-  "user": map[string]string{
-    "firstName": "Jean",
-    "lastName":  "Valjean",
-  },
-}
-```
-
-Outputs:
-
-```html
-<p>Jean VALJEAN</p>
-```
 
 ## Context
 
