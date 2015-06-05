@@ -139,7 +139,7 @@ result := tpl.MustExec(ctx)
 
 ## Context
 
-The rendering context can contain any type of objects, including `array`, `slice`, `map`, `struct` and `func`.
+The rendering context can contain any type of values, including `array`, `slice`, `map`, `struct` and `func`.
 
 When using structs, be warned that only exported fields are accessible:
 
@@ -166,30 +166,30 @@ func main() {
 </div>`
 
     type Person struct {
-      FirstName string
-      LastName  string
+        FirstName string
+        LastName  string
     }
 
     type Comment struct {
-      Author Person
-      Body   string
+        Author Person
+        Body   string
     }
 
     type Post struct {
-      Author   Person
-      Body     string
-      Comments []Comment
+        Author   Person
+        Body     string
+        Comments []Comment
     }
 
     ctx := Post{
-      Person{"Jean", "Valjean"},
-      "Life is difficult",
-      []Comment{
-        Comment{
-          Person{"Marcel", "Beliveau"},
-          "LOL!",
+        Person{"Jean", "Valjean"},
+        "Life is difficult",
+        []Comment{
+            Comment{
+                Person{"Marcel", "Beliveau"},
+                "LOL!",
+            },
         },
-      },
     }
 
     output := raymond.MustRender(source, ctx)
@@ -324,9 +324,23 @@ Outputs:
 </div>
 ```
 
-Helper arguments can be any type. Following example uses structs instead of maps and produces the same output as the previous one:
+Helper arguments can be any type.
+
+The following example uses structs instead of maps and produces the same output as the previous one:
 
 ```go
+    source := `<div class="post">
+  <h1>By {{fullName Author}}</h1>
+  <div class="body">{{Body}}</div>
+
+  <h1>Comments</h1>
+
+  {{#each Vomments}}
+  <h2>By {{fullName Author}}</h2>
+  <div class="body">{{Body}}</div>
+  {{/each}}
+</div>`
+
 type Person struct {
     FirstName string
     LastName  string
@@ -1158,6 +1172,7 @@ These handlebars features are currently NOT implemented:
 
 ## Todo
 
+- [ ] test and document "else block" chaining
 - [ ] test and document when lambdas/helpers return a second boolean value set to `false`
 - [ ] add a test for inverse statement with the `each` helper
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
