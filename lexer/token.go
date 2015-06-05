@@ -7,36 +7,36 @@ const (
 	TokenEOF
 
 	// mustache delimiters
-	TokenOpen             // OPEN: <mu>"{{"{LEFT_STRIP}?"&" | <mu>"{{"{LEFT_STRIP}?
-	TokenClose            // CLOSE: <mu>{RIGHT_STRIP}?"}}"
-	TokenOpenRawBlock     // OPEN_RAW_BLOCK: <mu>"{{{{"
-	TokenCloseRawBlock    // CLOSE_RAW_BLOCK: <mu>"}}}}"
-	TokenOpenEndRawBlock  // END_RAW_BLOCK: <raw>"{{{{/"[^\s!"#%-,\.\/;->@\[-\^`\{-~]+/[=}\s\/.]"}}}}"
-	TokenOpenUnescaped    // OPEN_UNESCAPED: <mu>"{{"{LEFT_STRIP}?"{"
-	TokenCloseUnescaped   // CLOSE_UNESCAPED: <mu>"}"{RIGHT_STRIP}?"}}"
-	TokenOpenBlock        // OPEN_BLOCK: <mu>"{{"{LEFT_STRIP}?"#"
-	TokenOpenEndBlock     // OPEN_ENDBLOCK: <mu>"{{"{LEFT_STRIP}?"/"
-	TokenInverse          // INVERSE: <mu>"{{"{LEFT_STRIP}?"^"\s*{RIGHT_STRIP}?"}}" | <mu>"{{"{LEFT_STRIP}?\s*"else"\s*{RIGHT_STRIP}?"}}"
-	TokenOpenInverse      // OPEN_INVERSE: <mu>"{{"{LEFT_STRIP}?"^"
-	TokenOpenInverseChain // OPEN_INVERSE_CHAIN: <mu>"{{"{LEFT_STRIP}?\s*"else"
-	TokenOpenPartial      // OPEN_PARTIAL: <mu>"{{"{LEFT_STRIP}?">"
-	TokenComment          // COMMENT: <com>[\s\S]*?"--"{RIGHT_STRIP}?"}}" | begin 'com': <mu>"{{"{LEFT_STRIP}?"!--" | COMMENT: <mu>"{{"{LEFT_STRIP}?"!"[\s\S]*?"}}"
+	TokenOpen             // OPEN
+	TokenClose            // CLOSE
+	TokenOpenRawBlock     // OPEN_RAW_BLOCK
+	TokenCloseRawBlock    // CLOSE_RAW_BLOCK
+	TokenOpenEndRawBlock  // END_RAW_BLOCK
+	TokenOpenUnescaped    // OPEN_UNESCAPED
+	TokenCloseUnescaped   // CLOSE_UNESCAPED
+	TokenOpenBlock        // OPEN_BLOCK
+	TokenOpenEndBlock     // OPEN_ENDBLOCK
+	TokenInverse          // INVERSE
+	TokenOpenInverse      // OPEN_INVERSE
+	TokenOpenInverseChain // OPEN_INVERSE_CHAIN
+	TokenOpenPartial      // OPEN_PARTIAL
+	TokenComment          // COMMENT
 
 	// inside mustaches
-	TokenOpenSexpr        // OPEN_SEXPR: <mu>"("
-	TokenCloseSexpr       // CLOSE_SEXPR: <mu>")"
-	TokenEquals           // EQUALS: <mu>"="
-	TokenData             // DATA: <mu>"@"
-	TokenSep              // SEP: <mu>[\/.]
-	TokenOpenBlockParams  // OPEN_BLOCK_PARAMS: <mu>"as"\s+"|"
-	TokenCloseBlockParams // CLOSE_BLOCK_PARAMS <mu>"|"
+	TokenOpenSexpr        // OPEN_SEXPR
+	TokenCloseSexpr       // CLOSE_SEXPR
+	TokenEquals           // EQUALS
+	TokenData             // DATA
+	TokenSep              // SEP
+	TokenOpenBlockParams  // OPEN_BLOCK_PARAMS
+	TokenCloseBlockParams // CLOSE_BLOCK_PARAMS
 
 	// tokens with content
-	TokenContent
-	TokenID      // ID: <mu>".." - 25. ID: <mu>"."/{LOOKAHEAD} | <mu>{ID} | <mu>'['[^\]]*']'
-	TokenString  // STRING: <mu>'"'("\\"["]|[^"])*'"' | <mu>"'"("\\"[']|[^'])*"'"
-	TokenNumber  // NUMBER: <mu>\-?[0-9]+(?:\.[0-9]+)?/{LITERAL_LOOKAHEAD}
-	TokenBoolean // BOOLEAN: <mu>"true"/{LITERAL_LOOKAHEAD} | BOOLEAN: <mu>"false"/{LITERAL_LOOKAHEAD}
+	TokenContent // CONTENT
+	TokenID      // ID
+	TokenString  // STRING
+	TokenNumber  // NUMBER
+	TokenBoolean // BOOLEAN
 )
 
 const (
