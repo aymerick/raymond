@@ -56,22 +56,8 @@ func ensureValidHelper(name string, funcValue reflect.Value) {
 
 	funcType := funcValue.Type()
 
-	if funcType.NumOut() == 0 {
+	if funcType.NumOut() != 1 {
 		panic(fmt.Errorf("Helper function must return a string or a SafeString: %s", name))
-	}
-
-	if funcType.NumOut() > 2 {
-		panic(fmt.Errorf("Helper function must not return more than two values: %s", name))
-	}
-
-	if funcType.NumOut() == 2 {
-		retType := funcType.Out(1)
-
-		// @todo Is there a better way to do that ?
-		boolType := reflect.TypeOf(true)
-		if !boolType.AssignableTo(retType) {
-			panic(fmt.Errorf("Second returned value of helper function must be a boolean: %s", name))
-		}
 	}
 
 	// @todo Check if first returned value is a string, SafeString or interface{} ?

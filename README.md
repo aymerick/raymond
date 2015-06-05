@@ -1203,7 +1203,6 @@ These handlebars features are currently NOT implemented:
 
 ## Todo
 
-- [ ] test and document when lambdas/helpers return a second boolean value set to `false`
 - [ ] add a test for inverse statement with the `each` helper
 - [ ] test with <https://github.com/dvyukov/go-fuzz>
 - [ ] benchmarks

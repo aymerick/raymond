@@ -594,10 +594,6 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 	}
 
 	result := funcVal.Call(args)
-	if len(result) == 2 && !result[1].IsNil() {
-		err, _ := result[1].Interface().(error)
-		v.errPanic(err)
-	}
 
 	return result[0]
 }

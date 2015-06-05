@@ -89,13 +89,6 @@ var evalErrors = []Test{
 		"Helper foo called with wrong number of arguments, needed 2 but got 1",
 	},
 	{
-		"functions returning a non boolean second value",
-		"{{foo}}",
-		map[string]interface{}{"foo": func() (string, string) { return "foo", "bar" }},
-		nil, nil, nil,
-		"Second returned value of helper function must be a boolean",
-	},
-	{
 		"functions with wrong number of returned values (1)",
 		"{{foo}}",
 		map[string]interface{}{"foo": func() {}},
@@ -107,7 +100,7 @@ var evalErrors = []Test{
 		"{{foo}}",
 		map[string]interface{}{"foo": func() (string, bool, string) { return "foo", true, "bar" }},
 		nil, nil, nil,
-		"Helper function must not return more than two values",
+		"Helper function must return a string or a SafeString",
 	},
 }
 
