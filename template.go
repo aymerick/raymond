@@ -98,12 +98,12 @@ func (tpl *Template) RegisterPartials(partials map[string]string) {
 	}
 }
 
-// Exec renders template with given context.
+// Exec evaluates template with given context.
 func (tpl *Template) Exec(ctx interface{}) (result string, err error) {
 	return tpl.ExecWith(ctx, nil)
 }
 
-// MustExec renders template with given context. It panics on error.
+// MustExec evaluates template with given context. It panics on error.
 func (tpl *Template) MustExec(ctx interface{}) string {
 	result, err := tpl.Exec(ctx)
 	if err != nil {
@@ -112,7 +112,7 @@ func (tpl *Template) MustExec(ctx interface{}) string {
 	return result
 }
 
-// ExecWith renders template with given context and private data frame.
+// ExecWith evaluates template with given context and private data frame.
 func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result string, err error) {
 	defer errRecover(&err)
 

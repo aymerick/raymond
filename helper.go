@@ -103,7 +103,7 @@ func newEmptyOptions(eval *evalVisitor) *Options {
 // Context Values
 //
 
-// ValueStr returns given field value from current context.
+// Value returns field value from current context.
 func (options *Options) Value(name string) interface{} {
 	value := options.eval.evalField(options.eval.curCtx(), name, false)
 	if !value.IsValid() {
@@ -113,7 +113,7 @@ func (options *Options) Value(name string) interface{} {
 	return value.Interface()
 }
 
-// ValueStr returns string representation of given field value from current context.
+// ValueStr returns string representation of field value from current context.
 func (options *Options) ValueStr(name string) string {
 	return Str(options.Value(name))
 }
@@ -231,7 +231,7 @@ func (options *Options) FnData(data *DataFrame) string {
 	return options.evalBlock(nil, data, nil)
 }
 
-// Inverse evaluates block inverse.
+// Inverse evaluates "else block".
 func (options *Options) Inverse() string {
 	result := ""
 	if block := options.eval.curBlock(); (block != nil) && (block.Inverse != nil) {
