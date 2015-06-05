@@ -714,7 +714,7 @@ Outputs:
 
 As you can see, the second block parameter is the map key. When using structs, it is the struct field name.
 
-When using arrays the second parameter is element index:
+When using arrays and slices, the second parameter is element index:
 
 ```go
 ctx := map[string]interface{}{
@@ -749,7 +749,7 @@ Outputs:
 
 ### Helper Parameters
 
-When calling a helper in a template, raymond expects to find the same number of arguments as the number of helper function parameters.
+When calling a helper in a template, raymond expects the same number of arguments as the number of helper function parameters.
 
 So this template:
 
@@ -765,7 +765,7 @@ raymond.RegisterHelper("add", func(val1, val2 int) string {
 })
 ```
 
-Will simply panics, because we call it with one argument, and it expects two.
+Will simply panics, because we call the helper with one argument whereas it expects two.
 
 
 #### Automatic conversion
@@ -791,7 +791,7 @@ Everything goes well, two strings are passed as arguments to the helper that out
 Jean VALJEAN
 ```
 
-But what happens if we fetch another type from the context ? For example with this context:
+But what happens if there is another type than `string` in the context ? For example:
 
 ```go
 ctx := map[string]interface{}{
@@ -800,7 +800,7 @@ ctx := map[string]interface{}{
 }
 ```
 
-Actually, raymond will perfom automatic string conversion, so helper will get the `"10"` string as its first argument is a `string`, and outputs:
+Actually, raymond perfoms automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper still outputs:
 
 ```html
 10 VALJEAN
