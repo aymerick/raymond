@@ -165,6 +165,12 @@ func main() {
   {{/each}}
 </div>`
 
+    type Post struct {
+        Author   Person
+        Body     string
+        Comments []Comment
+    }
+
     type Person struct {
         FirstName string
         LastName  string
@@ -173,12 +179,6 @@ func main() {
     type Comment struct {
         Author Person
         Body   string
-    }
-
-    type Post struct {
-        Author   Person
-        Body     string
-        Comments []Comment
     }
 
     ctx := Post{
@@ -345,6 +345,12 @@ The following example uses structs instead of maps and produces the same output 
 With this context and helper:
 
 ```go
+type Post struct {
+    Author   Person
+    Body     string
+    Comments []Comment
+}
+
 type Person struct {
     FirstName string
     LastName  string
@@ -353,12 +359,6 @@ type Person struct {
 type Comment struct {
     Author Person
     Body   string
-}
-
-type Post struct {
-    Author   Person
-    Body     string
-    Comments []Comment
 }
 
 ctx := Post{
