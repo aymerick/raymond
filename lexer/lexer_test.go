@@ -468,7 +468,7 @@ var lexTests = []lexTest{
 func collect(t *lexTest) []Token {
 	var result []Token
 
-	l := ScanWithName(t.input, t.name)
+	l := scanWithName(t.input, t.name)
 	for {
 		token := l.NextToken()
 		result = append(result, token)

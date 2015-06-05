@@ -86,13 +86,13 @@ var (
 //
 // Tokens can then be fetched sequentially thanks to NextToken() function on returned lexer.
 func Scan(input string) *Lexer {
-	return ScanWithName(input, "")
+	return scanWithName(input, "")
 }
 
-// ScanWithName scans given input, with a name used for testing.
+// scanWithName scans given input, with a name used for testing
 //
 // Tokens can then be fetched sequentially thanks to NextToken() function on returned lexer.
-func ScanWithName(input string, name string) *Lexer {
+func scanWithName(input string, name string) *Lexer {
 	result := &Lexer{
 		input:  input,
 		name:   name,
