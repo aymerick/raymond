@@ -420,6 +420,33 @@ When using a block expression, you can specify a template section to run if the 
 </div>
 ```
 
+You can chain several blocks. For example that template:
+
+```html
+{{#if isActive}}
+  <img src="star.gif" alt="Active">
+{{else if isInactive}}
+  <img src="cry.gif" alt="Inactive">
+{{else}}
+  <img src="wat.gif" alt="Unknown">
+{{/if}}
+```
+
+With that context:
+
+```go
+ctx := map[string]interface{}{
+    "isActive":   false,
+    "isInactive": false,
+}
+```
+
+Outputs:
+
+```html
+ <img src="wat.gif" alt="Unknown">
+```
+
 
 #### The `unless` block helper
 
@@ -958,7 +985,7 @@ raymond.Str([]interface{}{true, 10, "foo", 5, "bar"})
 
 #### `IsTrue()`
 
-`IsTrue()` returns the truthy version of the parameter.
+`IsTrue()` returns the truthy version of its parameter.
 
 It returns `false` when parameter is either:
 
@@ -1176,7 +1203,6 @@ These handlebars features are currently NOT implemented:
 
 ## Todo
 
-- [ ] test and document "else block" chaining
 - [ ] test and document when lambdas/helpers return a second boolean value set to `false`
 - [ ] add a test for inverse statement with the `each` helper
 - [ ] test with <https://github.com/dvyukov/go-fuzz>

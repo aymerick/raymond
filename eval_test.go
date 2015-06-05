@@ -65,6 +65,13 @@ var evalTests = []Test{
 		nil,
 		`My new blog post - <div class="mybold">I have so many things to say!</div>`,
 	},
+	{
+		"chained blocks",
+		"{{#if a}}A{{else if b}}B{{else}}C{{/if}}",
+		map[string]interface{}{"b": false},
+		nil, nil, nil,
+		"C",
+	},
 
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
 }
