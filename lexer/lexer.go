@@ -107,7 +107,7 @@ func scanWithName(input string, name string) *Lexer {
 
 // Collect scans and collect all tokens.
 //
-// This should be used for debugging purpose only.
+// This should be used for debugging purpose only. You should use `Scan()` and `lexer.NextToken()` instead.
 func Collect(input string) []Token {
 	var result []Token
 
