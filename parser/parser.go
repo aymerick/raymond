@@ -87,7 +87,7 @@ func errPanic(err error, line int) {
 	panic(fmt.Errorf("Parse error on line %d:\n%s", line, err))
 }
 
-// errNode panics with given Node infos
+// errNode panics with given node infos
 func errNode(node ast.Node, msg string) {
 	errPanic(fmt.Errorf("%s\nNode: %s", msg, node), node.Location().Line)
 }

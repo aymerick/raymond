@@ -11,7 +11,7 @@ import (
 //   - https://github.com/wycats/handlebars.js/blob/master/docs/compiler-api.md
 //   - https://github.com/golang/go/blob/master/src/text/template/parse/node.go
 
-// A Node is an element in the AST.
+// Node is an element in the AST.
 type Node interface {
 	// node type
 	Type() NodeType
@@ -86,7 +86,7 @@ const (
 	NodeHashPair
 )
 
-// Loc represents the position of parsed Node in source file.
+// Loc represents the position of a parsed node in source file.
 type Loc struct {
 	Pos  int // Byte position
 	Line int // Line number

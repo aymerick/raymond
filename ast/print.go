@@ -18,7 +18,7 @@ func newPrintVisitor() *printVisitor {
 	return &printVisitor{}
 }
 
-// Print returns a string representation of given AST and that can be used for debugging purpose.
+// Print returns a string representation of given AST, that can be used for debugging purpose.
 func Print(node Node) string {
 	visitor := newPrintVisitor()
 	node.Accept(visitor)
