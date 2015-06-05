@@ -800,7 +800,7 @@ ctx := map[string]interface{}{
 }
 ```
 
-Actually, raymond perfoms automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper still outputs:
+Actually, raymond perfoms automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper outputs:
 
 ```html
 10 VALJEAN
@@ -920,7 +920,7 @@ Helpers that need to evaluate the block with a private data frame and a new cont
 
 ### Utilites
 
-In addition to the `Escape()`, raymond provides utility functions that can be usefull for helpers.
+In addition to `Escape()`, raymond provides utility functions that can be usefull for helpers.
 
 
 #### `Str()`
@@ -975,11 +975,11 @@ For all others values, `IsTruth()` returns `true`.
 
 ## Context Functions
 
-In addition to helpers, lambdas are resolved in evaluation context.
+In addition to helpers, lambdas found in evaluation context are evaluated.
 
 For example, that template and context:
 
-``go
+```go
 source := "I {{feeling}} you"
 
 ctx := map[string]interface{}{
