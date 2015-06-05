@@ -380,7 +380,7 @@ RegisterHelper("fullName", func(person Person) string {
 
 ### Template Helpers
 
-You can register a helper on a specific template, and in that case that helper will be only available to that template:
+You can register a helper on a specific template, and in that case that helper will be available to that template only:
 
 ```go
 tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
@@ -398,7 +398,7 @@ Those built-in helpers are available to all templates.
 
 #### The `if` block helper
 
-You can use the `if` helper to conditionally render a block. If its argument returns `false`, `nil`, `0`, `""`, an empty array or an empty map, then raymond will not render the block.
+You can use the `if` helper to conditionally render a block. If its argument returns `false`, `nil`, `0`, `""`, an empty array, an empty slice or an empty map, then raymond will not render the block.
 
 ```html
 <div class="entry">
@@ -436,7 +436,7 @@ You can use the `unless` helper as the inverse of the `if` helper. Its block wil
 
 #### The `each` block helper
 
-You can iterate over an array, a map or a struct instance using the built-in each helper. Inside the block, you can use `this` to reference the element being iterated over.
+You can iterate over an array, a slice, a map or a struct instance using this built-in `each` helper. Inside the block, you can use `this` to reference the element being iterated over.
 
 For example:
 
@@ -468,7 +468,7 @@ Outputs:
 </ul>
 ```
 
-You can optionally provide an `{{else}}` section which will display only when the passed argument is empty.
+You can optionally provide an `{{else}}` section which will display only when the passed argument is an empty array, an empty slice or an empty map (a `struct` instance is never considered empty).
 
 ```html
 {{#each paragraphs}}
@@ -486,7 +486,7 @@ When looping through items in `each`, you can optionally reference the current l
 {{/each}}
 ```
 
-Additionally for map and struct instance iteration, `{{@key}}` references the current key name:
+Additionally for map and struct instance iteration, `{{@key}}` references the current map key or struct field name:
 
 ```html
 {{#each map}}
@@ -533,7 +533,7 @@ Outputs:
 </div>
 ```
 
-You can optionally provide an `{{else}}` section which will display only when the passed argument is empty.
+You can optionally provide an `{{else}}` section which will display only when the passed argument is falsy.
 
 ```html
 {{#with author}}
@@ -676,7 +676,7 @@ For example:
 
 ```html
 {{#each users as |user userId|}}
-  {{#each user.book as |book bookId|}}
+  {{#each user.books as |book bookId|}}
     User: {{userId}} Book: {{bookId}}
   {{/each}}
 {{/each}}
@@ -688,13 +688,13 @@ With this context:
 ctx := map[string]interface{}{
     "users": map[string]interface{}{
         "marcel": map[string]interface{}{
-            "book": map[string]interface{}{
+            "books": map[string]interface{}{
                 "book1": "My first book",
                 "book2": "My second book",
             },
         },
         "didier": map[string]interface{}{
-            "book": map[string]interface{}{
+            "books": map[string]interface{}{
                 "bookA": "Good book",
                 "bookB": "Bad book",
             },
@@ -721,14 +721,14 @@ ctx := map[string]interface{}{
     "users": []map[string]interface{}{
         {
             "id": "marcel",
-            "book": []map[string]interface{}{
+            "books": []map[string]interface{}{
                 {"id": "book1", "title": "My first book"},
                 {"id": "book2", "title": "My second book"},
             },
         },
         {
             "id": "didier",
-            "book": []map[string]interface{}{
+            "books": []map[string]interface{}{
                 {"id": "bookA", "title": "Good book"},
                 {"id": "bookB", "title": "Bad book"},
             },
