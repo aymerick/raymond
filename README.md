@@ -328,8 +328,8 @@ Helper arguments can be any type.
 
 The following example uses structs instead of maps and produces the same output as the previous one:
 
-```go
-    source := `<div class="post">
+```html
+<div class="post">
   <h1>By {{fullName Author}}</h1>
   <div class="body">{{Body}}</div>
 
@@ -339,8 +339,12 @@ The following example uses structs instead of maps and produces the same output 
   <h2>By {{fullName Author}}</h2>
   <div class="body">{{Body}}</div>
   {{/each}}
-</div>`
+</div>
+```
 
+With this context and helper:
+
+```go
 type Person struct {
     FirstName string
     LastName  string
