@@ -2,10 +2,18 @@ package handlebars
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path"
+	"strconv"
 	"testing"
 
 	"github.com/aymerick/raymond"
 )
+
+// cf. https://github.com/aymerick/go-fuzz-tests/raymond
+const DUMP_TPL = true
+
+var dump_tpl_nb = 0
 
 type Test struct {
 	name     string
@@ -24,6 +32,14 @@ func launchTests(t *testing.T, tests []Test) {
 	for _, test := range tests {
 		var err error
 		var tpl *raymond.Template
+
+		if DUMP_TPL {
+			filename := strconv.Itoa(dump_tpl_nb)
+			if err := ioutil.WriteFile(path.Join(".", "dump_tpl", filename), []byte(test.input), 0644); err != nil {
+				panic(err)
+			}
+			dump_tpl_nb += 1
+		}
 
 		// parse template
 		tpl, err = raymond.Parse(test.input)

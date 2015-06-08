@@ -1201,13 +1201,6 @@ These handlebars features are currently NOT implemented:
 - `@level` - log level
 
 
-## Todo
-
-- [ ] add a test for inverse statement with the `each` helper
-- [ ] test with <https://github.com/dvyukov/go-fuzz>
-- [ ] benchmarks
-
-
 ## Handlebars Lexer
 
 You should not use the lexer directly, but for your information here is an example:
