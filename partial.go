@@ -17,10 +17,11 @@ func init() {
 }
 
 // newPartial instanciates a new partial
-func newPartial(name string, source string) *partial {
+func newPartial(name string, source string, tpl *Template) *partial {
 	return &partial{
 		name:   name,
 		source: source,
+		tpl:    tpl,
 	}
 }
 
@@ -30,7 +31,7 @@ func RegisterPartial(name string, source string) {
 		panic(fmt.Errorf("Partial already registered: %s", name))
 	}
 
-	partials[name] = newPartial(name, source)
+	partials[name] = newPartial(name, source, nil)
 }
 
 // RegisterPartials registers several global partials. Those partials will be available to all templates.
@@ -40,12 +41,21 @@ func RegisterPartials(partials map[string]string) {
 	}
 }
 
+// RegisterPartial registers a global partial with given parsed template. That partial will be available to all templates.
+func RegisterPartialTemplate(name string, tpl *Template) {
+	if partials[name] != nil {
+		panic(fmt.Errorf("Partial already registered: %s", name))
+	}
+
+	partials[name] = newPartial(name, "", tpl)
+}
+
 // findPartial finds a registered global partial
 func findPartial(name string) *partial {
 	return partials[name]
 }
 
-// Template returns parsed partial template
+// template returns parsed partial template
 func (p *partial) template() (*Template, error) {
 	if p.tpl == nil {
 		var err error

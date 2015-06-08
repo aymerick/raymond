@@ -1291,9 +1291,17 @@ CONTENT[ ' John Snow' ]
 
 ## Test
 
+To run all tests:
+
     $ go test ./...
 
-    $ go test -run="HandlebarsBasic"
+To filter tests:
+
+    $ go test -run="Partials"
+
+To run all test and all benchmarks:
+
+    $ go test -bench . ./...
 
 
 ## References

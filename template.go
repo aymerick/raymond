@@ -88,7 +88,7 @@ func (tpl *Template) RegisterPartial(name string, partial string) {
 		panic(fmt.Sprintf("Partial %s already registered", name))
 	}
 
-	tpl.partials[name] = newPartial(name, partial)
+	tpl.partials[name] = newPartial(name, partial, nil)
 }
 
 // RegisterPartials registers several partials for that template.
@@ -96,6 +96,15 @@ func (tpl *Template) RegisterPartials(partials map[string]string) {
 	for name, partial := range partials {
 		tpl.RegisterPartial(name, partial)
 	}
+}
+
+// RegisterPartial registers an already parsed partial for that template.
+func (tpl *Template) RegisterPartialTemplate(name string, partial *Template) {
+	if tpl.partials[name] != nil {
+		panic(fmt.Sprintf("Partial %s already registered", name))
+	}
+
+	tpl.partials[name] = newPartial(name, "", partial)
 }
 
 // Exec evaluates template with given context.
