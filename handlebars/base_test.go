@@ -11,7 +11,7 @@ import (
 )
 
 // cf. https://github.com/aymerick/go-fuzz-tests/raymond
-const DUMP_TPL = true
+const DUMP_TPL = false
 
 var dump_tpl_nb = 0
 
