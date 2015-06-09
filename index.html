@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Raymond : Handlebars for golang">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Raymond</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/aymerick/raymond">View on GitHub</a>
+
+          <h1 id="project_title">Raymond</h1>
+          <h2 id="project_tagline">Handlebars for golang</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/aymerick/raymond/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/aymerick/raymond/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="raymond--" class="anchor" href="#raymond--" aria-hidden="true"><span class="octicon octicon-link"></span></a>raymond <a href="http://travis-ci.org/aymerick/raymond"><img src="https://secure.travis-ci.org/aymerick/raymond.svg?branch=master" alt="Build Status"></a> <a href="http://godoc.org/github.com/aymerick/raymond"><img src="https://godoc.org/github.com/aymerick/raymond?status.svg" alt="GoDoc"></a>
+</h1>
+
+<p>Handlebars for <a href="https://golang.org">golang</a> with the same features as <a href="http://handlebarsjs.com">handlebars.js</a> <code>3.0</code>.</p>
+
+<p>The full API documentation is available here: <a href="http://godoc.org/github.com/aymerick/raymond">http://godoc.org/github.com/aymerick/raymond</a>.</p>
+
+<h2>
+<a id="quick-start" class="anchor" href="#quick-start" aria-hidden="true"><span class="octicon octicon-link"></span></a>Quick Start</h2>
+
+<pre><code>$ go get github.com/aymerick/raymond
+</code></pre>
+
+<p>The quick and dirty way of rendering a handlebars template:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+    <span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+
+    <span class="pl-s"><span class="pl-pds">"</span>github.com/aymerick/raymond<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-smi">tpl</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>&lt;div class="entry"&gt;</span>
+<span class="pl-s">  &lt;h1&gt;{{title}}&lt;/h1&gt;</span>
+<span class="pl-s">  &lt;div class="body"&gt;</span>
+<span class="pl-s">    {{body}}</span>
+<span class="pl-s">  &lt;/div&gt;</span>
+<span class="pl-s">&lt;/div&gt;</span>
+<span class="pl-s"><span class="pl-pds">`</span></span>
+
+    <span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+        <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>My New Post<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>:  <span class="pl-s"><span class="pl-pds">"</span>This is my first post!<span class="pl-pds">"</span></span>,
+    }
+
+    <span class="pl-smi">result</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">Render</span>(tpl, ctx)
+    <span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+        <span class="pl-c1">panic</span>(<span class="pl-s"><span class="pl-pds">"</span>Please fill a bug :)<span class="pl-pds">"</span></span>)
+    }
+
+    fmt.<span class="pl-c1">Print</span>(result)
+}</pre></div>
+
+<p>Displays:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;My New Post&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;
+    This is my first post!
+  &lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>Please note that the template will be parsed everytime you call <code>Render()</code> function. So you probably want to read the next section.</p>
+
+<h2>
+<a id="correct-usage" class="anchor" href="#correct-usage" aria-hidden="true"><span class="octicon octicon-link"></span></a>Correct Usage</h2>
+
+<p>To avoid parsing a template several times, use the <code>Parse()</code> and <code>Exec()</code> functions:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+    <span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+
+    <span class="pl-s"><span class="pl-pds">"</span>github.com/aymerick/raymond<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>&lt;div class="entry"&gt;</span>
+<span class="pl-s">  &lt;h1&gt;{{title}}&lt;/h1&gt;</span>
+<span class="pl-s">  &lt;div class="body"&gt;</span>
+<span class="pl-s">    {{body}}</span>
+<span class="pl-s">  &lt;/div&gt;</span>
+<span class="pl-s">&lt;/div&gt;</span>
+<span class="pl-s"><span class="pl-pds">`</span></span>
+
+    <span class="pl-smi">ctxList</span> <span class="pl-k">:=</span> []<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+        {
+            <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>My New Post<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>:  <span class="pl-s"><span class="pl-pds">"</span>This is my first post!<span class="pl-pds">"</span></span>,
+        },
+        {
+            <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Here is another post<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>:  <span class="pl-s"><span class="pl-pds">"</span>This is my second post!<span class="pl-pds">"</span></span>,
+        },
+    }
+
+    <span class="pl-c">// parse template</span>
+    <span class="pl-smi">tpl</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">Parse</span>(source)
+    <span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+        <span class="pl-c1">panic</span>(err)
+    }
+
+    <span class="pl-k">for</span> <span class="pl-smi">_</span>, <span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">range</span> ctxList {
+        <span class="pl-c">// render template</span>
+        <span class="pl-smi">result</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">Exec</span>(ctx)
+        <span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+            <span class="pl-c1">panic</span>(err)
+        }
+
+        fmt.<span class="pl-c1">Print</span>(result)
+    }
+}
+</pre></div>
+
+<p>Displays:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;My New Post&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;
+    This is my first post!
+  &lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;
+&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;Here is another post&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;
+    This is my second post!
+  &lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>You can use <code>MustParse()</code> and <code>MustExec()</code> functions if you don't want to deal with errors:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-c">// parse template</span>
+<span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(source)
+
+<span class="pl-c">// render template</span>
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(ctx)</pre></div>
+
+<h2>
+<a id="context" class="anchor" href="#context" aria-hidden="true"><span class="octicon octicon-link"></span></a>Context</h2>
+
+<p>The rendering context can contain any type of values, including <code>array</code>, <code>slice</code>, <code>map</code>, <code>struct</code> and <code>func</code>.</p>
+
+<p>When using structs, be warned that only exported fields are accessible:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+  <span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+
+  <span class="pl-s"><span class="pl-pds">"</span>github.com/aymerick/raymond<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>&lt;div class="post"&gt;</span>
+<span class="pl-s">  &lt;h1&gt;By {{Author.FirstName}} {{Author.LastName}}&lt;/h1&gt;</span>
+<span class="pl-s">  &lt;div class="body"&gt;{{Body}}&lt;/div&gt;</span>
+<span class="pl-s"></span>
+<span class="pl-s">  &lt;h1&gt;Comments&lt;/h1&gt;</span>
+<span class="pl-s"></span>
+<span class="pl-s">  {{#each Comments}}</span>
+<span class="pl-s">  &lt;h2&gt;By {{Author.FirstName}} {{Author.LastName}}&lt;/h2&gt;</span>
+<span class="pl-s">  &lt;div class="body"&gt;{{Body}}&lt;/div&gt;</span>
+<span class="pl-s">  {{/each}}</span>
+<span class="pl-s">&lt;/div&gt;<span class="pl-pds">`</span></span>
+
+    <span class="pl-k">type</span> Post <span class="pl-k">struct</span> {
+        Author   Person
+        Body     <span class="pl-k">string</span>
+        Comments []Comment
+    }
+
+    <span class="pl-k">type</span> Person <span class="pl-k">struct</span> {
+        FirstName <span class="pl-k">string</span>
+        LastName  <span class="pl-k">string</span>
+    }
+
+    <span class="pl-k">type</span> Comment <span class="pl-k">struct</span> {
+        Author Person
+        Body   <span class="pl-k">string</span>
+    }
+
+    <span class="pl-smi">ctx</span> <span class="pl-k">:=</span> Post{
+        Person{<span class="pl-s"><span class="pl-pds">"</span>Jean<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Valjean<span class="pl-pds">"</span></span>},
+        <span class="pl-s"><span class="pl-pds">"</span>Life is difficult<span class="pl-pds">"</span></span>,
+        []Comment{
+            Comment{
+                Person{<span class="pl-s"><span class="pl-pds">"</span>Marcel<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Beliveau<span class="pl-pds">"</span></span>},
+                <span class="pl-s"><span class="pl-pds">"</span>LOL!<span class="pl-pds">"</span></span>,
+            },
+        },
+    }
+
+    <span class="pl-smi">output</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustRender</span>(source, ctx)
+
+    fmt.<span class="pl-c1">Print</span>(output)
+}</pre></div>
+
+<p>Output:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>post<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;By Jean Valjean&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;Life is difficult&lt;/<span class="pl-ent">div</span>&gt;
+
+  &lt;<span class="pl-ent">h1</span>&gt;Comments&lt;/<span class="pl-ent">h1</span>&gt;
+
+  &lt;<span class="pl-ent">h2</span>&gt;By Marcel Beliveau&lt;/<span class="pl-ent">h2</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;LOL!&lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h2>
+<a id="html-escaping" class="anchor" href="#html-escaping" aria-hidden="true"><span class="octicon octicon-link"></span></a>HTML Escaping</h2>
+
+<p>By default, the result of a mustache expression is HTML escaped. Use the triple mustache <code>{{{</code> to output unescaped values.</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>&lt;div class="entry"&gt;</span>
+<span class="pl-s">  &lt;h1&gt;{{title}}&lt;/h1&gt;</span>
+<span class="pl-s">  &lt;div class="body"&gt;</span>
+<span class="pl-s">    {{{body}}}</span>
+<span class="pl-s">  &lt;/div&gt;</span>
+<span class="pl-s">&lt;/div&gt;</span>
+<span class="pl-s"><span class="pl-pds">`</span></span>
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+    <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>All about &lt;p&gt; Tags<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>:  <span class="pl-s"><span class="pl-pds">"</span>&lt;p&gt;This is a post about &amp;lt;p&amp;gt; tags&lt;/p&gt;<span class="pl-pds">"</span></span>,
+}
+
+<span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(source)
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(ctx)
+
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<p>Output:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;All about <span class="pl-c1">&amp;lt;</span>p<span class="pl-c1">&amp;gt;</span> Tags&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;
+    &lt;<span class="pl-ent">p</span>&gt;This is a post about <span class="pl-c1">&amp;lt;</span>p<span class="pl-c1">&amp;gt;</span> tags&lt;/<span class="pl-ent">p</span>&gt;
+  &lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>When returning HTML from a helper, you should return a <code>SafeString</code> if you don't want it to be escaped by default. When using <code>SafeString</code> all unknown or unsafe data should be manually escaped with the <code>Escape</code> method.</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>link<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(url, text <span class="pl-k">string</span>) raymond.<span class="pl-smi">SafeString</span> {
+    <span class="pl-k">return</span> raymond.<span class="pl-c1">SafeString</span>(<span class="pl-s"><span class="pl-pds">"</span>&lt;a href='<span class="pl-pds">"</span></span> + raymond.<span class="pl-c1">Escape</span>(url) + <span class="pl-s"><span class="pl-pds">"</span>'&gt;<span class="pl-pds">"</span></span> + raymond.<span class="pl-c1">Escape</span>(text) + <span class="pl-s"><span class="pl-pds">"</span>&lt;/a&gt;<span class="pl-pds">"</span></span>)
+})
+
+<span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>{{link url text}}<span class="pl-pds">"</span></span>)
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+    <span class="pl-s"><span class="pl-pds">"</span>url<span class="pl-pds">"</span></span>:  <span class="pl-s"><span class="pl-pds">"</span>http://www.aymerick.com/<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>text<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>This is a &lt;em&gt;cool&lt;/em&gt; website<span class="pl-pds">"</span></span>,
+}
+
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(ctx)
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<p>Output:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">a</span> <span class="pl-e">href</span>=<span class="pl-s"><span class="pl-pds">'</span>http://www.aymerick.com/<span class="pl-pds">'</span></span>&gt;This is a <span class="pl-c1">&amp;lt;</span>em<span class="pl-c1">&amp;gt;</span>cool<span class="pl-c1">&amp;lt;</span>/em<span class="pl-c1">&amp;gt;</span> website&lt;/<span class="pl-ent">a</span>&gt;</pre></div>
+
+<h2>
+<a id="helpers" class="anchor" href="#helpers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Helpers</h2>
+
+<p>Helpers can be accessed from any context in a template. You can register a helper with the <code>RegisterHelper</code> function.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>post<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;By {{fullName author}}&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;{{body}}&lt;/<span class="pl-ent">div</span>&gt;
+
+  &lt;<span class="pl-ent">h1</span>&gt;Comments&lt;/<span class="pl-ent">h1</span>&gt;
+
+  {{#each comments}}
+  &lt;<span class="pl-ent">h2</span>&gt;By {{fullName author}}&lt;/<span class="pl-ent">h2</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;{{body}}&lt;/<span class="pl-ent">div</span>&gt;
+  {{/each}}
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>With this context and helper:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>author<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>firstName<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Jean<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>lastName<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Valjean<span class="pl-pds">"</span></span>},
+    <span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>:   <span class="pl-s"><span class="pl-pds">"</span>Life is difficult<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>comments<span class="pl-pds">"</span></span>: []<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{{
+        <span class="pl-s"><span class="pl-pds">"</span>author<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>firstName<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Marcel<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>lastName<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Beliveau<span class="pl-pds">"</span></span>},
+        <span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>:   <span class="pl-s"><span class="pl-pds">"</span>LOL!<span class="pl-pds">"</span></span>,
+    }},
+}
+
+raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>fullName<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(person <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">return</span> person[<span class="pl-s"><span class="pl-pds">"</span>firstName<span class="pl-pds">"</span></span>] + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + person[<span class="pl-s"><span class="pl-pds">"</span>lastName<span class="pl-pds">"</span></span>]
+})</pre></div>
+
+<p>Outputs:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>post<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;By Jean Valjean&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;Life is difficult&lt;/<span class="pl-ent">div</span>&gt;
+
+  &lt;<span class="pl-ent">h1</span>&gt;Comments&lt;/<span class="pl-ent">h1</span>&gt;
+
+  &lt;<span class="pl-ent">h2</span>&gt;By Marcel Beliveau&lt;/<span class="pl-ent">h2</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;LOL!&lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>Helper arguments can be any type.</p>
+
+<p>The following example uses structs instead of maps and produces the same output as the previous one:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>post<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;By {{fullName Author}}&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;{{Body}}&lt;/<span class="pl-ent">div</span>&gt;
+
+  &lt;<span class="pl-ent">h1</span>&gt;Comments&lt;/<span class="pl-ent">h1</span>&gt;
+
+  {{#each Vomments}}
+  &lt;<span class="pl-ent">h2</span>&gt;By {{fullName Author}}&lt;/<span class="pl-ent">h2</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;{{Body}}&lt;/<span class="pl-ent">div</span>&gt;
+  {{/each}}
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>With this context and helper:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">type</span> <span class="pl-v">Post</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Author</span>   <span class="pl-v">Person</span>
+    <span class="pl-v">Body</span>     <span class="pl-k">string</span>
+    <span class="pl-v">Comments</span> []<span class="pl-v">Comment</span>
+}
+
+<span class="pl-k">type</span> <span class="pl-v">Person</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">FirstName</span> <span class="pl-k">string</span>
+    <span class="pl-v">LastName</span>  <span class="pl-k">string</span>
+}
+
+<span class="pl-k">type</span> <span class="pl-v">Comment</span> <span class="pl-k">struct</span> {
+    <span class="pl-v">Author</span> <span class="pl-v">Person</span>
+    <span class="pl-v">Body</span>   <span class="pl-k">string</span>
+}
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-v">Post</span>{
+    <span class="pl-v">Person</span>{<span class="pl-s"><span class="pl-pds">"</span>Jean<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Valjean<span class="pl-pds">"</span></span>},
+    <span class="pl-s"><span class="pl-pds">"</span>Life is difficult<span class="pl-pds">"</span></span>,
+    []<span class="pl-v">Comment</span>{
+        Comment{
+            Person{<span class="pl-s"><span class="pl-pds">"</span>Marcel<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Beliveau<span class="pl-pds">"</span></span>},
+            <span class="pl-s"><span class="pl-pds">"</span>LOL!<span class="pl-pds">"</span></span>,
+        },
+    },
+}
+
+<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>fullName<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(person <span class="pl-v">Person</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">return</span> person.<span class="pl-smi">FirstName</span> + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + person.<span class="pl-smi">LastName</span>
+})</pre></div>
+
+<h3>
+<a id="template-helpers" class="anchor" href="#template-helpers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Template Helpers</h3>
+
+<p>You can register a helper on a specific template, and in that case that helper will be available to that template only:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>User: {{fullName user.firstName user.lastName}}<span class="pl-pds">"</span></span>)
+
+tpl.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>fullName<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(firstName, lastName <span class="pl-k">string</span>) <span class="pl-k">string</span> {
+  <span class="pl-k">return</span> firstName + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + lastName
+})</pre></div>
+
+<h3>
+<a id="built-in-helpers" class="anchor" href="#built-in-helpers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Built-In Helpers</h3>
+
+<p>Those built-in helpers are available to all templates.</p>
+
+<h4>
+<a id="the-if-block-helper" class="anchor" href="#the-if-block-helper" aria-hidden="true"><span class="octicon octicon-link"></span></a>The <code>if</code> block helper</h4>
+
+<p>You can use the <code>if</code> helper to conditionally render a block. If its argument returns <code>false</code>, <code>nil</code>, <code>0</code>, <code>""</code>, an empty array, an empty slice or an empty map, then raymond will not render the block.</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  {{#if author}}
+    &lt;<span class="pl-ent">h1</span>&gt;{{firstName}} {{lastName}}&lt;/<span class="pl-ent">h1</span>&gt;
+  {{/if}}
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>When using a block expression, you can specify a template section to run if the expression returns a falsy value. That section, marked by <code>{{else}}</code> is called an "else section".</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  {{#if author}}
+    &lt;<span class="pl-ent">h1</span>&gt;{{firstName}} {{lastName}}&lt;/<span class="pl-ent">h1</span>&gt;
+  {{else}}
+    &lt;<span class="pl-ent">h1</span>&gt;Unknown Author&lt;/<span class="pl-ent">h1</span>&gt;
+  {{/if}}
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>You can chain several blocks. For example that template:</p>
+
+<div class="highlight highlight-html"><pre>{{#if isActive}}
+  &lt;<span class="pl-ent">img</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">"</span>star.gif<span class="pl-pds">"</span></span> <span class="pl-e">alt</span>=<span class="pl-s"><span class="pl-pds">"</span>Active<span class="pl-pds">"</span></span>&gt;
+{{else if isInactive}}
+  &lt;<span class="pl-ent">img</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">"</span>cry.gif<span class="pl-pds">"</span></span> <span class="pl-e">alt</span>=<span class="pl-s"><span class="pl-pds">"</span>Inactive<span class="pl-pds">"</span></span>&gt;
+{{else}}
+  &lt;<span class="pl-ent">img</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">"</span>wat.gif<span class="pl-pds">"</span></span> <span class="pl-e">alt</span>=<span class="pl-s"><span class="pl-pds">"</span>Unknown<span class="pl-pds">"</span></span>&gt;
+{{/if}}</pre></div>
+
+<p>With that context:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>isActive<span class="pl-pds">"</span></span>:   <span class="pl-c1">false</span>,
+    <span class="pl-s"><span class="pl-pds">"</span>isInactive<span class="pl-pds">"</span></span>: <span class="pl-c1">false</span>,
+}</pre></div>
+
+<p>Outputs:</p>
+
+<div class="highlight highlight-html"><pre> &lt;<span class="pl-ent">img</span> <span class="pl-e">src</span>=<span class="pl-s"><span class="pl-pds">"</span>wat.gif<span class="pl-pds">"</span></span> <span class="pl-e">alt</span>=<span class="pl-s"><span class="pl-pds">"</span>Unknown<span class="pl-pds">"</span></span>&gt;</pre></div>
+
+<h4>
+<a id="the-unless-block-helper" class="anchor" href="#the-unless-block-helper" aria-hidden="true"><span class="octicon octicon-link"></span></a>The <code>unless</code> block helper</h4>
+
+<p>You can use the <code>unless</code> helper as the inverse of the <code>if</code> helper. Its block will be rendered if the expression returns a falsy value.</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  {{#unless license}}
+  &lt;<span class="pl-ent">h3</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>warning<span class="pl-pds">"</span></span>&gt;WARNING: This entry does not have a license!&lt;/<span class="pl-ent">h3</span>&gt;
+  {{/unless}}
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<h4>
+<a id="the-each-block-helper" class="anchor" href="#the-each-block-helper" aria-hidden="true"><span class="octicon octicon-link"></span></a>The <code>each</code> block helper</h4>
+
+<p>You can iterate over an array, a slice, a map or a struct instance using this built-in <code>each</code> helper. Inside the block, you can use <code>this</code> to reference the element being iterated over.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">ul</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>people<span class="pl-pds">"</span></span>&gt;
+  {{#each people}}
+    &lt;<span class="pl-ent">li</span>&gt;{{this}}&lt;/<span class="pl-ent">li</span>&gt;
+  {{/each}}
+&lt;/<span class="pl-ent">ul</span>&gt;</pre></div>
+
+<p>With this context:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>people<span class="pl-pds">"</span></span>: []<span class="pl-k">string</span>{
+        <span class="pl-s"><span class="pl-pds">"</span>Marcel<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Jean-Claude<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>Yvette<span class="pl-pds">"</span></span>,
+    },
+}</pre></div>
+
+<p>Outputs:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">ul</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>people<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">li</span>&gt;Marcel&lt;/<span class="pl-ent">li</span>&gt;
+  &lt;<span class="pl-ent">li</span>&gt;Jean-Claude&lt;/<span class="pl-ent">li</span>&gt;
+  &lt;<span class="pl-ent">li</span>&gt;Yvette&lt;/<span class="pl-ent">li</span>&gt;
+&lt;/<span class="pl-ent">ul</span>&gt;</pre></div>
+
+<p>You can optionally provide an <code>{{else}}</code> section which will display only when the passed argument is an empty array, an empty slice or an empty map (a <code>struct</code> instance is never considered empty).</p>
+
+<div class="highlight highlight-html"><pre>{{#each paragraphs}}
+  &lt;<span class="pl-ent">p</span>&gt;{{this}}&lt;/<span class="pl-ent">p</span>&gt;
+{{else}}
+  &lt;<span class="pl-ent">p</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>empty<span class="pl-pds">"</span></span>&gt;No content&lt;/<span class="pl-ent">p</span>&gt;
+{{/each}}</pre></div>
+
+<p>When looping through items in <code>each</code>, you can optionally reference the current loop index via <code>{{@index}}</code>.</p>
+
+<div class="highlight highlight-html"><pre>{{#each array}}
+  {{@index}}: {{this}}
+{{/each}}</pre></div>
+
+<p>Additionally for map and struct instance iteration, <code>{{@key}}</code> references the current map key or struct field name:</p>
+
+<div class="highlight highlight-html"><pre>{{#each map}}
+  {{@key}}: {{this}}
+{{/each}}</pre></div>
+
+<p>The first and last steps of iteration are noted via the <code>@first</code> and <code>@last</code> variables.</p>
+
+<h4>
+<a id="the-with-block-helper" class="anchor" href="#the-with-block-helper" aria-hidden="true"><span class="octicon octicon-link"></span></a>The <code>with</code> block helper</h4>
+
+<p>You can shift the context for a section of a template by using the built-in <code>with</code> block helper.</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;{{title}}&lt;/<span class="pl-ent">h1</span>&gt;
+
+  {{#with author}}
+  &lt;<span class="pl-ent">h2</span>&gt;By {{firstName}} {{lastName}}&lt;/<span class="pl-ent">h2</span>&gt;
+  {{/with}}
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>With this context:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>My first post!<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>author<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+        <span class="pl-s"><span class="pl-pds">"</span>firstName<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Jean<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>lastName<span class="pl-pds">"</span></span>:  <span class="pl-s"><span class="pl-pds">"</span>Valjean<span class="pl-pds">"</span></span>,
+    },
+}</pre></div>
+
+<p>Outputs:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;My first post!&lt;/<span class="pl-ent">h1</span>&gt;
+
+  &lt;<span class="pl-ent">h2</span>&gt;By Jean Valjean&lt;/<span class="pl-ent">h2</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>You can optionally provide an <code>{{else}}</code> section which will display only when the passed argument is falsy.</p>
+
+<div class="highlight highlight-html"><pre>{{#with author}}
+  &lt;<span class="pl-ent">p</span>&gt;{{name}}&lt;/<span class="pl-ent">p</span>&gt;
+{{else}}
+  &lt;<span class="pl-ent">p</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>empty<span class="pl-pds">"</span></span>&gt;No content&lt;/<span class="pl-ent">p</span>&gt;
+{{/with}}</pre></div>
+
+<h4>
+<a id="the-lookup-helper" class="anchor" href="#the-lookup-helper" aria-hidden="true"><span class="octicon octicon-link"></span></a>The <code>lookup</code> helper</h4>
+
+<p>The <code>lookup</code> helper allows for dynamic parameter resolution using handlebars variables.</p>
+
+<div class="highlight highlight-html"><pre>{{#each bar}}
+  {{lookup ../foo @index}}
+{{/each}}</pre></div>
+
+<h4>
+<a id="the-log-helper" class="anchor" href="#the-log-helper" aria-hidden="true"><span class="octicon octicon-link"></span></a>The <code>log</code> helper</h4>
+
+<p>The <code>log</code> helper allows for logging while rendering a template.</p>
+
+<div class="highlight highlight-html"><pre>{{log "Look at me!"}}</pre></div>
+
+<p>Note that the handlebars.js <code>@level</code> variable is not supported.</p>
+
+<h3>
+<a id="block-helpers" class="anchor" href="#block-helpers" aria-hidden="true"><span class="octicon octicon-link"></span></a>Block Helpers</h3>
+
+<p>Block helpers make it possible to define custom iterators and other functionality that can invoke the passed block with a new context.</p>
+
+<h4>
+<a id="block-evaluation" class="anchor" href="#block-evaluation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Block Evaluation</h4>
+
+<p>As an example, let's define a block helper that adds some markup to the wrapped text.</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>entry<span class="pl-pds">"</span></span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;{{title}}&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;
+    {{#bold}}{{body}}{{/bold}}
+  &lt;/<span class="pl-ent">div</span>&gt;
+&lt;/<span class="pl-ent">div</span>&gt;</pre></div>
+
+<p>The <code>bold</code> helper will add markup to make its text bold.</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>bold<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(options *raymond.<span class="pl-smi">Options</span>) raymond.<span class="pl-smi">SafeString</span> {
+    <span class="pl-k">return</span> raymond.<span class="pl-c1">SafeString</span>(<span class="pl-s"><span class="pl-pds">`</span>&lt;div class="mybold"&gt;<span class="pl-pds">`</span></span> + options.<span class="pl-c1">Fn</span>() + <span class="pl-s"><span class="pl-pds">"</span>&lt;/div&gt;<span class="pl-pds">"</span></span>)
+})</pre></div>
+
+<p>A helper evaluates the block content with current context by calling <code>options.Fn()</code>.</p>
+
+<p>If you want to evaluate the block with another context, then use <code>options.FnWith(ctx)</code>, like this french version of built-in <code>with</code> block helper:</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>avec<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(context <span class="pl-k">interface</span>{}, options *raymond.<span class="pl-smi">Options</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">return</span> options.<span class="pl-c1">FnWith</span>(context)
+})</pre></div>
+
+<p>With that template:</p>
+
+<div class="highlight highlight-html"><pre>{{#avec obj.text}}{{this}}{{/avec}}</pre></div>
+
+<h4>
+<a id="conditional" class="anchor" href="#conditional" aria-hidden="true"><span class="octicon octicon-link"></span></a>Conditional</h4>
+
+<p>Let's write a french version of <code>if</code> block helper:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>{{#si yep}}YEP !{{/si}}<span class="pl-pds">`</span></span>
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{<span class="pl-s"><span class="pl-pds">"</span>yep<span class="pl-pds">"</span></span>: <span class="pl-c1">true</span>}
+
+raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>si<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(conditional <span class="pl-k">bool</span>, options *raymond.<span class="pl-smi">Options</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">if</span> conditional {
+        <span class="pl-k">return</span> options.<span class="pl-c1">Fn</span>()
+    }
+    <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+})</pre></div>
+
+<p>Note that as the first parameter of the helper is typed as <code>bool</code> an automatic conversion is made if corresponding context value is not a boolean. So this helper works with that context too:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{<span class="pl-s"><span class="pl-pds">"</span>yep<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>message<span class="pl-pds">"</span></span>}</pre></div>
+
+<p>Here, <code>"message"</code> is converted to <code>true</code> because it is an non-empty string. See <code>IsTrue()</code> function for more informations on boolean conversion.</p>
+
+<h4>
+<a id="else-block-evaluation" class="anchor" href="#else-block-evaluation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Else Block Evaluation</h4>
+
+<p>We can enhance the <code>si</code> block helper to evaluate the <code>else block</code> by calling <code>options.Inverse()</code> if conditional is false:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>{{#si yep}}YEP !{{else}}NOP !{{/si}}<span class="pl-pds">`</span></span>
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{<span class="pl-s"><span class="pl-pds">"</span>yep<span class="pl-pds">"</span></span>: <span class="pl-c1">false</span>}
+
+raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>si<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(conditional <span class="pl-k">bool</span>, options *raymond.<span class="pl-smi">Options</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">if</span> conditional {
+        <span class="pl-k">return</span> options.<span class="pl-c1">Fn</span>()
+    }
+    <span class="pl-k">return</span> options.<span class="pl-c1">Inverse</span>()
+})</pre></div>
+
+<p>Outputs:</p>
+
+<pre><code>NOP !
+</code></pre>
+
+<h4>
+<a id="block-parameters" class="anchor" href="#block-parameters" aria-hidden="true"><span class="octicon octicon-link"></span></a>Block Parameters</h4>
+
+<p>It's possible to receive named parameters from supporting helpers.</p>
+
+<div class="highlight highlight-html"><pre>{{#each users as |user userId|}}
+  Id: {{userId}} Name: {{user.name}}
+{{/each}}</pre></div>
+
+<p>In this particular example, <code>user</code> will have the same value as the current context and <code>userId</code> will have the index/key value for the iteration.</p>
+
+<p>This allows for nested helpers to avoid name conflicts.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-html"><pre>{{#each users as |user userId|}}
+  {{#each user.books as |book bookId|}}
+    User: {{userId}} Book: {{bookId}}
+  {{/each}}
+{{/each}}</pre></div>
+
+<p>With this context:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+        <span class="pl-s"><span class="pl-pds">"</span>marcel<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+            <span class="pl-s"><span class="pl-pds">"</span>books<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+                <span class="pl-s"><span class="pl-pds">"</span>book1<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>My first book<span class="pl-pds">"</span></span>,
+                <span class="pl-s"><span class="pl-pds">"</span>book2<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>My second book<span class="pl-pds">"</span></span>,
+            },
+        },
+        <span class="pl-s"><span class="pl-pds">"</span>didier<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+            <span class="pl-s"><span class="pl-pds">"</span>books<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+                <span class="pl-s"><span class="pl-pds">"</span>bookA<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Good book<span class="pl-pds">"</span></span>,
+                <span class="pl-s"><span class="pl-pds">"</span>bookB<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Bad book<span class="pl-pds">"</span></span>,
+            },
+        },
+    },
+}</pre></div>
+
+<p>Outputs:</p>
+
+<div class="highlight highlight-html"><pre>  User: marcel Book: book1
+  User: marcel Book: book2
+  User: didier Book: bookA
+  User: didier Book: bookB</pre></div>
+
+<p>As you can see, the second block parameter is the map key. When using structs, it is the struct field name.</p>
+
+<p>When using arrays and slices, the second parameter is element index:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>users<span class="pl-pds">"</span></span>: []<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+        {
+            <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>marcel<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>books<span class="pl-pds">"</span></span>: []<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+                {<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>book1<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>My first book<span class="pl-pds">"</span></span>},
+                {<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>book2<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>My second book<span class="pl-pds">"</span></span>},
+            },
+        },
+        {
+            <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>didier<span class="pl-pds">"</span></span>,
+            <span class="pl-s"><span class="pl-pds">"</span>books<span class="pl-pds">"</span></span>: []<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+                {<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>bookA<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Good book<span class="pl-pds">"</span></span>},
+                {<span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>bookB<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Bad book<span class="pl-pds">"</span></span>},
+            },
+        },
+    },
+}</pre></div>
+
+<p>Outputs:</p>
+
+<div class="highlight highlight-html"><pre>    User: 0 Book: 0
+    User: 0 Book: 1
+    User: 1 Book: 0
+    User: 1 Book: 1</pre></div>
+
+<h3>
+<a id="helper-parameters" class="anchor" href="#helper-parameters" aria-hidden="true"><span class="octicon octicon-link"></span></a>Helper Parameters</h3>
+
+<p>When calling a helper in a template, raymond expects the same number of arguments as the number of helper function parameters.</p>
+
+<p>So this template:</p>
+
+<div class="highlight highlight-html"><pre>{{add a}}</pre></div>
+
+<p>With this helper:</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>add<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(val1, val2 <span class="pl-k">int</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">return</span> strconv.<span class="pl-c1">Itoa</span>(val1 + val2)
+})</pre></div>
+
+<p>Will simply panics, because we call the helper with one argument whereas it expects two.</p>
+
+<h4>
+<a id="automatic-conversion" class="anchor" href="#automatic-conversion" aria-hidden="true"><span class="octicon octicon-link"></span></a>Automatic conversion</h4>
+
+<p>Let's create a <code>concat</code> helper that expects two strings and concat them:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>{{concat a b}}<span class="pl-pds">`</span></span>
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Jean<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>b<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Valjean<span class="pl-pds">"</span></span>,
+}
+
+raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>concat<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(val1, val2 <span class="pl-k">string</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">return</span> val1 + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + val2
+})</pre></div>
+
+<p>Everything goes well, two strings are passed as arguments to the helper that outputs:</p>
+
+<div class="highlight highlight-html"><pre>Jean VALJEAN</pre></div>
+
+<p>But what happens if there is another type than <code>string</code> in the context ? For example:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span>: <span class="pl-c1">10</span>,
+    <span class="pl-s"><span class="pl-pds">"</span>b<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Valjean<span class="pl-pds">"</span></span>,
+}</pre></div>
+
+<p>Actually, raymond perfoms automatic string conversion. So because the first parameter of the helper is typed as <code>string</code>, the first argument will be converted from the <code>10</code> integer to <code>"10"</code>, and the helper outputs:</p>
+
+<div class="highlight highlight-html"><pre>10 VALJEAN</pre></div>
+
+<p>Note that this kind of automatic conversion is done with <code>bool</code> type too, thanks to the <code>IsTrue()</code> function.</p>
+
+<h3>
+<a id="options-argument" class="anchor" href="#options-argument" aria-hidden="true"><span class="octicon octicon-link"></span></a>Options Argument</h3>
+
+<p>If a helper needs the <code>Options</code> argument, just add it as the end of helper parameters:</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>add<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(val1, val2 <span class="pl-k">int</span>, options *raymond.<span class="pl-smi">Options</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">return</span> strconv.<span class="pl-c1">Itoa</span>(val1 + val2) + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + options.<span class="pl-c1">ValueStr</span>(<span class="pl-s"><span class="pl-pds">"</span>bananas<span class="pl-pds">"</span></span>)
+})</pre></div>
+
+<p>Thanks to the <code>options</code> argument, helpers have access to the current evaluation context, to the <code>Hash</code> arguments, and they can manipulate the private data variables.</p>
+
+<p>The <code>Options</code> argument is even necessary for Block Helpers to evaluate block and "else block".</p>
+
+<h4>
+<a id="context-values" class="anchor" href="#context-values" aria-hidden="true"><span class="octicon octicon-link"></span></a>Context Values</h4>
+
+<p>Helpers fetch current context values with <code>options.Value()</code> and <code>options.ValuesStr()</code>.</p>
+
+<p><code>Value()</code> returns an <code>interface{}</code> and lets the helper do the type assertions whereas <code>ValueStr()</code> automatically converts the value to a <code>string</code>.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>{{concat a b}}<span class="pl-pds">`</span></span>
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span>:      <span class="pl-s"><span class="pl-pds">"</span>Marcel<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>b<span class="pl-pds">"</span></span>:      <span class="pl-s"><span class="pl-pds">"</span>Beliveau<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>suffix<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>FOREVER !<span class="pl-pds">"</span></span>,
+}
+
+raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>concat<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(val1, val2 <span class="pl-k">string</span>, options *raymond.<span class="pl-smi">Options</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">return</span> val1 + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + val2 + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + options.<span class="pl-c1">ValueStr</span>(<span class="pl-s"><span class="pl-pds">"</span>suffix<span class="pl-pds">"</span></span>)
+})</pre></div>
+
+<p>Outputs:</p>
+
+<div class="highlight highlight-html"><pre>Marcel Beliveau FOREVER !</pre></div>
+
+<p>Helpers can get the entire current context with <code>options.Ctx()</code> that returns an <code>interface{}</code>.</p>
+
+<h4>
+<a id="helper-hash-arguments" class="anchor" href="#helper-hash-arguments" aria-hidden="true"><span class="octicon octicon-link"></span></a>Helper Hash Arguments</h4>
+
+<p>Helpers access hash arguments with <code>options.HashProp()</code> and <code>options.HashStr()</code>.</p>
+
+<p><code>HashProp()</code> returns an <code>interface{}</code> and lets the helper do the type assertions whereas <code>HashStr()</code> automatically converts the value to a <code>string</code>.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>{{concat suffix first=a second=b}}<span class="pl-pds">`</span></span>
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span>:      <span class="pl-s"><span class="pl-pds">"</span>Marcel<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>b<span class="pl-pds">"</span></span>:      <span class="pl-s"><span class="pl-pds">"</span>Beliveau<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>suffix<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>FOREVER !<span class="pl-pds">"</span></span>,
+}
+
+raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>concat<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(suffix <span class="pl-k">string</span>, options *raymond.<span class="pl-smi">Options</span>) <span class="pl-k">string</span> {
+    <span class="pl-k">return</span> options.<span class="pl-c1">HashStr</span>(<span class="pl-s"><span class="pl-pds">"</span>first<span class="pl-pds">"</span></span>) + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + options.<span class="pl-c1">HashStr</span>(<span class="pl-s"><span class="pl-pds">"</span>second<span class="pl-pds">"</span></span>) + <span class="pl-s"><span class="pl-pds">"</span> <span class="pl-pds">"</span></span> + suffix
+})</pre></div>
+
+<p>Outputs:</p>
+
+<div class="highlight highlight-html"><pre>Marcel Beliveau FOREVER !</pre></div>
+
+<p>Helpers can get the full hash with <code>options.Hash()</code> that returns a <code>map[string]interface{}</code>.</p>
+
+<h4>
+<a id="private-data" class="anchor" href="#private-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Private Data</h4>
+
+<p>Helpers access private data variables with <code>options.Data()</code> and <code>options.DataStr()</code>.</p>
+
+<p><code>Data()</code> returns an <code>interface{}</code> and lets the helper do the type assertions whereas <code>DataStr()</code> automatically converts the value to a <code>string</code>.</p>
+
+<p>Helpers can get the entire current data frame with <code>options.DataFrame()</code> that returns a <code>*DataFrame</code>.</p>
+
+<p>For helpers that need to inject their own private data frame, use <code>options.NewDataFrame()</code> to create the frame and <code>options.FnData()</code> to evaluate the block with that frame.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>{{#voodoo kind=a}}Voodoo is {{@magix}}{{/voodoo}}<span class="pl-pds">`</span></span>
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>awesome<span class="pl-pds">"</span></span>,
+}
+
+raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class="pl-pds">"</span>voodoo<span class="pl-pds">"</span></span>, <span class="pl-c1">func</span>(options *raymond.<span class="pl-smi">Options</span>) <span class="pl-k">string</span> {
+    <span class="pl-c">// create data frame with @magix data</span>
+    <span class="pl-smi">frame</span> <span class="pl-k">:=</span> options.<span class="pl-c1">NewDataFrame</span>()
+    frame.<span class="pl-c1">Set</span>(<span class="pl-s"><span class="pl-pds">"</span>magix<span class="pl-pds">"</span></span>, options.<span class="pl-c1">HashProp</span>(<span class="pl-s"><span class="pl-pds">"</span>kind<span class="pl-pds">"</span></span>))
+
+    <span class="pl-c">// evaluates block with new data frame</span>
+    <span class="pl-k">return</span> options.<span class="pl-c1">FnData</span>(frame)
+})</pre></div>
+
+<p>Helpers that need to evaluate the block with a private data frame and a new context can call <code>options.FnCtxData()</code>.</p>
+
+<h3>
+<a id="utilites" class="anchor" href="#utilites" aria-hidden="true"><span class="octicon octicon-link"></span></a>Utilites</h3>
+
+<p>In addition to <code>Escape()</code>, raymond provides utility functions that can be usefull for helpers.</p>
+
+<h4>
+<a id="str" class="anchor" href="#str" aria-hidden="true"><span class="octicon octicon-link"></span></a><code>Str()</code>
+</h4>
+
+<p><code>Str()</code> converts its parameter to a <code>string</code>.</p>
+
+<p>Booleans:</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">Str</span>(<span class="pl-c1">3</span>) + <span class="pl-s"><span class="pl-pds">"</span> foos and <span class="pl-pds">"</span></span> + raymond.<span class="pl-c1">Str</span>(-<span class="pl-c1">1.25</span>) + <span class="pl-s"><span class="pl-pds">"</span> bars<span class="pl-pds">"</span></span>
+<span class="pl-c">// Outputs: "3 foos and -1.25 bars"</span></pre></div>
+
+<p>Numbers:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-s"><span class="pl-pds">"</span>everything is <span class="pl-pds">"</span></span> + raymond.<span class="pl-c1">Str</span>(<span class="pl-c1">true</span>) + <span class="pl-s"><span class="pl-pds">"</span> and nothing is <span class="pl-pds">"</span></span> + raymond.<span class="pl-c1">Str</span>(<span class="pl-c1">false</span>)
+<span class="pl-c">// Outputs: "everything is true and nothing is false"</span></pre></div>
+
+<p>Maps:</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">Str</span>(<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>bar<span class="pl-pds">"</span></span>})
+<span class="pl-c">// Outputs: "map[foo:bar]"</span></pre></div>
+
+<p>Arrays and Slices:</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">Str</span>([]<span class="pl-k">interface</span>{}{<span class="pl-c1">true</span>, <span class="pl-c1">10</span>, <span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>, <span class="pl-c1">5</span>, <span class="pl-s"><span class="pl-pds">"</span>bar<span class="pl-pds">"</span></span>})
+<span class="pl-c">// Outputs: "true10foo5bar"</span></pre></div>
+
+<h4>
+<a id="istrue" class="anchor" href="#istrue" aria-hidden="true"><span class="octicon octicon-link"></span></a><code>IsTrue()</code>
+</h4>
+
+<p><code>IsTrue()</code> returns the truthy version of its parameter.</p>
+
+<p>It returns <code>false</code> when parameter is either:</p>
+
+<ul>
+<li>an empty array</li>
+<li>an empty slice</li>
+<li>an empty map</li>
+<li><code>""</code></li>
+<li><code>nil</code></li>
+<li><code>0</code></li>
+<li><code>false</code></li>
+</ul>
+
+<p>For all others values, <code>IsTrue()</code> returns <code>true</code>.</p>
+
+<h2>
+<a id="context-functions" class="anchor" href="#context-functions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Context Functions</h2>
+
+<p>In addition to helpers, lambdas found in context are evaluated.</p>
+
+<p>For example, that template and context:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>I {{feeling}} you<span class="pl-pds">"</span></span>
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>feeling<span class="pl-pds">"</span></span>: <span class="pl-c1">func</span>() <span class="pl-k">string</span> {
+        rand.<span class="pl-c1">Seed</span>(time.<span class="pl-c1">Now</span>().<span class="pl-c1">UTC</span>().<span class="pl-c1">UnixNano</span>())
+
+        <span class="pl-smi">feelings</span> <span class="pl-k">:=</span> []<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>hate<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>love<span class="pl-pds">"</span></span>}
+        <span class="pl-k">return</span> feelings[rand.<span class="pl-c1">Intn</span>(<span class="pl-c1">len</span>(feelings))]
+    },
+}</pre></div>
+
+<p>Randomly renders <code>I hate you</code> or <code>I love you</code>.</p>
+
+<p>Those context functions behave like helper functions: they can be called with parameters and they can have an <code>Options</code> argument.</p>
+
+<h2>
+<a id="partials" class="anchor" href="#partials" aria-hidden="true"><span class="octicon octicon-link"></span></a>Partials</h2>
+
+<h3>
+<a id="template-partials" class="anchor" href="#template-partials" aria-hidden="true"><span class="octicon octicon-link"></span></a>Template Partials</h3>
+
+<p>You can register template partials before execution:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>{{&gt; foo}} baz<span class="pl-pds">"</span></span>)
+tpl.<span class="pl-c1">RegisterPartial</span>(<span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>&lt;span&gt;bar&lt;/span&gt;<span class="pl-pds">"</span></span>)
+
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(<span class="pl-c1">nil</span>)
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<p>Output:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">span</span>&gt;bar&lt;/<span class="pl-ent">span</span>&gt; baz</pre></div>
+
+<p>You can register several partials at once:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>{{&gt; foo}} and {{&gt; baz}}<span class="pl-pds">"</span></span>)
+tpl.<span class="pl-c1">RegisterPartials</span>(<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+    <span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>&lt;span&gt;bar&lt;/span&gt;<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>baz<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>&lt;span&gt;bat&lt;/span&gt;<span class="pl-pds">"</span></span>,
+})
+
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(<span class="pl-c1">nil</span>)
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<p>Output:</p>
+
+<div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">span</span>&gt;bar&lt;/<span class="pl-ent">span</span>&gt; and &lt;<span class="pl-ent">span</span>&gt;bat&lt;/<span class="pl-ent">span</span>&gt;</pre></div>
+
+<h3>
+<a id="global-partials" class="anchor" href="#global-partials" aria-hidden="true"><span class="octicon octicon-link"></span></a>Global Partials</h3>
+
+<p>You can registers global partials that will be accessible by all templates:</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">RegisterPartial</span>(<span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>&lt;span&gt;bar&lt;/span&gt;<span class="pl-pds">"</span></span>)
+
+<span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>{{&gt; foo}} baz<span class="pl-pds">"</span></span>)
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(<span class="pl-c1">nil</span>)
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<p>Or:</p>
+
+<div class="highlight highlight-go"><pre>raymond.<span class="pl-c1">RegisterPartials</span>(<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+    <span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>&lt;span&gt;bar&lt;/span&gt;<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>baz<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>&lt;span&gt;bat&lt;/span&gt;<span class="pl-pds">"</span></span>,
+})
+
+<span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>{{&gt; foo}} and {{&gt; baz}}<span class="pl-pds">"</span></span>)
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(<span class="pl-c1">nil</span>)
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<h3>
+<a id="dynamic-partials" class="anchor" href="#dynamic-partials" aria-hidden="true"><span class="octicon octicon-link"></span></a>Dynamic Partials</h3>
+
+<p>It's possible to dynamically select the partial to be executed by using sub expression syntax.</p>
+
+<p>For example, that template randomly evaluates the <code>foo</code> or <code>baz</code> partial:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>{{&gt; (whichPartial) }}<span class="pl-pds">"</span></span>)
+tpl.<span class="pl-c1">RegisterPartials</span>(<span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+    <span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>&lt;span&gt;bar&lt;/span&gt;<span class="pl-pds">"</span></span>,
+    <span class="pl-s"><span class="pl-pds">"</span>baz<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>&lt;span&gt;bat&lt;/span&gt;<span class="pl-pds">"</span></span>,
+})
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>whichPartial<span class="pl-pds">"</span></span>: <span class="pl-c1">func</span>() <span class="pl-k">string</span> {
+        rand.<span class="pl-c1">Seed</span>(time.<span class="pl-c1">Now</span>().<span class="pl-c1">UTC</span>().<span class="pl-c1">UnixNano</span>())
+
+        <span class="pl-smi">names</span> <span class="pl-k">:=</span> []<span class="pl-k">string</span>{<span class="pl-s"><span class="pl-pds">"</span>foo<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>baz<span class="pl-pds">"</span></span>}
+        <span class="pl-k">return</span> names[rand.<span class="pl-c1">Intn</span>(<span class="pl-c1">len</span>(names))]
+    },
+}
+
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(ctx)
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<h3>
+<a id="partial-contexts" class="anchor" href="#partial-contexts" aria-hidden="true"><span class="octicon octicon-link"></span></a>Partial Contexts</h3>
+
+<p>It's possible to execute partials on a custom context by passing in the context to the partial call.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>User: {{&gt; userDetails user }}<span class="pl-pds">"</span></span>)
+tpl.<span class="pl-c1">RegisterPartial</span>(<span class="pl-s"><span class="pl-pds">"</span>userDetails<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>{{firstname}} {{lastname}}<span class="pl-pds">"</span></span>)
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>user<span class="pl-pds">"</span></span>: <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">string</span>{
+        <span class="pl-s"><span class="pl-pds">"</span>firstname<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Jean<span class="pl-pds">"</span></span>,
+        <span class="pl-s"><span class="pl-pds">"</span>lastname<span class="pl-pds">"</span></span>:  <span class="pl-s"><span class="pl-pds">"</span>Valjean<span class="pl-pds">"</span></span>,
+    },
+}
+
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(ctx)
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<p>Displays:</p>
+
+<div class="highlight highlight-html"><pre>User: Jean Valjean</pre></div>
+
+<h3>
+<a id="partial-parameters" class="anchor" href="#partial-parameters" aria-hidden="true"><span class="octicon octicon-link"></span></a>Partial Parameters</h3>
+
+<p>Custom data can be passed to partials through hash parameters.</p>
+
+<p>For example:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-smi">tpl</span> <span class="pl-k">:=</span> raymond.<span class="pl-c1">MustParse</span>(<span class="pl-s"><span class="pl-pds">"</span>{{&gt; myPartial name=hero }}<span class="pl-pds">"</span></span>)
+tpl.<span class="pl-c1">RegisterPartial</span>(<span class="pl-s"><span class="pl-pds">"</span>myPartial<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>My hero is {{name}}<span class="pl-pds">"</span></span>)
+
+<span class="pl-smi">ctx</span> <span class="pl-k">:=</span> <span class="pl-k">map</span>[<span class="pl-k">string</span>]<span class="pl-k">interface</span>{}{
+    <span class="pl-s"><span class="pl-pds">"</span>hero<span class="pl-pds">"</span></span>: <span class="pl-s"><span class="pl-pds">"</span>Goldorak<span class="pl-pds">"</span></span>,
+}
+
+<span class="pl-smi">result</span> <span class="pl-k">:=</span> tpl.<span class="pl-c1">MustExec</span>(ctx)
+fmt.<span class="pl-c1">Print</span>(result)</pre></div>
+
+<p>Displays:</p>
+
+<div class="highlight highlight-html"><pre>My hero is Goldorak</pre></div>
+
+<h2>
+<a id="mustache" class="anchor" href="#mustache" aria-hidden="true"><span class="octicon octicon-link"></span></a>Mustache</h2>
+
+<p>Handlebars is a superset of <a href="https://mustache.github.io">mustache</a> but it differs on those points:</p>
+
+<ul>
+<li>Alternative delimiters are not supported</li>
+<li>There is no recursive lookup</li>
+</ul>
+
+<h2>
+<a id="limitations" class="anchor" href="#limitations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Limitations</h2>
+
+<p>These handlebars options are currently NOT implemented:</p>
+
+<ul>
+<li>
+<code>compat</code> - enables recursive field lookup</li>
+<li>
+<code>knownHelpers</code> - list of helpers that are known to exist (truthy) at template execution time</li>
+<li>
+<code>knownHelpersOnly</code> - allows further optimzations based on the known helpers list</li>
+<li>
+<code>trackIds</code> - include the id names used to resolve parameters for helpers</li>
+<li>
+<code>noEscape</code> - disables HTML escaping globally</li>
+<li>
+<code>strict</code> - templates will throw rather than silently ignore missing fields</li>
+<li>
+<code>assumeObjects</code> - removes object existence checks when traversing paths</li>
+<li>
+<code>preventIndent</code> - disables the auto-indententation of nested partials</li>
+<li>
+<code>stringParams</code> - resolves a parameter to it's name if the value isn't present in the context stack</li>
+</ul>
+
+<p>These handlebars features are currently NOT implemented:</p>
+
+<ul>
+<li>raw block content is not passed as a parameter to helper</li>
+<li>
+<code>blockHelperMissing</code> - helper called when a helper can not be directly resolved</li>
+<li>
+<code>helperMissing</code> - helper called when a potential helper expression was not found</li>
+<li>
+<code>@contextPath</code> - value set in <code>trackIds</code> mode that records the lookup path for the current context</li>
+<li>
+<code>@level</code> - log level</li>
+</ul>
+
+<h2>
+<a id="handlebars-lexer" class="anchor" href="#handlebars-lexer" aria-hidden="true"><span class="octicon octicon-link"></span></a>Handlebars Lexer</h2>
+
+<p>You should not use the lexer directly, but for your information here is an example:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+    <span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+
+    <span class="pl-s"><span class="pl-pds">"</span>github.com/aymerick/raymond/lexer<span class="pl-pds">"</span></span>
+)
+
+<span class="pl-k">func</span> <span class="pl-en">main</span>() {
+    <span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>You know {{nothing}} John Snow<span class="pl-pds">"</span></span>
+
+    <span class="pl-smi">output</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>
+
+    <span class="pl-smi">lex</span> <span class="pl-k">:=</span> lexer.<span class="pl-c1">Scan</span>(source)
+    <span class="pl-k">for</span> {
+        <span class="pl-c">// consume next token</span>
+        <span class="pl-smi">token</span> <span class="pl-k">:=</span> lex.<span class="pl-c1">NextToken</span>()
+
+        output += fmt.<span class="pl-c1">Sprintf</span>(<span class="pl-s"><span class="pl-pds">"</span> <span class="pl-c1">%s</span><span class="pl-pds">"</span></span>, token)
+
+        <span class="pl-c">// stops when all tokens have been consumed, or on error</span>
+        <span class="pl-k">if</span> token.<span class="pl-smi">Kind</span> == lexer.<span class="pl-smi">TokenEOF</span> || token.<span class="pl-smi">Kind</span> == lexer.<span class="pl-smi">TokenError</span> {
+            <span class="pl-k">break</span>
+        }
+    }
+
+    fmt.<span class="pl-c1">Print</span>(output)
+}</pre></div>
+
+<p>Outputs:</p>
+
+<pre><code>Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
+</code></pre>
+
+<h2>
+<a id="handlebars-parser" class="anchor" href="#handlebars-parser" aria-hidden="true"><span class="octicon octicon-link"></span></a>Handlebars Parser</h2>
+
+<p>You should not use the parser directly, but for your information here is an example:</p>
+
+<div class="highlight highlight-go"><pre><span class="pl-k">package</span> main
+
+<span class="pl-k">import</span> (
+    <span class="pl-s"><span class="pl-pds">"</span>fmt<span class="pl-pds">"</span></span>
+
+    <span class="pl-s"><span class="pl-pds">"</span>github.com/aymerick/raymond/ast<span class="pl-pds">"</span></span>
+    <span class="pl-s"><span class="pl-pds">"</span>github.com/aymerick/raymond/parser<span class="pl-pds">"</span></span>
+)
+
+fu  nc <span class="pl-c1">main</span>() {
+    <span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">"</span>You know {{nothing}} John Snow<span class="pl-pds">"</span></span>
+
+    <span class="pl-c">// parse template</span>
+    <span class="pl-smi">program</span>, <span class="pl-smi">err</span> <span class="pl-k">:=</span> parser.<span class="pl-c1">Parse</span>(source)
+    <span class="pl-k">if</span> err != <span class="pl-c1">nil</span> {
+        <span class="pl-c1">panic</span>(err)
+    }
+
+    <span class="pl-c">// print AST</span>
+    <span class="pl-smi">output</span> <span class="pl-k">:=</span> ast.<span class="pl-c1">Print</span>(program)
+
+    fmt.<span class="pl-c1">Print</span>(output)
+}</pre></div>
+
+<p>Outputs:</p>
+
+<pre><code>CONTENT[ 'You know ' ]
+{{ PATH:nothing [] }}
+CONTENT[ ' John Snow' ]
+</code></pre>
+
+<h2>
+<a id="test" class="anchor" href="#test" aria-hidden="true"><span class="octicon octicon-link"></span></a>Test</h2>
+
+<p>To run all tests:</p>
+
+<pre><code>$ go test ./...
+</code></pre>
+
+<p>To filter tests:</p>
+
+<pre><code>$ go test -run="Partials"
+</code></pre>
+
+<p>To run all test and all benchmarks:</p>
+
+<pre><code>$ go test -bench . ./...
+</code></pre>
+
+<h2>
+<a id="references" class="anchor" href="#references" aria-hidden="true"><span class="octicon octicon-link"></span></a>References</h2>
+
+<ul>
+<li><a href="http://handlebarsjs.com/">http://handlebarsjs.com/</a></li>
+<li><a href="https://mustache.github.io/mustache.5.html">https://mustache.github.io/mustache.5.html</a></li>
+<li><a href="https://github.com/golang/go/tree/master/src/text/template">https://github.com/golang/go/tree/master/src/text/template</a></li>
+<li><a href="https://www.youtube.com/watch?v=HxaD_trXwRE">https://www.youtube.com/watch?v=HxaD_trXwRE</a></li>
+</ul>
+
+<h2>
+<a id="others-implementations" class="anchor" href="#others-implementations" aria-hidden="true"><span class="octicon octicon-link"></span></a>Others Implementations</h2>
+
+<ul>
+<li>
+<a href="http://handlebarsjs.com">handlebars.js</a> - javascript</li>
+<li>
+<a href="https://github.com/jknack/handlebars.java">handlebars.java</a> - java</li>
+<li>
+<a href="https://github.com/cowboyd/handlebars.rb">handlebars.rb</a> - ruby</li>
+<li>
+<a href="https://github.com/XaminProject/handlebars.php">handlebars.php</a> - php</li>
+<li>
+<a href="https://github.com/Bertrand/handlebars-objc">handlebars-objc</a> - Objective C</li>
+<li>
+<a href="https://github.com/nicolas-cherel/rumblebars">rumblebars</a> - rust</li>
+</ul>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Raymond maintained by <a href="https://github.com/aymerick">aymerick</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
