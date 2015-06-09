@@ -4,6 +4,8 @@ Handlebars for [golang](https://golang.org) with the same features as [handlebar
 
 The full API documentation is available here: <http://godoc.org/github.com/aymerick/raymond>.
 
+![Raymond Logo](raymond.png "Raymond")
+
 
 ## Quick Start
 
