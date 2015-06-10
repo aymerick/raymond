@@ -164,7 +164,7 @@ func main() {
   <h1>Comments</h1>
 
   {{#each comments}}
-  <h2>By {{Author.FirstName}} {{author.lastName}}</h2>
+  <h2>By {{author.firstName}} {{author.lastName}}</h2>
   <div class="body">{{body}}</div>
   {{/each}}
 </div>`
