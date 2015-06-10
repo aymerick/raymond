@@ -166,7 +166,9 @@
 
 <p>The rendering context can contain any type of values, including <code>array</code>, <code>slice</code>, <code>map</code>, <code>struct</code> and <code>func</code>.</p>
 
-<p>When using structs, be warned that only exported fields are accessible:</p>
+<p>When using structs, be warned that only exported fields are accessible. However you can access exported fields in template with their lowercase names.</p>
+
+<p>For example, both <code>{{author.firstName}}</code> and <code>{{Author.FirstName}}</code> references give the same result, as long as <code>Author</code> and <code>FirstName</code> are exported struct fields.</p>
 
 <div class="highlight highlight-go"><pre><span class="pl-k">package</span> main
 
@@ -178,14 +180,14 @@
 
 <span class="pl-k">func</span> <span class="pl-en">main</span>() {
     <span class="pl-smi">source</span> <span class="pl-k">:=</span> <span class="pl-s"><span class="pl-pds">`</span>&lt;div class="post"&gt;</span>
-<span class="pl-s">  &lt;h1&gt;By {{Author.FirstName}} {{Author.LastName}}&lt;/h1&gt;</span>
-<span class="pl-s">  &lt;div class="body"&gt;{{Body}}&lt;/div&gt;</span>
+<span class="pl-s">  &lt;h1&gt;By {{author.firstName}} {{author.lastName}}&lt;/h1&gt;</span>
+<span class="pl-s">  &lt;div class="body"&gt;{{body}}&lt;/div&gt;</span>
 <span class="pl-s"></span>
 <span class="pl-s">  &lt;h1&gt;Comments&lt;/h1&gt;</span>
 <span class="pl-s"></span>
-<span class="pl-s">  {{#each Comments}}</span>
-<span class="pl-s">  &lt;h2&gt;By {{Author.FirstName}} {{Author.LastName}}&lt;/h2&gt;</span>
-<span class="pl-s">  &lt;div class="body"&gt;{{Body}}&lt;/div&gt;</span>
+<span class="pl-s">  {{#each comments}}</span>
+<span class="pl-s">  &lt;h2&gt;By {{author.firstName}} {{author.lastName}}&lt;/h2&gt;</span>
+<span class="pl-s">  &lt;div class="body"&gt;{{body}}&lt;/div&gt;</span>
 <span class="pl-s">  {{/each}}</span>
 <span class="pl-s">&lt;/div&gt;<span class="pl-pds">`</span></span>
 
@@ -336,14 +338,14 @@ raymond.<span class="pl-c1">RegisterHelper</span>(<span class="pl-s"><span class
 <p>The following example uses structs instead of maps and produces the same output as the previous one:</p>
 
 <div class="highlight highlight-html"><pre>&lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>post<span class="pl-pds">"</span></span>&gt;
-  &lt;<span class="pl-ent">h1</span>&gt;By {{fullName Author}}&lt;/<span class="pl-ent">h1</span>&gt;
-  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;{{Body}}&lt;/<span class="pl-ent">div</span>&gt;
+  &lt;<span class="pl-ent">h1</span>&gt;By {{fullName author}}&lt;/<span class="pl-ent">h1</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;{{body}}&lt;/<span class="pl-ent">div</span>&gt;
 
   &lt;<span class="pl-ent">h1</span>&gt;Comments&lt;/<span class="pl-ent">h1</span>&gt;
 
-  {{#each Vomments}}
-  &lt;<span class="pl-ent">h2</span>&gt;By {{fullName Author}}&lt;/<span class="pl-ent">h2</span>&gt;
-  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;{{Body}}&lt;/<span class="pl-ent">div</span>&gt;
+  {{#each comments}}
+  &lt;<span class="pl-ent">h2</span>&gt;By {{fullName author}}&lt;/<span class="pl-ent">h2</span>&gt;
+  &lt;<span class="pl-ent">div</span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>body<span class="pl-pds">"</span></span>&gt;{{body}}&lt;/<span class="pl-ent">div</span>&gt;
   {{/each}}
 &lt;/<span class="pl-ent">div</span>&gt;</pre></div>
 
