@@ -145,7 +145,7 @@ The rendering context can contain any type of values, including `array`, `slice`
 
 When using structs, be warned that only exported fields are accessible. However you can access exported fields in template with their lowercase names.
 
-For example, in following example, both `{{author.firstName}}` and `{{Author.FirstName}}` references work, as long as `Author` and `FirstName` are exported struct fields:
+For example, both `{{author.firstName}}` and `{{Author.FirstName}}` references give the same result, as long as `Author` and `FirstName` are exported struct fields.
 
 ```go
 package main
@@ -164,7 +164,7 @@ func main() {
   <h1>Comments</h1>
 
   {{#each comments}}
-  <h2>By {{author.firstName}} {{author.lastName}}</h2>
+  <h2>By {{Author.FirstName}} {{author.lastName}}</h2>
   <div class="body">{{body}}</div>
   {{/each}}
 </div>`

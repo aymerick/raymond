@@ -110,14 +110,14 @@ func TestEvalErrors(t *testing.T) {
 
 func TestEvalStruct(t *testing.T) {
 	source := `<div class="post">
-  <h1>By {{Author.FirstName}} {{Author.LastName}}</h1>
+  <h1>By {{author.FirstName}} {{Author.lastName}}</h1>
   <div class="body">{{Body}}</div>
 
   <h1>Comments</h1>
 
-  {{#each Comments}}
-  <h2>By {{Author.FirstName}} {{Author.LastName}}</h2>
-  <div class="body">{{Body}}</div>
+  {{#each comments}}
+  <h2>By {{Author.FirstName}} {{author.LastName}}</h2>
+  <div class="body">{{body}}</div>
   {{/each}}
 </div>`
 
@@ -161,61 +161,5 @@ func TestEvalStruct(t *testing.T) {
 	output := MustRender(source, ctx)
 	if output != expected {
 		t.Errorf("Failed to evaluate with struct context")
-	}
-}
-
-func TestEvalStructLowercase(t *testing.T) {
-	source := `<div class="post">
-  <h1>By {{author.firstName}} {{author.lastName}}</h1>
-  <div class="body">{{body}}</div>
-
-  <h1>Comments</h1>
-
-  {{#each comments}}
-  <h2>By {{author.firstName}} {{author.lastName}}</h2>
-  <div class="body">{{body}}</div>
-  {{/each}}
-</div>`
-
-	expected := `<div class="post">
-  <h1>By Jean Valjean</h1>
-  <div class="body">Life is difficult</div>
-
-  <h1>Comments</h1>
-
-  <h2>By Marcel Beliveau</h2>
-  <div class="body">LOL!</div>
-</div>`
-
-	type Person struct {
-		FirstName string
-		LastName  string
-	}
-
-	type Comment struct {
-		Author Person
-		Body   string
-	}
-
-	type Post struct {
-		Author   Person
-		Body     string
-		Comments []Comment
-	}
-
-	ctx := Post{
-		Person{"Jean", "Valjean"},
-		"Life is difficult",
-		[]Comment{
-			Comment{
-				Person{"Marcel", "Beliveau"},
-				"LOL!",
-			},
-		},
-	}
-
-	output := MustRender(source, ctx)
-	if output != expected {
-		t.Errorf("Failed to evaluate with struct context and lowercase references in template: %s", output)
 	}
 }
