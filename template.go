@@ -63,6 +63,23 @@ func (tpl *Template) parse() error {
 	return nil
 }
 
+// Clone returns a copy of that template.
+func (tpl *Template) Clone() *Template {
+	result := newTemplate(tpl.source)
+
+	result.program = tpl.program
+
+	for name, helper := range tpl.helpers {
+		result.RegisterHelper(name, helper)
+	}
+
+	for name, partial := range tpl.partials {
+		result.addPartial(name, partial.source, partial.tpl)
+	}
+
+	return result
+}
+
 // RegisterHelper registers a helper for that template.
 func (tpl *Template) RegisterHelper(name string, helper interface{}) {
 	if tpl.helpers[name] != zero {
@@ -82,13 +99,17 @@ func (tpl *Template) RegisterHelpers(helpers map[string]interface{}) {
 	}
 }
 
+func (tpl *Template) addPartial(name string, source string, template *Template) {
+	tpl.partials[name] = newPartial(name, source, template)
+}
+
 // RegisterPartial registers a partial for that template.
-func (tpl *Template) RegisterPartial(name string, partial string) {
+func (tpl *Template) RegisterPartial(name string, source string) {
 	if tpl.partials[name] != nil {
 		panic(fmt.Sprintf("Partial %s already registered", name))
 	}
 
-	tpl.partials[name] = newPartial(name, partial, nil)
+	tpl.addPartial(name, source, nil)
 }
 
 // RegisterPartials registers several partials for that template.
@@ -99,12 +120,12 @@ func (tpl *Template) RegisterPartials(partials map[string]string) {
 }
 
 // RegisterPartial registers an already parsed partial for that template.
-func (tpl *Template) RegisterPartialTemplate(name string, partial *Template) {
+func (tpl *Template) RegisterPartialTemplate(name string, template *Template) {
 	if tpl.partials[name] != nil {
 		panic(fmt.Sprintf("Partial %s already registered", name))
 	}
 
-	tpl.partials[name] = newPartial(name, "", partial)
+	tpl.addPartial(name, "", template)
 }
 
 // Exec evaluates template with given context.

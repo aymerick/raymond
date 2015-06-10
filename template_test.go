@@ -27,18 +27,46 @@ CONTENT[ '
 func TestNewTemplate(t *testing.T) {
 	tpl := newTemplate(sourceBasic)
 	if tpl.source != sourceBasic {
-		t.Errorf("Faild to instantiate template")
+		t.Errorf("Failed to instantiate template")
 	}
 }
 
 func TestParse(t *testing.T) {
 	tpl, err := Parse(sourceBasic)
 	if err != nil || (tpl.source != sourceBasic) {
-		t.Errorf("Faild to parse template")
+		t.Errorf("Failed to parse template")
 	}
 
 	if str := tpl.PrintAST(); str != basicAST {
 		t.Errorf("Template parsing incorrect: %s", str)
+	}
+}
+
+func TestClone(t *testing.T) {
+	sourcePartial := `I am a {{wat}} partial`
+	sourcePartial2 := `Partial for the {{wat}}`
+
+	tpl := MustParse(sourceBasic)
+	tpl.RegisterPartial("p", sourcePartial)
+
+	if (len(tpl.partials) != 1) || (tpl.partials["p"] == nil) {
+		t.Errorf("What?")
+	}
+
+	cloned := tpl.Clone()
+
+	if (len(cloned.partials) != 1) || (cloned.partials["p"] == nil) {
+		t.Errorf("Template partials must be cloned")
+	}
+
+	cloned.RegisterPartial("p2", sourcePartial2)
+
+	if (len(cloned.partials) != 2) || (cloned.partials["p"] == nil) || (cloned.partials["p2"] == nil) {
+		t.Errorf("Failed to register a partial on cloned template")
+	}
+
+	if (len(tpl.partials) != 1) || (tpl.partials["p"] == nil) {
+		t.Errorf("Modification of a cloned template MUST NOT affect original template")
 	}
 }
 
