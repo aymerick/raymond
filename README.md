@@ -1288,6 +1288,10 @@ CONTENT[ ' John Snow' ]
 
 ## Test
 
+First, fetch mustache tests:
+
+    $ git submodule update --init
+
 To run all tests:
 
     $ go test ./...
