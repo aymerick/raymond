@@ -25,14 +25,14 @@ func Example() {
 
 func Example_struct() {
 	source := `<div class="post">
-  <h1>By {{fullName Author}}</h1>
-  <div class="body">{{Body}}</div>
+  <h1>By {{fullName author}}</h1>
+  <div class="body">{{body}}</div>
 
   <h1>Comments</h1>
 
-  {{#each Comments}}
-  <h2>By {{fullName Author}}</h2>
-  <div class="body">{{Body}}</div>
+  {{#each comments}}
+  <h2>By {{fullName author}}</h2>
+  <div class="body">{{body}}</div>
   {{/each}}
 </div>`
 

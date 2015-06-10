@@ -314,8 +314,11 @@ func (v *evalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 
 	switch ctx.Kind() {
 	case reflect.Struct:
+		// example: firstName => FirstName
+		expFieldName := strings.Title(fieldName)
+
 		// check if struct have this field and that it is exported
-		if tField, ok := ctx.Type().FieldByName(fieldName); ok && (tField.PkgPath == "") {
+		if tField, ok := ctx.Type().FieldByName(expFieldName); ok && (tField.PkgPath == "") {
 			// struct field
 			result = ctx.FieldByIndex(tField.Index)
 		}

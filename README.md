@@ -143,7 +143,9 @@ result := tpl.MustExec(ctx)
 
 The rendering context can contain any type of values, including `array`, `slice`, `map`, `struct` and `func`.
 
-When using structs, be warned that only exported fields are accessible:
+When using structs, be warned that only exported fields are accessible. However you can access exported fields in template with their lowercase names.
+
+For example, in following example, both `{{author.firstName}}` and `{{Author.FirstName}}` references work, as long as `Author` and `FirstName` are exported struct fields:
 
 ```go
 package main
@@ -156,14 +158,14 @@ import (
 
 func main() {
     source := `<div class="post">
-  <h1>By {{Author.FirstName}} {{Author.LastName}}</h1>
-  <div class="body">{{Body}}</div>
+  <h1>By {{author.firstName}} {{author.lastName}}</h1>
+  <div class="body">{{body}}</div>
 
   <h1>Comments</h1>
 
-  {{#each Comments}}
-  <h2>By {{Author.FirstName}} {{Author.LastName}}</h2>
-  <div class="body">{{Body}}</div>
+  {{#each comments}}
+  <h2>By {{author.firstName}} {{author.lastName}}</h2>
+  <div class="body">{{body}}</div>
   {{/each}}
 </div>`
 
@@ -332,14 +334,14 @@ The following example uses structs instead of maps and produces the same output 
 
 ```html
 <div class="post">
-  <h1>By {{fullName Author}}</h1>
-  <div class="body">{{Body}}</div>
+  <h1>By {{fullName author}}</h1>
+  <div class="body">{{body}}</div>
 
   <h1>Comments</h1>
 
-  {{#each Vomments}}
-  <h2>By {{fullName Author}}</h2>
-  <div class="body">{{Body}}</div>
+  {{#each comments}}
+  <h2>By {{fullName author}}</h2>
+  <div class="body">{{body}}</div>
   {{/each}}
 </div>
 ```
