@@ -163,3 +163,45 @@ func TestEvalStruct(t *testing.T) {
 		t.Errorf("Failed to evaluate with struct context")
 	}
 }
+
+type TestFoo struct {
+}
+
+func (t *TestFoo) Subject() string {
+	return "foo"
+}
+
+func TestEvalMethod(t *testing.T) {
+	source := `Subject is {{subject}}! YES I SAID {{Subject}}!`
+	expected := `Subject is foo! YES I SAID foo!`
+
+	ctx := &TestFoo{}
+
+	output := MustRender(source, ctx)
+	if output != expected {
+		t.Errorf("Failed to evaluate struct method: %s", output)
+	}
+}
+
+type TestBar struct {
+}
+
+func (t *TestBar) Subject() interface{} {
+	return testBar
+}
+
+func testBar() string {
+	return "bar"
+}
+
+func TestEvalMethodReturningFunc(t *testing.T) {
+	source := `Subject is {{subject}}! YES I SAID {{Subject}}!`
+	expected := `Subject is bar! YES I SAID bar!`
+
+	ctx := &TestBar{}
+
+	output := MustRender(source, ctx)
+	if output != expected {
+		t.Errorf("Failed to evaluate struct method: %s", output)
+	}
+}

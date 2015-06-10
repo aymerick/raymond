@@ -312,36 +312,58 @@ func (v *evalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 		return result
 	}
 
-	switch ctx.Kind() {
-	case reflect.Struct:
-		// example: firstName => FirstName
-		expFieldName := strings.Title(fieldName)
+	// check if this is a method call
+	result, isMeth := v.evalMethod(ctx, fieldName, exprRoot)
+	if !isMeth {
+		switch ctx.Kind() {
+		case reflect.Struct:
+			// example: firstName => FirstName
+			expFieldName := strings.Title(fieldName)
 
-		// check if struct have this field and that it is exported
-		if tField, ok := ctx.Type().FieldByName(expFieldName); ok && (tField.PkgPath == "") {
-			// struct field
-			result = ctx.FieldByIndex(tField.Index)
-		}
-	case reflect.Map:
-		nameVal := reflect.ValueOf(fieldName)
-		if nameVal.Type().AssignableTo(ctx.Type().Key()) {
-			// map key
-			result = ctx.MapIndex(nameVal)
-		}
-	case reflect.Array, reflect.Slice:
-		if i, err := strconv.Atoi(fieldName); (err == nil) && (i < ctx.Len()) {
-			result = ctx.Index(i)
+			// check if struct have this field and that it is exported
+			if tField, ok := ctx.Type().FieldByName(expFieldName); ok && (tField.PkgPath == "") {
+				// struct field
+				result = ctx.FieldByIndex(tField.Index)
+			}
+		case reflect.Map:
+			nameVal := reflect.ValueOf(fieldName)
+			if nameVal.Type().AssignableTo(ctx.Type().Key()) {
+				// map key
+				result = ctx.MapIndex(nameVal)
+			}
+		case reflect.Array, reflect.Slice:
+			if i, err := strconv.Atoi(fieldName); (err == nil) && (i < ctx.Len()) {
+				result = ctx.Index(i)
+			}
 		}
 	}
 
 	// check if result is a function
 	result, _ = indirect(result)
 	if result.Kind() == reflect.Func {
-		// in that code path, we know we can't be an expression root
 		result = v.evalFieldFunc(fieldName, result, exprRoot)
 	}
 
 	return result
+}
+
+// evalFieldFunc tries to evaluate given method name, and a boolean to indicate if this was a method call
+func (v *evalVisitor) evalMethod(ctx reflect.Value, name string, exprRoot bool) (reflect.Value, bool) {
+	if ctx.Kind() != reflect.Interface && ctx.CanAddr() {
+		ctx = ctx.Addr()
+	}
+
+	method := ctx.MethodByName(name)
+	if !method.IsValid() {
+		// example: subject() => Subject()
+		method = ctx.MethodByName(strings.Title(name))
+	}
+
+	if !method.IsValid() {
+		return zero, false
+	}
+
+	return v.evalFieldFunc(name, method, exprRoot), true
 }
 
 // evalFieldFunc evaluates given function
