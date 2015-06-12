@@ -578,7 +578,7 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 	}
 
 	if !addOptions && (len(params) != numIn) {
-		v.errorf("Helper %s called with wrong number of arguments, needed %d but got %d", name, numIn, len(params))
+		v.errorf("Helper '%s' called with wrong number of arguments, needed %d but got %d", name, numIn, len(params))
 	}
 
 	// check and collect arguments
