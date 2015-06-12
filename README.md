@@ -1174,6 +1174,15 @@ My hero is Goldorak
 ```
 
 
+## Utility Functions
+
+You can use following utility fuctions to parse and register partials from files:
+
+- `ParseFile()` - reads a file and return parsed template
+- `Template.RegisterPartialFile()` - reads a file and registers its content as a partial with given name
+- `Template.RegisterPartialFiles()` - reads several files and registers them as partials, the filename base is used as the partial name
+
+
 ## Mustache
 
 Handlebars is a superset of [mustache](https://mustache.github.io) but it differs on those points:
