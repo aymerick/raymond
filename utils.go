@@ -1,6 +1,9 @@
 package raymond
 
-import "reflect"
+import (
+	"path"
+	"reflect"
+)
 
 // indirect returns the item at the end of indirection, and a bool to indicate if it's nil.
 // We indirect through pointers and empty interfaces (only) because
@@ -69,4 +72,14 @@ func canBeNil(typ reflect.Type) bool {
 		return true
 	}
 	return false
+}
+
+// fileBase returns base file name
+//
+// example: /foo/bar/baz.png => baz
+func fileBase(filePath string) string {
+	fileName := path.Base(filePath)
+	fileExt := path.Ext(filePath)
+
+	return fileName[:len(fileName)-len(fileExt)]
 }

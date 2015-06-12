@@ -3,7 +3,6 @@ package raymond
 import (
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"reflect"
 	"runtime"
 
@@ -150,7 +149,7 @@ func (tpl *Template) RegisterPartialFiles(filePaths ...string) error {
 	}
 
 	for _, filePath := range filePaths {
-		name := filepath.Base(filePath)
+		name := fileBase(filePath)
 
 		if err := tpl.RegisterPartialFile(filePath, name); err != nil {
 			return err
