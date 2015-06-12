@@ -81,7 +81,7 @@ func (tpl *Template) Clone() *Template {
 	result.program = tpl.program
 
 	for name, helper := range tpl.helpers {
-		result.RegisterHelper(name, helper)
+		result.RegisterHelper(name, helper.Interface())
 	}
 
 	for name, partial := range tpl.partials {
