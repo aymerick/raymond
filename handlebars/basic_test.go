@@ -620,6 +620,8 @@ func TestBasic(t *testing.T) {
 }
 
 func TestBasicErrors(t *testing.T) {
+	t.Parallel()
+
 	var err error
 
 	inputs := []string{

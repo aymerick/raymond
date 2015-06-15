@@ -17,7 +17,7 @@ type Test struct {
 }
 
 func launchTests(t *testing.T, tests []Test) {
-	// @todo Check why this fails
+	// NOTE: TestMustache() makes Parallel testing fail
 	// t.Parallel()
 
 	for _, test := range tests {
@@ -84,6 +84,8 @@ func launchTests(t *testing.T, tests []Test) {
 }
 
 func launchErrorTests(t *testing.T, tests []Test) {
+	t.Parallel()
+
 	for _, test := range tests {
 		var err error
 		var tpl *Template

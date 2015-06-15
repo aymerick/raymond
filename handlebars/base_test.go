@@ -26,8 +26,7 @@ type Test struct {
 }
 
 func launchTests(t *testing.T, tests []Test) {
-	// @todo Check why this fails
-	// t.Parallel()
+	t.Parallel()
 
 	for _, test := range tests {
 		var err error

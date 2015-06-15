@@ -504,6 +504,8 @@ func equal(i1, i2 []Token, checkPos bool) bool {
 }
 
 func TestLexer(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range lexTests {
 		tokens := collect(&test)
 		if !equal(tokens, test.tokens, false) {

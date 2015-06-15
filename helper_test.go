@@ -159,5 +159,7 @@ var helperTests = []Test{
 //
 
 func TestHelper(t *testing.T) {
+	t.Parallel()
+
 	launchTests(t, helperTests)
 }

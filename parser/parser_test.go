@@ -85,6 +85,8 @@ var parserTests = []parserTest{
 }
 
 func TestParser(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range parserTests {
 		output := ""
 
@@ -156,6 +158,8 @@ var parserErrorTests = []parserTest{
 }
 
 func TestParserErrors(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range parserErrorTests {
 		node, err := Parse(test.input)
 		if err == nil {

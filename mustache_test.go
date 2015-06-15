@@ -228,5 +228,7 @@ var mustacheLambdasTests = []Test{
 }
 
 func TestMustacheLambdas(t *testing.T) {
+	t.Parallel()
+
 	launchTests(t, mustacheLambdasTests)
 }

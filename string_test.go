@@ -24,6 +24,8 @@ var strTests = []strTest{
 }
 
 func TestStr(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range strTests {
 		if res := Str(test.input); res != test.output {
 			t.Errorf("Failed to stringify: %s\nexpected:\n\t'%s'got:\n\t%q", test.name, test.output, res)

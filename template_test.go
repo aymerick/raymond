@@ -25,6 +25,8 @@ CONTENT[ '
 `
 
 func TestNewTemplate(t *testing.T) {
+	t.Parallel()
+
 	tpl := newTemplate(sourceBasic)
 	if tpl.source != sourceBasic {
 		t.Errorf("Failed to instantiate template")
@@ -32,6 +34,8 @@ func TestNewTemplate(t *testing.T) {
 }
 
 func TestParse(t *testing.T) {
+	t.Parallel()
+
 	tpl, err := Parse(sourceBasic)
 	if err != nil || (tpl.source != sourceBasic) {
 		t.Errorf("Failed to parse template")
@@ -43,6 +47,8 @@ func TestParse(t *testing.T) {
 }
 
 func TestClone(t *testing.T) {
+	t.Parallel()
+
 	sourcePartial := `I am a {{wat}} partial`
 	sourcePartial2 := `Partial for the {{wat}}`
 

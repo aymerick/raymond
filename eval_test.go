@@ -77,6 +77,8 @@ var evalTests = []Test{
 }
 
 func TestEval(t *testing.T) {
+	t.Parallel()
+
 	launchTests(t, evalTests)
 }
 
@@ -109,6 +111,8 @@ func TestEvalErrors(t *testing.T) {
 }
 
 func TestEvalStruct(t *testing.T) {
+	t.Parallel()
+
 	source := `<div class="post">
   <h1>By {{author.FirstName}} {{Author.lastName}}</h1>
   <div class="body">{{Body}}</div>
@@ -172,6 +176,8 @@ func (t *TestFoo) Subject() string {
 }
 
 func TestEvalMethod(t *testing.T) {
+	t.Parallel()
+
 	source := `Subject is {{subject}}! YES I SAID {{Subject}}!`
 	expected := `Subject is foo! YES I SAID foo!`
 
@@ -195,6 +201,8 @@ func testBar() string {
 }
 
 func TestEvalMethodReturningFunc(t *testing.T) {
+	t.Parallel()
+
 	source := `Subject is {{subject}}! YES I SAID {{Subject}}!`
 	expected := `Subject is bar! YES I SAID bar!`
 
