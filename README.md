@@ -842,7 +842,7 @@ Note that this kind of automatic conversion is done with `bool` type too, thanks
 
 ### Options Argument
 
-If a helper needs the `Options` argument, just add it as the end of helper parameters:
+If a helper needs the `Options` argument, just add it at the end of helper parameters:
 
 ```go
 raymond.RegisterHelper("add", func(val1, val2 int, options *raymond.Options) string {
@@ -1197,7 +1197,7 @@ These handlebars options are currently NOT implemented:
 
 - `compat` - enables recursive field lookup
 - `knownHelpers` - list of helpers that are known to exist (truthy) at template execution time
-- `knownHelpersOnly` - allows further optimzations based on the known helpers list
+- `knownHelpersOnly` - allows further optimizations based on the known helpers list
 - `trackIds` - include the id names used to resolve parameters for helpers
 - `noEscape` - disables HTML escaping globally
 - `strict` - templates will throw rather than silently ignore missing fields
