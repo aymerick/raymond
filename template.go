@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"reflect"
 	"runtime"
+	"sync"
 
 	"github.com/aymerick/raymond/ast"
 	"github.com/aymerick/raymond/parser"
@@ -16,6 +17,8 @@ type Template struct {
 	program  *ast.Program
 	helpers  map[string]reflect.Value
 	partials map[string]*partial
+	mutex    sync.RWMutex // protects helpers and partials
+
 }
 
 // newTemplate instanciate a new template without parsing it
@@ -80,6 +83,9 @@ func (tpl *Template) Clone() *Template {
 
 	result.program = tpl.program
 
+	tpl.mutex.RLock()
+	defer tpl.mutex.RUnlock()
+
 	for name, helper := range tpl.helpers {
 		result.RegisterHelper(name, helper.Interface())
 	}
@@ -91,8 +97,18 @@ func (tpl *Template) Clone() *Template {
 	return result
 }
 
+func (tpl *Template) findHelper(name string) reflect.Value {
+	tpl.mutex.RLock()
+	defer tpl.mutex.RUnlock()
+
+	return tpl.helpers[name]
+}
+
 // RegisterHelper registers a helper for that template.
 func (tpl *Template) RegisterHelper(name string, helper interface{}) {
+	tpl.mutex.Lock()
+	defer tpl.mutex.Unlock()
+
 	if tpl.helpers[name] != zero {
 		panic(fmt.Sprintf("Helper %s already registered", name))
 	}
@@ -111,15 +127,25 @@ func (tpl *Template) RegisterHelpers(helpers map[string]interface{}) {
 }
 
 func (tpl *Template) addPartial(name string, source string, template *Template) {
-	tpl.partials[name] = newPartial(name, source, template)
-}
+	tpl.mutex.Lock()
+	defer tpl.mutex.Unlock()
 
-// RegisterPartial registers a partial for that template.
-func (tpl *Template) RegisterPartial(name string, source string) {
 	if tpl.partials[name] != nil {
 		panic(fmt.Sprintf("Partial %s already registered", name))
 	}
 
+	tpl.partials[name] = newPartial(name, source, template)
+}
+
+func (tpl *Template) findPartial(name string) *partial {
+	tpl.mutex.RLock()
+	defer tpl.mutex.RUnlock()
+
+	return tpl.partials[name]
+}
+
+// RegisterPartial registers a partial for that template.
+func (tpl *Template) RegisterPartial(name string, source string) {
 	tpl.addPartial(name, source, nil)
 }
 
@@ -161,10 +187,6 @@ func (tpl *Template) RegisterPartialFiles(filePaths ...string) error {
 
 // RegisterPartial registers an already parsed partial for that template.
 func (tpl *Template) RegisterPartialTemplate(name string, template *Template) {
-	if tpl.partials[name] != nil {
-		panic(fmt.Sprintf("Partial %s already registered", name))
-	}
-
 	tpl.addPartial(name, "", template)
 }
 

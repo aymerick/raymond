@@ -548,8 +548,8 @@ func (v *evalVisitor) isHelperCall(node *ast.Expression) bool {
 // findHelper finds given helper
 func (v *evalVisitor) findHelper(name string) reflect.Value {
 	// check template helpers
-	if v.tpl.helpers[name] != zero {
-		return v.tpl.helpers[name]
+	if h := v.tpl.findHelper(name); h != zero {
+		return h
 	}
 
 	// check global helpers
@@ -658,8 +658,8 @@ func (v *evalVisitor) helperOptions(node *ast.Expression) *Options {
 // findPartial finds given partial
 func (v *evalVisitor) findPartial(name string) *partial {
 	// check template partials
-	if v.tpl.partials[name] != nil {
-		return v.tpl.partials[name]
+	if p := v.tpl.findPartial(name); p != nil {
+		return p
 	}
 
 	// check global partials

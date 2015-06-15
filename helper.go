@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"sync"
 )
 
 // Options represents the options argument provided to helpers and context functions.
@@ -19,6 +20,9 @@ type Options struct {
 // helpers stores all globally registered helpers
 var helpers = make(map[string]reflect.Value)
 
+// protects global helpers
+var helpersMutex sync.RWMutex
+
 func init() {
 	// register builtin helpers
 	RegisterHelper("if", ifHelper)
@@ -31,6 +35,9 @@ func init() {
 
 // RegisterHelper registers a global helper. That helper will be available to all templates.
 func RegisterHelper(name string, helper interface{}) {
+	helpersMutex.Lock()
+	defer helpersMutex.Unlock()
+
 	if helpers[name] != zero {
 		panic(fmt.Errorf("Helper already registered: %s", name))
 	}
@@ -65,6 +72,9 @@ func ensureValidHelper(name string, funcValue reflect.Value) {
 
 // findHelper finds a globally registered helper
 func findHelper(name string) reflect.Value {
+	helpersMutex.RLock()
+	defer helpersMutex.RUnlock()
+
 	return helpers[name]
 }
 

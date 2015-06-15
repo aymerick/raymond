@@ -1,6 +1,9 @@
 package raymond
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // partial represents a partial template
 type partial struct {
@@ -9,8 +12,11 @@ type partial struct {
 	tpl    *Template
 }
 
-// partials storres all global partials
+// partials stores all global partials
 var partials map[string]*partial
+
+// protects global partials
+var partialsMutex sync.RWMutex
 
 func init() {
 	partials = make(map[string]*partial)
@@ -27,6 +33,9 @@ func newPartial(name string, source string, tpl *Template) *partial {
 
 // RegisterPartial registers a global partial. That partial will be available to all templates.
 func RegisterPartial(name string, source string) {
+	partialsMutex.Lock()
+	defer partialsMutex.Unlock()
+
 	if partials[name] != nil {
 		panic(fmt.Errorf("Partial already registered: %s", name))
 	}
@@ -43,6 +52,9 @@ func RegisterPartials(partials map[string]string) {
 
 // RegisterPartial registers a global partial with given parsed template. That partial will be available to all templates.
 func RegisterPartialTemplate(name string, tpl *Template) {
+	partialsMutex.Lock()
+	defer partialsMutex.Unlock()
+
 	if partials[name] != nil {
 		panic(fmt.Errorf("Partial already registered: %s", name))
 	}
@@ -52,6 +64,9 @@ func RegisterPartialTemplate(name string, tpl *Template) {
 
 // findPartial finds a registered global partial
 func findPartial(name string) *partial {
+	partialsMutex.RLock()
+	defer partialsMutex.RUnlock()
+
 	return partials[name]
 }
 
