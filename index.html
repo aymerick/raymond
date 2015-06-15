@@ -1060,6 +1060,20 @@ fmt.<span class="pl-c1">Print</span>(result)</pre></div>
 <div class="highlight highlight-html"><pre>My hero is Goldorak</pre></div>
 
 <h2>
+<a id="utility-functions" class="anchor" href="#utility-functions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Utility Functions</h2>
+
+<p>You can use following utility fuctions to parse and register partials from files:</p>
+
+<ul>
+<li>
+<code>ParseFile()</code> - reads a file and return parsed template</li>
+<li>
+<code>Template.RegisterPartialFile()</code> - reads a file and registers its content as a partial with given name</li>
+<li>
+<code>Template.RegisterPartialFiles()</code> - reads several files and registers them as partials, the filename base is used as the partial name</li>
+</ul>
+
+<h2>
 <a id="mustache" class="anchor" href="#mustache" aria-hidden="true"><span class="octicon octicon-link"></span></a>Mustache</h2>
 
 <p>Handlebars is a superset of <a href="https://mustache.github.io">mustache</a> but it differs on those points:</p>
@@ -1186,6 +1200,11 @@ CONTENT[ ' John Snow' ]
 
 <h2>
 <a id="test" class="anchor" href="#test" aria-hidden="true"><span class="octicon octicon-link"></span></a>Test</h2>
+
+<p>First, fetch mustache tests:</p>
+
+<pre><code>$ git submodule update --init
+</code></pre>
 
 <p>To run all tests:</p>
 
