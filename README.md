@@ -7,6 +7,52 @@ The full API documentation is available here: <http://godoc.org/github.com/aymer
 ![Raymond Logo](https://github.com/aymerick/raymond/blob/master/raymond.png?raw=true "Raymond")
 
 
+# Table of Contents
+
+- [Quick Start](#quick-start)
+- [Correct Usage](#correct-usage)
+- [Context](#context)
+- [HTML Escaping](#html-escaping)
+- [Helpers](#helpers)
+  - [Template Helpers](#template-helpers)
+  - [Built-In Helpers](#built-in-helpers)
+    - [The `if` block helper](#the-if-block-helper)
+    - [The `unless` block helper](#the-unless-block-helper)
+    - [The `each` block helper](#the-each-block-helper)
+    - [The `with` block helper](#the-with-block-helper)
+    - [The `lookup` helper](#the-lookup-helper)
+    - [The `log` helper](#the-log-helper)
+  - [Block Helpers](#block-helpers)
+    - [Block Evaluation](#block-evaluation)
+    - [Conditional](#conditional)
+    - [Else Block Evaluation](#else-block-evaluation)
+    - [Block Parameters](#block-parameters)
+  - [Helper Parameters](#helper-parameters)
+    - [Automatic conversion](#automatic-conversion)
+  - [Options Argument](#options-argument)
+    - [Context Values](#context-values)
+    - [Helper Hash Arguments](#helper-hash-arguments)
+    - [Private Data](#private-data)
+  - [Utilites](#utilites)
+    - [`Str()`](#str)
+    - [`IsTrue()`](#istrue)
+- [Context Functions](#context-functions)
+- [Partials](#partials)
+  - [Template Partials](#template-partials)
+  - [Global Partials](#global-partials)
+  - [Dynamic Partials](#dynamic-partials)
+  - [Partial Contexts](#partial-contexts)
+  - [Partial Parameters](#partial-parameters)
+- [Utility Functions](#utility-functions)
+- [Mustache](#mustache)
+- [Limitations](#limitations)
+- [Handlebars Lexer](#handlebars-lexer)
+- [Handlebars Parser](#handlebars-parser)
+- [Test](#test)
+- [References](#references)
+- [Others Implementations](#others-implementations)
+
+
 ## Quick Start
 
     $ go get github.com/aymerick/raymond
