@@ -163,3 +163,31 @@ func TestHelper(t *testing.T) {
 
 	launchTests(t, helperTests)
 }
+
+//
+// Fixes: https://github.com/aymerick/raymond/issues/2
+//
+
+type Author struct {
+	FirstName string
+	LastName  string
+}
+
+func TestHelperCtx(t *testing.T) {
+	RegisterHelper("template", func(name string, options *Options) SafeString {
+		context := options.Ctx()
+
+		template := name + " - {{ firstName }} {{ lastName }}"
+		result, _ := Render(template, context)
+
+		return SafeString(result)
+	})
+
+	template := `By {{ template "namefile" }}`
+	context := Author{"Alan", "Johnson"}
+
+	result, _ := Render(template, context)
+	if result != "By namefile - Alan Johnson" {
+		t.Errorf("Failed to render template in helper: %q", result)
+	}
+}

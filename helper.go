@@ -116,7 +116,7 @@ func (options *Options) ValueStr(name string) string {
 
 // Ctx returns current evaluation context.
 func (options *Options) Ctx() interface{} {
-	return options.eval.curCtx()
+	return options.eval.curCtx().Interface()
 }
 
 //
