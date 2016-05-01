@@ -477,9 +477,8 @@ var helpersTests = []Test{
 			if ok {
 				if p {
 					return "GOODBYE " + options.HashStr("cruel") + " " + options.HashStr("world")
-				} else {
-					return "NOT PRINTING"
 				}
+				return "NOT PRINTING"
 			}
 
 			return "THIS SHOULD NOT HAPPEN"
@@ -496,9 +495,8 @@ var helpersTests = []Test{
 			if ok {
 				if p {
 					return "GOODBYE " + options.HashStr("cruel") + " " + options.HashStr("world")
-				} else {
-					return "NOT PRINTING"
 				}
+				return "NOT PRINTING"
 			}
 
 			return "THIS SHOULD NOT HAPPEN"
@@ -535,9 +533,8 @@ var helpersTests = []Test{
 			if ok {
 				if p {
 					return "GOODBYE " + options.HashStr("cruel") + " " + options.Fn()
-				} else {
-					return "NOT PRINTING"
 				}
+				return "NOT PRINTING"
 			}
 
 			return "THIS SHOULD NOT HAPPEN"
@@ -554,9 +551,8 @@ var helpersTests = []Test{
 			if ok {
 				if p {
 					return "GOODBYE " + options.HashStr("cruel") + " " + options.Fn()
-				} else {
-					return "NOT PRINTING"
 				}
+				return "NOT PRINTING"
 			}
 
 			return "THIS SHOULD NOT HAPPEN"
@@ -580,9 +576,8 @@ var helpersTests = []Test{
 			if ok {
 				if p {
 					return "GOODBYE " + options.HashStr("cruel") + " " + options.Fn()
-				} else {
-					return "NOT PRINTING"
 				}
+				return "NOT PRINTING"
 			}
 
 			return "THIS SHOULD NOT HAPPEN"

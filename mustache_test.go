@@ -159,7 +159,7 @@ var mustacheLambdasTests = []Test{
 		"Interpolation - Multiple Calls",
 		"{{lambda}} == {{{lambda}}} == {{lambda}}",
 		map[string]interface{}{"lambda": func() string {
-			musTestLambdaInterMult += 1
+			musTestLambdaInterMult++
 			return Str(musTestLambdaInterMult)
 		}},
 		nil, nil, nil,

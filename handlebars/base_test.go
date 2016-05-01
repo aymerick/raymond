@@ -11,9 +11,9 @@ import (
 )
 
 // cf. https://github.com/aymerick/go-fuzz-tests/raymond
-const DUMP_TPL = false
+const dumpTpl = false
 
-var dump_tpl_nb = 0
+var dumpTplNb = 0
 
 type Test struct {
 	name     string
@@ -32,12 +32,12 @@ func launchTests(t *testing.T, tests []Test) {
 		var err error
 		var tpl *raymond.Template
 
-		if DUMP_TPL {
-			filename := strconv.Itoa(dump_tpl_nb)
+		if dumpTpl {
+			filename := strconv.Itoa(dumpTplNb)
 			if err := ioutil.WriteFile(path.Join(".", "dump_tpl", filename), []byte(test.input), 0644); err != nil {
 				panic(err)
 			}
-			dump_tpl_nb += 1
+			dumpTplNb++
 		}
 
 		// parse template

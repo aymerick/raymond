@@ -15,7 +15,7 @@ import (
 //   - https://github.com/wycats/handlebars.js/blob/master/src/handlebars.yy
 //   - https://github.com/golang/go/blob/master/src/text/template/parse/parse.go
 
-// Parser is a syntax analyzer.
+// parser is a syntax analyzer.
 type parser struct {
 	// Lexer
 	lex *lexer.Lexer
@@ -256,15 +256,15 @@ func (p *parser) parseRawBlock() *ast.BlockStatement {
 	}
 
 	// helperName
-	endId := p.parseHelperName()
+	endID := p.parseHelperName()
 
-	closeName, ok := ast.HelperNameStr(endId)
+	closeName, ok := ast.HelperNameStr(endID)
 	if !ok {
-		errNode(endId, "Erroneous closing expression")
+		errNode(endID, "Erroneous closing expression")
 	}
 
 	if openName != closeName {
-		errNode(endId, fmt.Sprintf("%s doesn't match %s", openName, closeName))
+		errNode(endID, fmt.Sprintf("%s doesn't match %s", openName, closeName))
 	}
 
 	// CLOSE_RAW_BLOCK
@@ -366,30 +366,30 @@ func (p *parser) parseInverseChain() *ast.Program {
 	if p.isInverse() {
 		// inverseAndProgram
 		return p.parseInverseAndProgram()
-	} else {
-		result := ast.NewProgram(p.lex.Pos(), p.lex.Line())
-
-		// openInverseChain
-		block, blockParams := p.parseOpenBlock()
-
-		// program
-		program := p.parseProgram()
-
-		program.BlockParams = blockParams
-		block.Program = program
-
-		// inverseChain?
-		if p.isInverseChain() {
-			block.Inverse = p.parseInverseChain()
-		}
-
-		setBlockInverseStrip(block)
-
-		result.Chained = true
-		result.AddStatement(block)
-
-		return result
 	}
+
+	result := ast.NewProgram(p.lex.Pos(), p.lex.Line())
+
+	// openInverseChain
+	block, blockParams := p.parseOpenBlock()
+
+	// program
+	program := p.parseProgram()
+
+	program.BlockParams = blockParams
+	block.Program = program
+
+	// inverseChain?
+	if p.isInverseChain() {
+		block.Inverse = p.parseInverseChain()
+	}
+
+	setBlockInverseStrip(block)
+
+	result.Chained = true
+	result.AddStatement(block)
+
+	return result
 }
 
 // Returns true if current token starts an inverse chain
@@ -440,16 +440,16 @@ func (p *parser) parseCloseBlock(block *ast.BlockStatement) {
 	}
 
 	// helperName
-	endId := p.parseHelperName()
+	endID := p.parseHelperName()
 
-	closeName, ok := ast.HelperNameStr(endId)
+	closeName, ok := ast.HelperNameStr(endID)
 	if !ok {
-		errNode(endId, "Erroneous closing expression")
+		errNode(endID, "Erroneous closing expression")
 	}
 
 	openName := block.Expression.Canonical()
 	if openName != closeName {
-		errNode(endId, fmt.Sprintf("%s doesn't match %s", openName, closeName))
+		errNode(endID, fmt.Sprintf("%s doesn't match %s", openName, closeName))
 	}
 
 	// CLOSE
@@ -522,10 +522,10 @@ func (p *parser) parseHelperNameOrSexpr() ast.Node {
 	if p.isSexpr() {
 		// sexpr
 		return p.parseSexpr()
-	} else {
-		// helperName
-		return p.parseHelperName()
 	}
+
+	// helperName
+	return p.parseHelperName()
 }
 
 // param : helperName | sexpr

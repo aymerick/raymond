@@ -436,7 +436,6 @@ var basicTests = []Test{
 		nil, nil,
 		map[string]interface{}{"helper": func() string {
 			panic("fail")
-			return ""
 		}},
 		nil,
 		"test: ",

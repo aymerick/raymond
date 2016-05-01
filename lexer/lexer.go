@@ -15,12 +15,12 @@ import (
 
 const (
 	// Mustaches detection
-	ESCAPED_ESCAPED_OPEN_MUSTACHE  = "\\\\{{"
-	ESCAPED_OPEN_MUSTACHE          = "\\{{"
-	OPEN_MUSTACHE                  = "{{"
-	CLOSE_MUSTACHE                 = "}}"
-	CLOSE_STRIP_MUSTACHE           = "~}}"
-	CLOSE_UNESCAPED_STRIP_MUSTACHE = "}~}}"
+	escapedEscapedOpenMustache  = "\\\\{{"
+	escapedOpenMustache         = "\\{{"
+	openMustache                = "{{"
+	closeMustache               = "}}"
+	closeStripMustache          = "~}}"
+	closeUnescapedStripMustache = "}~}}"
 )
 
 const eof = -1
@@ -255,9 +255,8 @@ func (l *Lexer) indexRegexp(r *regexp.Regexp) int {
 	loc := r.FindStringIndex(l.input[l.pos:])
 	if loc == nil {
 		return -1
-	} else {
-		return loc[0]
 	}
+	return loc[0]
 }
 
 // lexContent scans content (ie: not between mustaches)
@@ -274,7 +273,7 @@ func lexContent(l *Lexer) lexFunc {
 		} else {
 			return l.errorf("Unclosed raw block")
 		}
-	} else if l.isString(ESCAPED_ESCAPED_OPEN_MUSTACHE) {
+	} else if l.isString(escapedEscapedOpenMustache) {
 		// \\{{
 
 		// emit content with only one escaped escape
@@ -286,7 +285,7 @@ func lexContent(l *Lexer) lexFunc {
 		l.ignore()
 
 		next = lexContent
-	} else if l.isString(ESCAPED_OPEN_MUSTACHE) {
+	} else if l.isString(escapedOpenMustache) {
 		// \{{
 		next = lexEscapedOpenMustache
 	} else if str := l.findRegexp(rOpenCommentDash); str != "" {
@@ -299,7 +298,7 @@ func lexContent(l *Lexer) lexFunc {
 		l.closeComment = rCloseComment
 
 		next = lexComment
-	} else if l.isString(OPEN_MUSTACHE) {
+	} else if l.isString(openMustache) {
 		// {{
 		next = lexOpenMustache
 	}
@@ -408,7 +407,7 @@ func lexCloseMustache(l *Lexer) lexFunc {
 // lexExpression scans inside mustaches
 func lexExpression(l *Lexer) lexFunc {
 	// search close mustache delimiter
-	if l.isString(CLOSE_MUSTACHE) || l.isString(CLOSE_STRIP_MUSTACHE) || l.isString(CLOSE_UNESCAPED_STRIP_MUSTACHE) {
+	if l.isString(closeMustache) || l.isString(closeStripMustache) || l.isString(closeUnescapedStripMustache) {
 		return lexCloseMustache
 	}
 
@@ -515,7 +514,7 @@ func lexIgnorable(l *Lexer) lexFunc {
 func lexString(l *Lexer) lexFunc {
 	// get string delimiter
 	delim := l.next()
-	var prev rune = 0
+	var prev rune
 
 	// ignore delimiter
 	l.ignore()

@@ -11,7 +11,7 @@ import (
 // A SafeString can be returned by helpers to disable escaping.
 type SafeString string
 
-// IsSafeString returns true if argument is a SafeString
+// isSafeString returns true if argument is a SafeString
 func isSafeString(value interface{}) bool {
 	if _, ok := value.(SafeString); ok {
 		return true

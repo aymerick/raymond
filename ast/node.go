@@ -61,28 +61,46 @@ func (t NodeType) Type() NodeType {
 }
 
 const (
-	// program
+	// NodeProgram is the program node
 	NodeProgram NodeType = iota
 
-	// statements
+	// NodeMustache is the mustache statement node
 	NodeMustache
+
+	// NodeBlock is the block statement node
 	NodeBlock
+
+	// NodePartial is the partial statement node
 	NodePartial
+
+	// NodeContent is the content statement node
 	NodeContent
+
+	// NodeComment is the comment statement node
 	NodeComment
 
-	// expressions
+	// NodeExpression is the expression node
 	NodeExpression
+
+	// NodeSubExpression is the subexpression node
 	NodeSubExpression
+
+	// NodePath is the expression path node
 	NodePath
 
-	// literals
+	// NodeBoolean is the literal boolean node
 	NodeBoolean
+
+	// NodeNumber is the literal number node
 	NodeNumber
+
+	// NodeString is the literal string node
 	NodeString
 
-	// miscellaneous
+	// NodeHash is the hash node
 	NodeHash
+
+	// NodeHashPair is the hash pair node
 	NodeHashPair
 )
 
@@ -548,7 +566,7 @@ func (node *PathExpression) Part(part string) {
 
 	switch part {
 	case "..":
-		node.Depth += 1
+		node.Depth++
 		node.Scoped = true
 	case ".", "this":
 		node.Scoped = true
@@ -637,9 +655,9 @@ func (node *BooleanLiteral) Accept(visitor Visitor) interface{} {
 func (node *BooleanLiteral) Canonical() string {
 	if node.Value {
 		return "true"
-	} else {
-		return "false"
 	}
+
+	return "false"
 }
 
 //
@@ -691,9 +709,9 @@ func (node *NumberLiteral) Canonical() string {
 func (node *NumberLiteral) Number() interface{} {
 	if node.IsInt {
 		return int(node.Value)
-	} else {
-		return node.Value
 	}
+
+	return node.Value
 }
 
 //
@@ -708,7 +726,7 @@ type Hash struct {
 	Pairs []*HashPair
 }
 
-// NewNumberLiteral instanciates a new hash node.
+// NewHash instanciates a new hash node.
 func NewHash(pos int, line int) *Hash {
 	return &Hash{
 		NodeType: NodeHash,
@@ -718,7 +736,7 @@ func NewHash(pos int, line int) *Hash {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *Hash) String() string {
-	result := fmt.Sprintf("Hash{[", node.Loc.Pos)
+	result := fmt.Sprintf("Hash{[%d", node.Loc.Pos)
 
 	for i, p := range node.Pairs {
 		if i > 0 {

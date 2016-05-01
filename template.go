@@ -18,7 +18,6 @@ type Template struct {
 	helpers  map[string]reflect.Value
 	partials map[string]*partial
 	mutex    sync.RWMutex // protects helpers and partials
-
 }
 
 // newTemplate instanciate a new template without parsing it
@@ -185,7 +184,7 @@ func (tpl *Template) RegisterPartialFiles(filePaths ...string) error {
 	return nil
 }
 
-// RegisterPartial registers an already parsed partial for that template.
+// RegisterPartialTemplate registers an already parsed partial for that template.
 func (tpl *Template) RegisterPartialTemplate(name string, template *Template) {
 	tpl.addPartial(name, "", template)
 }

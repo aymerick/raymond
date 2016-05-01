@@ -50,7 +50,7 @@ func RegisterPartials(partials map[string]string) {
 	}
 }
 
-// RegisterPartial registers a global partial with given parsed template. That partial will be available to all templates.
+// RegisterPartialTemplate registers a global partial with given parsed template. That partial will be available to all templates.
 func RegisterPartialTemplate(name string, tpl *Template) {
 	partialsMutex.Lock()
 	defer partialsMutex.Unlock()

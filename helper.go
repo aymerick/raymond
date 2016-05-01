@@ -146,9 +146,9 @@ func (options *Options) Hash() map[string]interface{} {
 func (options *Options) Param(pos int) interface{} {
 	if len(options.params) > pos {
 		return options.params[pos]
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 // ParamStr returns string representation of parameter at given position.
