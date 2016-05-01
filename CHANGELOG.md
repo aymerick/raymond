@@ -2,7 +2,7 @@
 
 ### Raymond 2.0.0 _(May 01, 2016)_
 
-- [BUGFIX] Fixes passing of context in helper options (issue #2) - Thanks @GhostRussia
+- [BUGFIX] Fixes passing of context in helper options [#2](https://github.com/aymerick/raymond/issues/2) - Thanks [@GhostRussia](https://github.com/GhostRussia)
 - [BREAKING] Renames and unexports constants:
 
   - `handlebars.DUMP_TPL`
