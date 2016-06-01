@@ -104,7 +104,7 @@ func errExpected(expect lexer.TokenKind, tok *lexer.Token) {
 
 // program : statement*
 func (p *parser) parseProgram() *ast.Program {
-	result := ast.NewProgram(p.lex.Pos(), p.lex.Line())
+	result := ast.NewProgram(p.next().Pos, p.next().Line)
 
 	for p.isStatement() {
 		result.AddStatement(p.parseStatement())
@@ -368,7 +368,7 @@ func (p *parser) parseInverseChain() *ast.Program {
 		return p.parseInverseAndProgram()
 	}
 
-	result := ast.NewProgram(p.lex.Pos(), p.lex.Line())
+	result := ast.NewProgram(p.next().Pos, p.next().Line)
 
 	// openInverseChain
 	block, blockParams := p.parseOpenBlock()

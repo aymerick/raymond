@@ -131,16 +131,6 @@ func (l *Lexer) NextToken() Token {
 	return result
 }
 
-// Pos returns the current byte position.
-func (l *Lexer) Pos() int {
-	return l.pos
-}
-
-// Line returns the current line number.
-func (l *Lexer) Line() int {
-	return l.line
-}
-
 // run starts lexical analysis
 func (l *Lexer) run() {
 	for l.nextFunc = lexContent; l.nextFunc != nil; {

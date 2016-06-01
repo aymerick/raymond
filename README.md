@@ -1359,6 +1359,10 @@ To run all test and all benchmarks:
 
     $ go test -bench . ./...
 
+To test with race detection:
+
+    $ go test -race ./...
+
 
 ## References
 
