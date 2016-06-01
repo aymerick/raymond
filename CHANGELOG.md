@@ -1,5 +1,9 @@
 # Raymond Changelog
 
+### Raymond 2.0.1 _(June 01, 2016)_
+
+- [BUGFIX] Removes data races [#3](https://github.com/aymerick/raymond/issues/3) - Thanks [@markbates](https://github.com/markbates)
+
 ### Raymond 2.0.0 _(May 01, 2016)_
 
 - [BUGFIX] Fixes passing of context in helper options [#2](https://github.com/aymerick/raymond/issues/2) - Thanks [@GhostRussia](https://github.com/GhostRussia)
