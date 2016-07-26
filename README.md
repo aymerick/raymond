@@ -215,12 +215,6 @@ func main() {
   {{/each}}
 </div>`
 
-    type Post struct {
-        Author   Person
-        Body     string
-        Comments []Comment
-    }
-
     type Person struct {
         FirstName string
         LastName  string
@@ -229,6 +223,12 @@ func main() {
     type Comment struct {
         Author Person
         Body   string
+    }
+
+    type Post struct {
+        Author   Person
+        Body     string
+        Comments []Comment
     }
 
     ctx := Post{
