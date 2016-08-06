@@ -324,7 +324,11 @@ func (v *evalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 			if tField, ok := ctx.Type().FieldByName(expFieldName); ok && (tField.PkgPath == "") {
 				// struct field
 				result = ctx.FieldByIndex(tField.Index)
+				break
 			}
+
+			// attempts to find template variable name as a struct tag
+			result = v.evalFieldStructTag(ctx, fieldName)
 		case reflect.Map:
 			nameVal := reflect.ValueOf(fieldName)
 			if nameVal.Type().AssignableTo(ctx.Type().Key()) {
@@ -385,6 +389,23 @@ func (v *evalVisitor) evalFieldFunc(name string, funcVal reflect.Value, exprRoot
 	}
 
 	return v.callFunc(name, funcVal, options)
+}
+
+// evalFieldStructTag checks for the existence of a struct tag containing the
+// name of the variable in the template. This allows for a template variable to
+// be separated from the field in the struct.
+func (v *evalVisitor) evalFieldStructTag(ctx reflect.Value, n string) reflect.Value {
+	d := reflect.ValueOf(ctx.Interface())
+
+	for i := 0; i < d.NumField(); i++ {
+		ft := d.Type().Field(i)
+		t := ft.Tag.Get("handlebars")
+		if t == n {
+			return d.Field(i)
+		}
+	}
+
+	return reflect.Value{}
 }
 
 // findBlockParam returns node's block parameter
