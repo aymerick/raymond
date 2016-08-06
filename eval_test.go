@@ -168,6 +168,63 @@ func TestEvalStruct(t *testing.T) {
 	}
 }
 
+func TestEvalStructTag(t *testing.T) {
+	t.Parallel()
+
+	source := `<div class="person">
+	<h1>{{real-name}}</h1>
+	<ul>
+	  <li>City: {{info.location}}</li>
+	  <li>Rug: {{info.[r.u.g]}}</li>
+	  <li>Activity: {{info.activity}}</li>
+	</ul>
+	{{#each other-names}}
+	<p>{{alias-name}}</p>
+	{{/each}}
+</div>`
+
+	expected := `<div class="person">
+	<h1>Lebowski</h1>
+	<ul>
+	  <li>City: Venice</li>
+	  <li>Rug: Tied The Room Together</li>
+	  <li>Activity: Bowling</li>
+	</ul>
+	<p>his dudeness</p>
+	<p>el duderino</p>
+</div>`
+
+	type Alias struct {
+		Name string `handlebars:"alias-name"`
+	}
+
+	type CharacterInfo struct {
+		City     string `handlebars:"location"`
+		Rug      string `handlebars:"r.u.g"`
+		Activity string `handlebars:"not-activity"`
+	}
+
+	type Character struct {
+		RealName string `handlebars:"real-name"`
+		Info     CharacterInfo
+		Aliases  []Alias `handlebars:"other-names"`
+	}
+
+	ctx := Character{
+		"Lebowski",
+		CharacterInfo{"Venice", "Tied The Room Together", "Bowling"},
+		[]Alias{
+			{"his dudeness"},
+			{"el duderino"},
+		},
+	}
+
+	output := MustRender(source, ctx)
+	if output != expected {
+		t.Errorf("Failed to evaluate with struct tag context")
+	}
+}
+
 type TestFoo struct {
 }
 
