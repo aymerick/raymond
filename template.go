@@ -125,6 +125,11 @@ func (tpl *Template) RegisterHelpers(helpers map[string]interface{}) {
 	}
 }
 
+// RemoveHelper removes a previously defined helper from from the system.
+func (tpl *Template) RemoveHelper(name string) {
+	delete(tpl.helpers, name)
+}
+
 func (tpl *Template) addPartial(name string, source string, template *Template) {
 	tpl.mutex.Lock()
 	defer tpl.mutex.Unlock()

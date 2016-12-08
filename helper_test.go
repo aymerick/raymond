@@ -191,3 +191,15 @@ func TestHelperCtx(t *testing.T) {
 		t.Errorf("Failed to render template in helper: %q", result)
 	}
 }
+
+func TestRemoveHelper(t *testing.T) {
+	RegisterHelper("foo", func() string { return "" })
+	if _, ok := helpers["foo"]; !ok {
+		t.Error("Expected helper to be registered")
+	}
+
+	RemoveHelper("foo")
+	if _, ok := helpers["foo"]; ok {
+		t.Error("Expected helper to not be registered")
+	}
+}
