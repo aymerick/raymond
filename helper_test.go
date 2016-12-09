@@ -152,6 +152,74 @@ var helperTests = []Test{
 		nil, nil, nil,
 		`YES MAN`,
 	},
+	{
+		"#equal helper with same string var",
+		`{{#equal foo "bar"}}YES MAN{{/equal}}`,
+		map[string]interface{}{"foo": "bar"},
+		nil, nil, nil,
+		`YES MAN`,
+	},
+	{
+		"#equal helper with different string var",
+		`{{#equal foo "baz"}}YES MAN{{/equal}}`,
+		map[string]interface{}{"foo": "bar"},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"#equal helper with same string vars",
+		`{{#equal foo bar}}YES MAN{{/equal}}`,
+		map[string]interface{}{"foo": "baz", "bar": "baz"},
+		nil, nil, nil,
+		`YES MAN`,
+	},
+	{
+		"#equal helper with different string vars",
+		`{{#equal foo bar}}YES MAN{{/equal}}`,
+		map[string]interface{}{"foo": "baz", "bar": "tag"},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"#equal helper with same integer var",
+		`{{#equal foo 1}}YES MAN{{/equal}}`,
+		map[string]interface{}{"foo": 1},
+		nil, nil, nil,
+		`YES MAN`,
+	},
+	{
+		"#equal helper with different integer var",
+		`{{#equal foo 0}}YES MAN{{/equal}}`,
+		map[string]interface{}{"foo": 1},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"#equal helper inside HTML tag",
+		`<option value="test" {{#equal value "test"}}selected{{/equal}}>Test</option>`,
+		map[string]interface{}{"value": "test"},
+		nil, nil, nil,
+		`<option value="test" selected>Test</option>`,
+	},
+	{
+		"#equal full example",
+		`{{#equal foo "bar"}}foo is bar{{/equal}}
+{{#equal foo baz}}foo is the same as baz{{/equal}}
+{{#equal nb 0}}nothing{{/equal}}
+{{#equal nb 1}}there is one{{/equal}}
+{{#equal nb "1"}}everything is stringified before comparison{{/equal}}`,
+		map[string]interface{}{
+			"foo": "bar",
+			"baz": "bar",
+			"nb":  1,
+		},
+		nil, nil, nil,
+		`foo is bar
+foo is the same as baz
+
+there is one
+everything is stringified before comparison`,
+	},
 }
 
 //

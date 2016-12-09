@@ -22,6 +22,7 @@ The full API documentation is available here: <http://godoc.org/github.com/aymer
     - [The `with` block helper](#the-with-block-helper)
     - [The `lookup` helper](#the-lookup-helper)
     - [The `log` helper](#the-log-helper)
+    - [The `equal` helper](#the-equal-helper)
   - [Block Helpers](#block-helpers)
     - [Block Evaluation](#block-evaluation)
     - [Conditional](#conditional)
@@ -640,6 +641,41 @@ The `log` helper allows for logging while rendering a template.
 ```
 
 Note that the handlebars.js `@level` variable is not supported.
+
+
+#### The `equal` helper
+
+The `equal` helper renders a block if the string version of both arguments are equals.
+
+For example that template:
+
+```html
+{{#equal foo "bar"}}foo is bar{{/equal}}
+{{#equal foo baz}}foo is the same as baz{{/equal}}
+{{#equal nb 0}}nothing{{/equal}}
+{{#equal nb 1}}there is one{{/equal}}
+{{#equal nb "1"}}everything is stringified before comparison{{/equal}}
+```
+
+With that context:
+
+```go
+ctx := map[string]interface{}{
+    "foo": "bar",
+    "baz": "bar",
+    "nb":  1,
+}
+```
+
+Outputs:
+
+```html
+foo is bar
+foo is the same as baz
+
+there is one
+everything is stringified before comparison
+```
 
 
 ### Block Helpers
