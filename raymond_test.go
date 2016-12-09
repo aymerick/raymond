@@ -32,7 +32,7 @@ func Example_struct() {
 
   {{#each comments}}
   <h2>By {{fullName author}}</h2>
-  <div class="body">{{body}}</div>
+  <div class="body">{{content}}</div>
   {{/each}}
 </div>`
 
@@ -43,7 +43,7 @@ func Example_struct() {
 
 	type Comment struct {
 		Author Person
-		Body   string
+		Body   string `handlebars:"content"`
 	}
 
 	type Post struct {

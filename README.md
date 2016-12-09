@@ -189,9 +189,9 @@ result := tpl.MustExec(ctx)
 
 The rendering context can contain any type of values, including `array`, `slice`, `map`, `struct` and `func`.
 
-When using structs, be warned that only exported fields are accessible. However you can access exported fields in template with their lowercase names.
+When using structs, be warned that only exported fields are accessible. However you can access exported fields in template with their lowercase names. For example, both `{{author.firstName}}` and `{{Author.FirstName}}` references give the same result, as long as `Author` and `FirstName` are exported struct fields.
 
-For example, both `{{author.firstName}}` and `{{Author.FirstName}}` references give the same result, as long as `Author` and `FirstName` are exported struct fields.
+More, you can use the `handlebars` struct tag to specify a template variable name different from the struct field name.
 
 ```go
 package main
@@ -211,7 +211,7 @@ func main() {
 
   {{#each comments}}
   <h2>By {{author.firstName}} {{author.lastName}}</h2>
-  <div class="body">{{body}}</div>
+  <div class="body">{{content}}</div>
   {{/each}}
 </div>`
 
@@ -222,7 +222,7 @@ func main() {
 
     type Comment struct {
         Author Person
-        Body   string
+        Body   string `handlebars:"content"`
     }
 
     type Post struct {
@@ -261,7 +261,6 @@ Output:
   <div class="body">LOL!</div>
 </div>
 ```
-
 
 ## HTML Escaping
 
