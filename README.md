@@ -84,7 +84,7 @@ func main() {
 
     result, err := raymond.Render(tpl, ctx)
     if err != nil {
-        panic("Please fill a bug :)")
+        panic("Please report a bug :)")
     }
 
     fmt.Print(result)
