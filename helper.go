@@ -189,7 +189,11 @@ func (options *Options) NewDataFrame() *DataFrame {
 
 // newIterDataFrame instanciates a new data frame and set iteration specific vars
 func (options *Options) newIterDataFrame(length int, i int, key interface{}) *DataFrame {
-	return options.eval.dataFrame.newIterDataFrame(length, i, key)
+	df := options.eval.dataFrame.newIterDataFrame(length, i, key)
+	// set the current parent context on to the dataframe. if not, it gets lost and
+	// you can't get access to it from with an #each block.
+	df.Set("parent", options.Ctx())
+	return df
 }
 
 //
