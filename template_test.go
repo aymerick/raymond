@@ -1,8 +1,10 @@
-package raymond
+package ray
 
 import (
 	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 var sourceBasic = `<div class="entry">
@@ -35,19 +37,18 @@ func TestNewTemplate(t *testing.T) {
 
 func TestParse(t *testing.T) {
 	t.Parallel()
+	r := require.New(t)
 
 	tpl, err := Parse(sourceBasic)
-	if err != nil || (tpl.source != sourceBasic) {
-		t.Errorf("Failed to parse template")
-	}
-
-	if str := tpl.PrintAST(); str != basicAST {
-		t.Errorf("Template parsing incorrect: %s", str)
-	}
+	r.NoError(err)
+	r.Equal(sourceBasic, tpl.source)
+	str := tpl.PrintAST()
+	r.Equal(basicAST, str)
 }
 
 func TestClone(t *testing.T) {
 	t.Parallel()
+	r := require.New(t)
 
 	sourcePartial := `I am a {{wat}} partial`
 	sourcePartial2 := `Partial for the {{wat}}`
@@ -55,25 +56,22 @@ func TestClone(t *testing.T) {
 	tpl := MustParse(sourceBasic)
 	tpl.RegisterPartial("p", sourcePartial)
 
-	if (len(tpl.partials) != 1) || (tpl.partials["p"] == nil) {
-		t.Errorf("What?")
-	}
+	r.Len(tpl.partials, 1)
+	r.NotNil(tpl.partials["p"])
 
 	cloned := tpl.Clone()
 
-	if (len(cloned.partials) != 1) || (cloned.partials["p"] == nil) {
-		t.Errorf("Template partials must be cloned")
-	}
+	r.Len(cloned.partials, 1)
+	r.NotNil(cloned.partials["p"])
 
 	cloned.RegisterPartial("p2", sourcePartial2)
 
-	if (len(cloned.partials) != 2) || (cloned.partials["p"] == nil) || (cloned.partials["p2"] == nil) {
-		t.Errorf("Failed to register a partial on cloned template")
-	}
+	r.Len(cloned.partials, 2)
+	r.NotNil(cloned.partials["p"])
+	r.NotNil(cloned.partials["p2"])
 
-	if (len(tpl.partials) != 1) || (tpl.partials["p"] == nil) {
-		t.Errorf("Modification of a cloned template MUST NOT affect original template")
-	}
+	r.Len(tpl.partials, 1)
+	r.NotNil(tpl.partials["p"])
 }
 
 func ExampleTemplate_Exec() {

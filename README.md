@@ -1,10 +1,10 @@
-# raymond [![Build Status](https://secure.travis-ci.org/aymerick/raymond.svg?branch=master)](http://travis-ci.org/aymerick/raymond) [![GoDoc](https://godoc.org/github.com/aymerick/raymond?status.svg)](http://godoc.org/github.com/aymerick/raymond)
+# ray [![Build Status](https://secure.travis-ci.org/gobuffalo/ray.svg?branch=master)](http://travis-ci.org/gobuffalo/ray) [![GoDoc](https://godoc.org/github.com/gobuffalo/ray?status.svg)](http://godoc.org/github.com/gobuffalo/ray)
 
 Handlebars for [golang](https://golang.org) with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
-The full API documentation is available here: <http://godoc.org/github.com/aymerick/raymond>.
+The full API documentation is available here: <http://godoc.org/github.com/gobuffalo/ray>.
 
-![Raymond Logo](https://github.com/aymerick/raymond/blob/master/raymond.png?raw=true "Raymond")
+![ray Logo](https://github.com/gobuffalo/ray/blob/master/ray.png?raw=true "ray")
 
 
 # Table of Contents
@@ -56,7 +56,7 @@ The full API documentation is available here: <http://godoc.org/github.com/aymer
 
 ## Quick Start
 
-    $ go get github.com/aymerick/raymond
+    $ go get github.com/gobuffalo/ray
 
 The quick and dirty way of rendering a handlebars template:
 
@@ -66,7 +66,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/gobuffalo/ray"
 )
 
 func main() {
@@ -83,7 +83,7 @@ func main() {
         "body":  "This is my first post!",
     }
 
-    result, err := raymond.Render(tpl, ctx)
+    result, err := ray.Render(tpl, ctx)
     if err != nil {
         panic("Please report a bug :)")
     }
@@ -116,7 +116,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/gobuffalo/ray"
 )
 
 func main() {
@@ -140,7 +140,7 @@ func main() {
     }
 
     // parse template
-    tpl, err := raymond.Parse(source)
+    tpl, err := ray.Parse(source)
     if err != nil {
         panic(err)
     }
@@ -179,7 +179,7 @@ You can use `MustParse()` and `MustExec()` functions if you don't want to deal w
 
 ```go
 // parse template
-tpl := raymond.MustParse(source)
+tpl := ray.MustParse(source)
 
 // render template
 result := tpl.MustExec(ctx)
@@ -200,7 +200,7 @@ package main
 import (
   "fmt"
 
-  "github.com/aymerick/raymond"
+  "github.com/gobuffalo/ray"
 )
 
 func main() {
@@ -243,7 +243,7 @@ func main() {
         },
     }
 
-    output := raymond.MustRender(source, ctx)
+    output := ray.MustRender(source, ctx)
 
     fmt.Print(output)
 }
@@ -281,7 +281,7 @@ ctx := map[string]string{
     "body":  "<p>This is a post about &lt;p&gt; tags</p>",
 }
 
-tpl := raymond.MustParse(source)
+tpl := ray.MustParse(source)
 result := tpl.MustExec(ctx)
 
 fmt.Print(result)
@@ -301,11 +301,11 @@ Output:
 When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
 
 ```go
-raymond.RegisterHelper("link", func(url, text string) raymond.SafeString {
-    return raymond.SafeString("<a href='" + raymond.Escape(url) + "'>" + raymond.Escape(text) + "</a>")
+ray.RegisterHelper("link", func(url, text string) ray.SafeString {
+    return ray.SafeString("<a href='" + ray.Escape(url) + "'>" + ray.Escape(text) + "</a>")
 })
 
-tpl := raymond.MustParse("{{link url text}}")
+tpl := ray.MustParse("{{link url text}}")
 
 ctx := map[string]string{
     "url":  "http://www.aymerick.com/",
@@ -355,7 +355,7 @@ ctx := map[string]interface{}{
     }},
 }
 
-raymond.RegisterHelper("fullName", func(person map[string]string) string {
+ray.RegisterHelper("fullName", func(person map[string]string) string {
     return person["firstName"] + " " + person["lastName"]
 })
 ```
@@ -433,7 +433,7 @@ RegisterHelper("fullName", func(person Person) string {
 You can register a helper on a specific template, and in that case that helper will be available to that template only:
 
 ```go
-tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
+tpl := ray.MustParse("User: {{fullName user.firstName user.lastName}}")
 
 tpl.RegisterHelper("fullName", func(firstName, lastName string) string {
   return firstName + " " + lastName
@@ -448,7 +448,7 @@ Those built-in helpers are available to all templates.
 
 #### The `if` block helper
 
-You can use the `if` helper to conditionally render a block. If its argument returns `false`, `nil`, `0`, `""`, an empty array, an empty slice or an empty map, then raymond will not render the block.
+You can use the `if` helper to conditionally render a block. If its argument returns `false`, `nil`, `0`, `""`, an empty array, an empty slice or an empty map, then ray will not render the block.
 
 ```html
 <div class="entry">
@@ -699,8 +699,8 @@ As an example, let's define a block helper that adds some markup to the wrapped 
 The `bold` helper will add markup to make its text bold.
 
 ```go
-raymond.RegisterHelper("bold", func(options *raymond.Options) raymond.SafeString {
-    return raymond.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
+ray.RegisterHelper("bold", func(options *ray.Options) ray.SafeString {
+    return ray.SafeString(`<div class="mybold">` + options.Fn() + "</div>")
 })
 ```
 
@@ -709,7 +709,7 @@ A helper evaluates the block content with current context by calling `options.Fn
 If you want to evaluate the block with another context, then use `options.FnWith(ctx)`, like this french version of built-in `with` block helper:
 
 ```go
-raymond.RegisterHelper("avec", func(context interface{}, options *raymond.Options) string {
+ray.RegisterHelper("avec", func(context interface{}, options *ray.Options) string {
     return options.FnWith(context)
 })
 ```
@@ -730,7 +730,7 @@ source := `{{#si yep}}YEP !{{/si}}`
 
 ctx := map[string]interface{}{"yep": true}
 
-raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
+ray.RegisterHelper("si", func(conditional bool, options *ray.Options) string {
     if conditional {
         return options.Fn()
     }
@@ -756,7 +756,7 @@ source := `{{#si yep}}YEP !{{else}}NOP !{{/si}}`
 
 ctx := map[string]interface{}{"yep": false}
 
-raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) string {
+ray.RegisterHelper("si", func(conditional bool, options *ray.Options) string {
     if conditional {
         return options.Fn()
     }
@@ -861,7 +861,7 @@ Outputs:
 
 ### Helper Parameters
 
-When calling a helper in a template, raymond expects the same number of arguments as the number of helper function parameters.
+When calling a helper in a template, ray expects the same number of arguments as the number of helper function parameters.
 
 So this template:
 
@@ -872,7 +872,7 @@ So this template:
 With this helper:
 
 ```go
-raymond.RegisterHelper("add", func(val1, val2 int) string {
+ray.RegisterHelper("add", func(val1, val2 int) string {
     return strconv.Itoa(val1 + val2)
 })
 ```
@@ -892,7 +892,7 @@ ctx := map[string]interface{}{
     "b": "Valjean",
 }
 
-raymond.RegisterHelper("concat", func(val1, val2 string) string {
+ray.RegisterHelper("concat", func(val1, val2 string) string {
     return val1 + " " + val2
 })
 ```
@@ -912,7 +912,7 @@ ctx := map[string]interface{}{
 }
 ```
 
-Actually, raymond perfoms automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper outputs:
+Actually, ray perfoms automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper outputs:
 
 ```html
 10 VALJEAN
@@ -926,7 +926,7 @@ Note that this kind of automatic conversion is done with `bool` type too, thanks
 If a helper needs the `Options` argument, just add it at the end of helper parameters:
 
 ```go
-raymond.RegisterHelper("add", func(val1, val2 int, options *raymond.Options) string {
+ray.RegisterHelper("add", func(val1, val2 int, options *ray.Options) string {
     return strconv.Itoa(val1 + val2) + " " + options.ValueStr("bananas")
 })
 ```
@@ -953,7 +953,7 @@ ctx := map[string]interface{}{
     "suffix": "FOREVER !",
 }
 
-raymond.RegisterHelper("concat", func(val1, val2 string, options *raymond.Options) string {
+ray.RegisterHelper("concat", func(val1, val2 string, options *ray.Options) string {
     return val1 + " " + val2 + " " + options.ValueStr("suffix")
 })
 ```
@@ -984,7 +984,7 @@ ctx := map[string]interface{}{
     "suffix": "FOREVER !",
 }
 
-raymond.RegisterHelper("concat", func(suffix string, options *raymond.Options) string {
+ray.RegisterHelper("concat", func(suffix string, options *ray.Options) string {
     return options.HashStr("first") + " " + options.HashStr("second") + " " + suffix
 })
 ```
@@ -1017,7 +1017,7 @@ ctx := map[string]interface{}{
     "a": "awesome",
 }
 
-raymond.RegisterHelper("voodoo", func(options *raymond.Options) string {
+ray.RegisterHelper("voodoo", func(options *ray.Options) string {
     // create data frame with @magix data
     frame := options.NewDataFrame()
     frame.Set("magix", options.HashProp("kind"))
@@ -1032,7 +1032,7 @@ Helpers that need to evaluate the block with a private data frame and a new cont
 
 ### Utilites
 
-In addition to `Escape()`, raymond provides utility functions that can be usefull for helpers.
+In addition to `Escape()`, ray provides utility functions that can be usefull for helpers.
 
 
 #### `Str()`
@@ -1042,28 +1042,28 @@ In addition to `Escape()`, raymond provides utility functions that can be useful
 Booleans:
 
 ```go
-raymond.Str(3) + " foos and " + raymond.Str(-1.25) + " bars"
+ray.Str(3) + " foos and " + ray.Str(-1.25) + " bars"
 // Outputs: "3 foos and -1.25 bars"
 ```
 
 Numbers:
 
 ``` go
-"everything is " + raymond.Str(true) + " and nothing is " + raymond.Str(false)
+"everything is " + ray.Str(true) + " and nothing is " + ray.Str(false)
 // Outputs: "everything is true and nothing is false"
 ```
 
 Maps:
 
 ```go
-raymond.Str(map[string]string{"foo": "bar"})
+ray.Str(map[string]string{"foo": "bar"})
 // Outputs: "map[foo:bar]"
 ```
 
 Arrays and Slices:
 
 ```go
-raymond.Str([]interface{}{true, 10, "foo", 5, "bar"})
+ray.Str([]interface{}{true, 10, "foo", 5, "bar"})
 // Outputs: "true10foo5bar"
 ```
 
@@ -1116,7 +1116,7 @@ Those context functions behave like helper functions: they can be called with pa
 You can register template partials before execution:
 
 ```go
-tpl := raymond.MustParse("{{> foo}} baz")
+tpl := ray.MustParse("{{> foo}} baz")
 tpl.RegisterPartial("foo", "<span>bar</span>")
 
 result := tpl.MustExec(nil)
@@ -1132,7 +1132,7 @@ Output:
 You can register several partials at once:
 
 ```go
-tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
+tpl := ray.MustParse("{{> foo}} and {{> baz}}")
 tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
@@ -1154,9 +1154,9 @@ Output:
 You can registers global partials that will be accessible by all templates:
 
 ```go
-raymond.RegisterPartial("foo", "<span>bar</span>")
+ray.RegisterPartial("foo", "<span>bar</span>")
 
-tpl := raymond.MustParse("{{> foo}} baz")
+tpl := ray.MustParse("{{> foo}} baz")
 result := tpl.MustExec(nil)
 fmt.Print(result)
 ```
@@ -1164,12 +1164,12 @@ fmt.Print(result)
 Or:
 
 ```go
-raymond.RegisterPartials(map[string]string{
+ray.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
 })
 
-tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
+tpl := ray.MustParse("{{> foo}} and {{> baz}}")
 result := tpl.MustExec(nil)
 fmt.Print(result)
 ```
@@ -1182,7 +1182,7 @@ It's possible to dynamically select the partial to be executed by using sub expr
 For example, that template randomly evaluates the `foo` or `baz` partial:
 
 ```go
-tpl := raymond.MustParse("{{> (whichPartial) }}")
+tpl := ray.MustParse("{{> (whichPartial) }}")
 tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
@@ -1209,7 +1209,7 @@ It's possible to execute partials on a custom context by passing in the context 
 For example:
 
 ```go
-tpl := raymond.MustParse("User: {{> userDetails user }}")
+tpl := ray.MustParse("User: {{> userDetails user }}")
 tpl.RegisterPartial("userDetails", "{{firstname}} {{lastname}}")
 
 ctx := map[string]interface{}{
@@ -1237,7 +1237,7 @@ Custom data can be passed to partials through hash parameters.
 For example:
 
 ```go
-tpl := raymond.MustParse("{{> myPartial name=hero }}")
+tpl := ray.MustParse("{{> myPartial name=hero }}")
 tpl.RegisterPartial("myPartial", "My hero is {{name}}")
 
 ctx := map[string]interface{}{
@@ -1305,7 +1305,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/lexer"
+    "github.com/gobuffalo/ray/lexer"
 )
 
 func main() {
@@ -1347,8 +1347,8 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/ast"
-    "github.com/aymerick/raymond/parser"
+    "github.com/gobuffalo/ray/ast"
+    "github.com/gobuffalo/ray/parser"
 )
 
 fu  nc main() {

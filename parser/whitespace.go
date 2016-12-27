@@ -3,7 +3,7 @@ package parser
 import (
 	"regexp"
 
-	"github.com/aymerick/raymond/ast"
+	"github.com/gobuffalo/ray/ast"
 )
 
 // whitespaceVisitor walks through the AST to perform whitespace control

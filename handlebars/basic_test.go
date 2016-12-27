@@ -5,7 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aymerick/raymond"
+	"github.com/gobuffalo/ray"
+	"github.com/stretchr/testify/require"
 )
 
 //
@@ -265,7 +266,7 @@ var basicTests = []Test{
 	{
 		"functions returning safestrings shouldn't be escaped",
 		"{{awesome}}",
-		map[string]interface{}{"awesome": func() raymond.SafeString { return raymond.SafeString("&'\\<>") }},
+		map[string]interface{}{"awesome": func() ray.SafeString { return ray.SafeString("&'\\<>") }},
 		nil, nil, nil,
 		"&'\\<>",
 	},
@@ -279,7 +280,7 @@ var basicTests = []Test{
 	{
 		"functions (2)",
 		"{{awesome}}",
-		map[string]interface{}{"awesome": func(options *raymond.Options) string {
+		map[string]interface{}{"awesome": func(options *ray.Options) string {
 			return options.ValueStr("more")
 		}, "more": "More awesome"},
 		nil, nil, nil,
@@ -315,7 +316,7 @@ var basicTests = []Test{
 	{
 		"block functions with context argument",
 		"{{#awesome 1}}inner {{.}}{{/awesome}}",
-		map[string]interface{}{"awesome": func(context interface{}, options *raymond.Options) string {
+		map[string]interface{}{"awesome": func(context interface{}, options *ray.Options) string {
 			return options.FnWith(context)
 		}},
 		nil, nil, nil,
@@ -325,7 +326,7 @@ var basicTests = []Test{
 		"depthed block functions with context argument",
 		"{{#with value}}{{#../awesome 1}}inner {{.}}{{/../awesome}}{{/with}}",
 		map[string]interface{}{
-			"awesome": func(context interface{}, options *raymond.Options) string {
+			"awesome": func(context interface{}, options *ray.Options) string {
 				return options.FnWith(context)
 			},
 			"value": true,
@@ -337,7 +338,7 @@ var basicTests = []Test{
 		"block functions without context argument",
 		"{{#awesome}}inner{{/awesome}}",
 		map[string]interface{}{
-			"awesome": func(options *raymond.Options) string {
+			"awesome": func(options *ray.Options) string {
 				return options.Fn()
 			},
 		},
@@ -351,7 +352,7 @@ var basicTests = []Test{
 	// 	"{{#foo.awesome}}inner{{/foo.awesome}}",
 	// 	map[string]map[string]interface{}{
 	// 		"foo": {
-	// 			"awesome": func(options *raymond.Options) interface{} {
+	// 			"awesome": func(options *ray.Options) interface{} {
 	// 				return options.Ctx()
 	// 			},
 	// 		},
@@ -366,7 +367,7 @@ var basicTests = []Test{
 	// 	"{{#with value}}{{#../awesome}}inner{{/../awesome}}{{/with}}",
 	// 	map[string]interface{}{
 	// 		"value": true,
-	// 		"awesome": func(options *raymond.Options) interface{} {
+	// 		"awesome": func(options *ray.Options) interface{} {
 	// 			return options.Ctx()
 	// 		},
 	// 	},
@@ -620,6 +621,7 @@ func TestBasic(t *testing.T) {
 
 func TestBasicErrors(t *testing.T) {
 	t.Parallel()
+	r := require.New(t)
 
 	var err error
 
@@ -633,18 +635,11 @@ func TestBasicErrors(t *testing.T) {
 	expectedError := regexp.QuoteMeta("Invalid path: text/this")
 
 	for _, input := range inputs {
-		_, err = raymond.Parse(input)
-		if err == nil {
-			t.Errorf("Test failed - Error expected")
-		}
+		_, err = ray.Parse(input)
+		r.Error(err)
 
 		match, errMatch := regexp.MatchString(expectedError, fmt.Sprint(err))
-		if errMatch != nil {
-			panic("Failed to match regexp")
-		}
-
-		if !match {
-			t.Errorf("Test failed - Expected error:\n\t%s\n\nGot:\n\t%s", expectedError, err)
-		}
+		r.NoError(errMatch)
+		r.True(match)
 	}
 }

@@ -1,7 +1,8 @@
-package raymond
+package ray
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 )
 
@@ -40,7 +41,7 @@ func escape(w writer, s string) error {
 		case '"':
 			esc = "&quot;"
 		default:
-			panic("unrecognized escape character")
+			return fmt.Errorf("unrecognized escape character %s", esc)
 		}
 		s = s[i+1:]
 		if _, err := w.WriteString(esc); err != nil {
