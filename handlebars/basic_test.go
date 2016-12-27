@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/gobuffalo/ray"
+	"github.com/stretchr/testify/require"
 )
 
 //
@@ -620,6 +621,7 @@ func TestBasic(t *testing.T) {
 
 func TestBasicErrors(t *testing.T) {
 	t.Parallel()
+	r := require.New(t)
 
 	var err error
 
@@ -634,17 +636,10 @@ func TestBasicErrors(t *testing.T) {
 
 	for _, input := range inputs {
 		_, err = ray.Parse(input)
-		if err == nil {
-			t.Errorf("Test failed - Error expected")
-		}
+		r.Error(err)
 
 		match, errMatch := regexp.MatchString(expectedError, fmt.Sprint(err))
-		if errMatch != nil {
-			panic("Failed to match regexp")
-		}
-
-		if !match {
-			t.Errorf("Test failed - Expected error:\n\t%s\n\nGot:\n\t%s", expectedError, err)
-		}
+		r.NoError(errMatch)
+		r.True(match)
 	}
 }
