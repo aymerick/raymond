@@ -44,32 +44,38 @@ func TestMustache(t *testing.T) {
 		"~lambdas.yml": true,
 	}
 
-	for _, fileName := range mustacheTestFiles() {
+	files, err := mustacheTestFiles()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fileName := range files {
 		if skipFiles[fileName] {
 			// fmt.Printf("Skipped file: %s\n", fileName)
 			continue
 		}
-
-		launchTests(t, testsFromMustacheFile(fileName))
+		tests, err := testsFromMustacheFile(fileName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		launchTests(t, tests)
 	}
 }
 
-func testsFromMustacheFile(fileName string) []Test {
+func testsFromMustacheFile(fileName string) ([]Test, error) {
 	result := []Test{}
 
 	fileData, err := ioutil.ReadFile(path.Join("mustache", "specs", fileName))
 	if err != nil {
-		panic(err)
+		return result, err
 	}
 
 	var testFile mustacheTestFile
 	if err := yaml.Unmarshal(fileData, &testFile); err != nil {
-		panic(err)
+		return result, err
 	}
 
 	for _, mustacheTest := range testFile.Tests {
 		if mustBeSkipped(mustacheTest, fileName) {
-			// fmt.Printf("Skipped test: %s\n", mustacheTest.Name)
 			continue
 		}
 
@@ -84,7 +90,7 @@ func testsFromMustacheFile(fileName string) []Test {
 		result = append(result, test)
 	}
 
-	return result
+	return result, err
 }
 
 // returns true if test must be skipped
@@ -112,12 +118,12 @@ func haveAltDelimiter(test mustacheTest) bool {
 	return false
 }
 
-func mustacheTestFiles() []string {
+func mustacheTestFiles() ([]string, error) {
 	var result []string
 
 	files, err := ioutil.ReadDir(path.Join("mustache", "specs"))
 	if err != nil {
-		panic(err)
+		return result, err
 	}
 
 	for _, file := range files {
@@ -128,7 +134,7 @@ func mustacheTestFiles() []string {
 		}
 	}
 
-	return result
+	return result, err
 }
 
 //
