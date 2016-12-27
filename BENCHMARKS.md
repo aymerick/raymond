@@ -5,7 +5,7 @@ Hardware: MacBookPro11,1 - Intel Core i5 - 2,6 GHz - 8 Go RAM
 With:
 
     - handlebars.js #8cba84df119c317fcebc49fb285518542ca9c2d0
-    - raymond #7bbaaf50ed03c96b56687d7fa6c6e04e02375a98
+    - ray #7bbaaf50ed03c96b56687d7fa6c6e04e02375a98
 
 
 ## handlebars.js (ops/ms)
@@ -27,7 +27,7 @@ With:
         variables         2671 ±83 (4)
 
 
-## raymond
+## ray
 
         BenchmarkArguments          200000     6642 ns/op   151 ops/ms
         BenchmarkArrayEach          100000    19584 ns/op    51 ops/ms

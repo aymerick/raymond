@@ -1,4 +1,4 @@
-package raymond
+package ray
 
 import (
 	"path"
