@@ -702,8 +702,17 @@ func (v *evalVisitor) partialContext(node *ast.PartialStatement) reflect.Value {
 	}
 
 	if node.Hash != nil {
+		// mix the hash parameters and the current context into one map
 		hash, _ := node.Hash.Accept(v).(map[string]interface{})
-		return reflect.ValueOf(hash)
+		curCtx, _ := v.curCtx().Interface().(map[string]interface{})
+		newCtx := make(map[string]interface{})
+		for k, v := range curCtx {
+			newCtx[k] = v
+		}
+		for k, v := range hash {
+			newCtx[k] = v
+		}
+		return reflect.ValueOf(newCtx)
 	}
 
 	return zero
