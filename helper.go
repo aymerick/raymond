@@ -35,25 +35,34 @@ func init() {
 }
 
 // RegisterHelper registers a global helper. That helper will be available to all templates.
-func RegisterHelper(name string, helper interface{}) {
+func RegisterHelper(name string, helper interface{}) (err error) {
 	helpersMutex.Lock()
 	defer helpersMutex.Unlock()
 
 	if helpers[name] != zero {
-		panic(fmt.Errorf("Helper already registered: %s", name))
+		err = fmt.Errorf("Helper already registered: %s", name)
+		return
 	}
 
 	val := reflect.ValueOf(helper)
 	ensureValidHelper(name, val)
 
 	helpers[name] = val
+
+	return
 }
 
 // RegisterHelpers registers several global helpers. Those helpers will be available to all templates.
-func RegisterHelpers(helpers map[string]interface{}) {
+func RegisterHelpers(helpers map[string]interface{}) (errors []error) {
 	for name, helper := range helpers {
-		RegisterHelper(name, helper)
+		err := RegisterHelper(name, helper)
+
+		if err != nil {
+			errors = append(errors, err)
+		}
+
 	}
+	return
 }
 
 // ensureValidHelper panics if given helper is not valid
