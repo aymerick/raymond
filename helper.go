@@ -49,6 +49,13 @@ func RegisterHelper(name string, helper interface{}) {
 	helpers[name] = val
 }
 
+// UnregisterHelper unregisters a global helper. The unregistered helper will no longer be available to any template.
+func UnregisterHelper(name string) {
+	helpersMutex.Lock()
+	defer helpersMutex.Unlock()
+	delete(helpers, name)
+}
+
 // RegisterHelpers registers several global helpers. Those helpers will be available to all templates.
 func RegisterHelpers(helpers map[string]interface{}) {
 	for name, helper := range helpers {
