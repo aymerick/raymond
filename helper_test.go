@@ -232,6 +232,18 @@ func TestHelper(t *testing.T) {
 	launchTests(t, helperTests)
 }
 
+func TestRemoveHelper(t *testing.T) {
+	RegisterHelper("testremovehelper", func() string { return "" })
+	if _, ok := helpers["testremovehelper"]; !ok {
+		t.Error("Failed to register global helper")
+	}
+
+	RemoveHelper("testremovehelper")
+	if _, ok := helpers["testremovehelper"]; ok {
+		t.Error("Failed to remove global helper")
+	}
+}
+
 //
 // Fixes: https://github.com/aymerick/raymond/issues/2
 //
