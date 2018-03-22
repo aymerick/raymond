@@ -76,6 +76,19 @@ func TestClone(t *testing.T) {
 	}
 }
 
+func TestTemplateRemoveHelper(t *testing.T) {
+	tpl := MustParse("")
+	tpl.RegisterHelper("foo", func() string { return "" })
+	if _, ok := tpl.helpers["foo"]; !ok {
+		t.Error("Expected helper to be registered")
+	}
+
+	tpl.RemoveHelper("foo")
+	if _, ok := tpl.helpers["foo"]; ok {
+		t.Error("Expected helper to not be registered")
+	}
+}
+
 func ExampleTemplate_Exec() {
 	source := "<h1>{{title}}</h1><p>{{body.content}}</p>"
 
