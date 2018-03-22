@@ -27,7 +27,7 @@ CONTENT[ '
 func TestNewTemplate(t *testing.T) {
 	t.Parallel()
 
-	tpl := newTemplate(sourceBasic)
+	tpl := newTemplate(sourceBasic, nil)
 	if tpl.source != sourceBasic {
 		t.Errorf("Failed to instantiate template")
 	}
@@ -36,7 +36,7 @@ func TestNewTemplate(t *testing.T) {
 func TestParse(t *testing.T) {
 	t.Parallel()
 
-	tpl, err := Parse(sourceBasic)
+	tpl, err := Parse(sourceBasic, nil)
 	if err != nil || (tpl.source != sourceBasic) {
 		t.Errorf("Failed to parse template")
 	}
@@ -52,7 +52,7 @@ func TestClone(t *testing.T) {
 	sourcePartial := `I am a {{wat}} partial`
 	sourcePartial2 := `Partial for the {{wat}}`
 
-	tpl := MustParse(sourceBasic)
+	tpl := MustParse(sourceBasic, nil)
 	tpl.RegisterPartial("p", sourcePartial)
 
 	if (len(tpl.partials) != 1) || (tpl.partials["p"] == nil) {
@@ -85,7 +85,7 @@ func ExampleTemplate_Exec() {
 	}
 
 	// parse template
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	// evaluate template with context
 	output, err := tpl.Exec(ctx)
@@ -106,7 +106,7 @@ func ExampleTemplate_MustExec() {
 	}
 
 	// parse template
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	// evaluate template with context
 	output := tpl.MustExec(ctx)
@@ -124,7 +124,7 @@ func ExampleTemplate_ExecWith() {
 	}
 
 	// parse template
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	// computes private data frame
 	frame := NewDataFrame()
@@ -144,7 +144,7 @@ func ExampleTemplate_PrintAST() {
 	source := "<h1>{{title}}</h1><p>{{#body}}{{content}} and {{@baz.bat}}{{/body}}</p>"
 
 	// parse template
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	// print AST
 	output := tpl.PrintAST()

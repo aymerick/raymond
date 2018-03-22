@@ -712,7 +712,7 @@ func (v *evalVisitor) partialContext(node *ast.PartialStatement) reflect.Value {
 // evalPartial evaluates a partial
 func (v *evalVisitor) evalPartial(p *partial, node *ast.PartialStatement) string {
 	// get partial template
-	partialTpl, err := p.template()
+	partialTpl, err := p.template(v.tpl.opts)
 	if err != nil {
 		v.errPanic(err)
 	}
@@ -804,7 +804,7 @@ func (v *evalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	str := Str(expr)
 	if !isSafe && !node.Unescaped {
 		// escape html
-		str = Escape(str)
+		str = v.tpl.escape(str)
 	}
 
 	return str

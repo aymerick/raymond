@@ -16,7 +16,7 @@ func BenchmarkArguments(b *testing.B) {
 		"bar": true,
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 	tpl.RegisterHelper("foo", func(a, b, c, d interface{}) string { return "" })
 
 	b.ResetTimer()
@@ -37,7 +37,7 @@ func BenchmarkArrayEach(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -57,7 +57,7 @@ func BenchmarkArrayMustache(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -92,7 +92,7 @@ func BenchmarkComplex(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -112,7 +112,7 @@ func BenchmarkData(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -133,7 +133,7 @@ func BenchmarkDepth1(b *testing.B) {
 		"foo": "bar",
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -154,7 +154,7 @@ func BenchmarkDepth2(b *testing.B) {
 		"foo": "bar",
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -172,7 +172,7 @@ func BenchmarkObjectMustache(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -190,7 +190,7 @@ func BenchmarkObject(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -216,9 +216,9 @@ func BenchmarkPartialRecursion(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
-	partial := MustParse(`{{name}}{{#each kids}}{{>recursion}}{{/each}}`)
+	partial := MustParse(`{{name}}{{#each kids}}{{>recursion}}{{/each}}`, nil)
 	tpl.RegisterPartialTemplate("recursion", partial)
 
 	b.ResetTimer()
@@ -238,9 +238,9 @@ func BenchmarkPartial(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
-	partial := MustParse(`Hello {{name}}! You have {{count}} new messages.`)
+	partial := MustParse(`Hello {{name}}! You have {{count}} new messages.`, nil)
 	tpl.RegisterPartialTemplate("variables", partial)
 
 	b.ResetTimer()
@@ -263,7 +263,7 @@ func BenchmarkPath(b *testing.B) {
 		},
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -274,7 +274,7 @@ func BenchmarkPath(b *testing.B) {
 func BenchmarkString(b *testing.B) {
 	source := `Hello world`
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -287,7 +287,7 @@ func BenchmarkSubExpression(b *testing.B) {
 
 	ctx := map[string]interface{}{}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 	tpl.RegisterHelpers(map[string]interface{}{
 		"echo":   func(v string) string { return "foo " + v },
 		"header": func() string { return "Colors" },
@@ -307,7 +307,7 @@ func BenchmarkVariables(b *testing.B) {
 		"count": 30,
 	}
 
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {

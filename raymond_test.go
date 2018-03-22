@@ -11,7 +11,7 @@ func Example() {
 	}
 
 	// parse template
-	tpl := MustParse(source)
+	tpl := MustParse(source, nil)
 
 	// evaluate template with context
 	output := tpl.MustExec(ctx)

@@ -11,6 +11,11 @@ import (
 	"github.com/aymerick/raymond/parser"
 )
 
+// TemplateOptions specifies options for rendering a template.
+type TemplateOptions struct {
+	Escaper Escaper
+}
+
 // Template represents a handlebars template.
 type Template struct {
 	source   string
@@ -18,20 +23,32 @@ type Template struct {
 	helpers  map[string]reflect.Value
 	partials map[string]*partial
 	mutex    sync.RWMutex // protects helpers and partials
+	opts     *TemplateOptions
+	escape   escapeFunc
 }
 
 // newTemplate instanciate a new template without parsing it
-func newTemplate(source string) *Template {
+func newTemplate(source string, opts *TemplateOptions) *Template {
+	if opts == nil {
+		opts = &TemplateOptions{}
+	}
+
+	if opts.Escaper == nil {
+		opts.Escaper = defaultEscaper
+	}
+
 	return &Template{
 		source:   source,
 		helpers:  make(map[string]reflect.Value),
 		partials: make(map[string]*partial),
+		opts:     opts,
+		escape:   opts.Escaper.Escape,
 	}
 }
 
 // Parse instanciates a template by parsing given source.
-func Parse(source string) (*Template, error) {
-	tpl := newTemplate(source)
+func Parse(source string, opts *TemplateOptions) (*Template, error) {
+	tpl := newTemplate(source, opts)
 
 	// parse template
 	if err := tpl.parse(); err != nil {
@@ -42,8 +59,8 @@ func Parse(source string) (*Template, error) {
 }
 
 // MustParse instanciates a template by parsing given source. It panics on error.
-func MustParse(source string) *Template {
-	result, err := Parse(source)
+func MustParse(source string, opts *TemplateOptions) *Template {
+	result, err := Parse(source, opts)
 	if err != nil {
 		panic(err)
 	}
@@ -51,13 +68,13 @@ func MustParse(source string) *Template {
 }
 
 // ParseFile reads given file and returns parsed template.
-func ParseFile(filePath string) (*Template, error) {
+func ParseFile(filePath string, opts *TemplateOptions) (*Template, error) {
 	b, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	return Parse(string(b))
+	return Parse(string(b), opts)
 }
 
 // parse parses the template
@@ -78,7 +95,7 @@ func (tpl *Template) parse() error {
 
 // Clone returns a copy of that template.
 func (tpl *Template) Clone() *Template {
-	result := newTemplate(tpl.source)
+	result := newTemplate(tpl.source, tpl.opts)
 
 	result.program = tpl.program
 

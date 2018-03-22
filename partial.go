@@ -71,11 +71,11 @@ func findPartial(name string) *partial {
 }
 
 // template returns parsed partial template
-func (p *partial) template() (*Template, error) {
+func (p *partial) template(opts *TemplateOptions) (*Template, error) {
 	if p.tpl == nil {
 		var err error
 
-		p.tpl, err = Parse(p.source)
+		p.tpl, err = Parse(p.source, opts)
 		if err != nil {
 			return nil, err
 		}

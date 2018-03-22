@@ -52,10 +52,18 @@ func escape(w writer, s string) error {
 	return err
 }
 
-// Escape escapes special HTML characters.
-//
-// It can be used by helpers that return a SafeString and that need to escape some content by themselves.
-func Escape(s string) string {
+type escapeFunc func(string) string
+
+// Escaper defines an object which can be used to escape strings.
+type Escaper interface {
+	Escape(string) string
+}
+
+// HTMLEscaper is an Escaper which escapes HTML-unsafe characters in strings.
+type HTMLEscaper struct{}
+
+// Escape HTML characters in a string
+func (h HTMLEscaper) Escape(s string) string {
 	if strings.IndexAny(s, escapedChars) == -1 {
 		return s
 	}
@@ -63,3 +71,10 @@ func Escape(s string) string {
 	escape(&buf, s)
 	return buf.String()
 }
+
+var defaultEscaper = HTMLEscaper{}
+
+// Escape escapes special HTML characters.
+//
+// It can be used by helpers that return a SafeString and that need to escape some content by themselves.
+var Escape = HTMLEscaper.Escape

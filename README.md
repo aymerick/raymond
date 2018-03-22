@@ -140,7 +140,7 @@ func main() {
     }
 
     // parse template
-    tpl, err := raymond.Parse(source)
+    tpl, err := raymond.Parse(source, nil)
     if err != nil {
         panic(err)
     }
@@ -179,7 +179,7 @@ You can use `MustParse()` and `MustExec()` functions if you don't want to deal w
 
 ```go
 // parse template
-tpl := raymond.MustParse(source)
+tpl := raymond.MustParse(source, nil)
 
 // render template
 result := tpl.MustExec(ctx)
@@ -281,7 +281,7 @@ ctx := map[string]string{
     "body":  "<p>This is a post about &lt;p&gt; tags</p>",
 }
 
-tpl := raymond.MustParse(source)
+tpl := raymond.MustParse(source, nil)
 result := tpl.MustExec(ctx)
 
 fmt.Print(result)
@@ -305,7 +305,7 @@ raymond.RegisterHelper("link", func(url, text string) raymond.SafeString {
     return raymond.SafeString("<a href='" + raymond.Escape(url) + "'>" + raymond.Escape(text) + "</a>")
 })
 
-tpl := raymond.MustParse("{{link url text}}")
+tpl := raymond.MustParse("{{link url text}}", nil)
 
 ctx := map[string]string{
     "url":  "http://www.aymerick.com/",
@@ -322,6 +322,29 @@ Output:
 <a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>
 ```
 
+### Custom Escaping
+
+If you are rendering something which is not HTML, the default escaping may not be what you want. In that case, you may specify your own escaper:
+
+```go
+type NoopEscaper struct {}
+func (n NoopEscaper) Escape(s string) string {
+    return s
+}
+
+
+opts := &raymond.TemplateOptions{
+    Escaper: &NoopEscaper{},
+}
+tpl := raymond.MustParse("Hey {{ text }}", opts)
+
+ctx := map[string]string{
+    "text": "<<< cool >>>",
+}
+
+result := tpl.MustExec(ctx)
+fmt.Print(result) // would print "Hey <<< cool >>>"
+```
 
 ## Helpers
 
@@ -433,7 +456,7 @@ RegisterHelper("fullName", func(person Person) string {
 You can register a helper on a specific template, and in that case that helper will be available to that template only:
 
 ```go
-tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}")
+tpl := raymond.MustParse("User: {{fullName user.firstName user.lastName}}", nil)
 
 tpl.RegisterHelper("fullName", func(firstName, lastName string) string {
   return firstName + " " + lastName
@@ -1116,7 +1139,7 @@ Those context functions behave like helper functions: they can be called with pa
 You can register template partials before execution:
 
 ```go
-tpl := raymond.MustParse("{{> foo}} baz")
+tpl := raymond.MustParse("{{> foo}} baz", nil)
 tpl.RegisterPartial("foo", "<span>bar</span>")
 
 result := tpl.MustExec(nil)
@@ -1132,7 +1155,7 @@ Output:
 You can register several partials at once:
 
 ```go
-tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
+tpl := raymond.MustParse("{{> foo}} and {{> baz}}", nil)
 tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
@@ -1156,7 +1179,7 @@ You can registers global partials that will be accessible by all templates:
 ```go
 raymond.RegisterPartial("foo", "<span>bar</span>")
 
-tpl := raymond.MustParse("{{> foo}} baz")
+tpl := raymond.MustParse("{{> foo}} baz", nil)
 result := tpl.MustExec(nil)
 fmt.Print(result)
 ```
@@ -1169,7 +1192,7 @@ raymond.RegisterPartials(map[string]string{
     "baz": "<span>bat</span>",
 })
 
-tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
+tpl := raymond.MustParse("{{> foo}} and {{> baz}}", nil)
 result := tpl.MustExec(nil)
 fmt.Print(result)
 ```
@@ -1182,7 +1205,7 @@ It's possible to dynamically select the partial to be executed by using sub expr
 For example, that template randomly evaluates the `foo` or `baz` partial:
 
 ```go
-tpl := raymond.MustParse("{{> (whichPartial) }}")
+tpl := raymond.MustParse("{{> (whichPartial) }}", nil)
 tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
@@ -1209,7 +1232,7 @@ It's possible to execute partials on a custom context by passing in the context 
 For example:
 
 ```go
-tpl := raymond.MustParse("User: {{> userDetails user }}")
+tpl := raymond.MustParse("User: {{> userDetails user }}", nil)
 tpl.RegisterPartial("userDetails", "{{firstname}} {{lastname}}")
 
 ctx := map[string]interface{}{
@@ -1237,7 +1260,7 @@ Custom data can be passed to partials through hash parameters.
 For example:
 
 ```go
-tpl := raymond.MustParse("{{> myPartial name=hero }}")
+tpl := raymond.MustParse("{{> myPartial name=hero }}", nil)
 tpl.RegisterPartial("myPartial", "My hero is {{name}}")
 
 ctx := map[string]interface{}{
