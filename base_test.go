@@ -25,7 +25,7 @@ func launchTests(t *testing.T, tests []Test) {
 		var tpl *Template
 
 		// parse template
-		tpl, err = Parse(test.input)
+		tpl, err = Parse(test.input, nil)
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {
@@ -91,7 +91,7 @@ func launchErrorTests(t *testing.T, tests []Test) {
 		var tpl *Template
 
 		// parse template
-		tpl, err = Parse(test.input)
+		tpl, err = Parse(test.input, nil)
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {

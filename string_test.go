@@ -51,7 +51,7 @@ func ExampleSafeString() {
 		return SafeString("<em>FOO BAR</em>")
 	})
 
-	tpl := MustParse("{{em}}")
+	tpl := MustParse("{{em}}", nil)
 
 	result := tpl.MustExec(nil)
 	fmt.Print(result)
