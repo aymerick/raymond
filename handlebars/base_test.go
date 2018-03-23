@@ -41,7 +41,7 @@ func launchTests(t *testing.T, tests []Test) {
 		}
 
 		// parse template
-		tpl, err = raymond.Parse(test.input)
+		tpl, err = raymond.Parse(test.input, nil)
 		if err != nil {
 			t.Errorf("Test '%s' failed - Failed to parse template\ninput:\n\t'%s'\nerror:\n\t%s", test.name, test.input, err)
 		} else {
