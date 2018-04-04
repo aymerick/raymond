@@ -72,6 +72,20 @@ var evalTests = []Test{
 		nil, nil, nil,
 		"C",
 	},
+	{
+		"length method on a slice, like with JS engines",
+		"Length: {{arr.length}}",
+		map[string]interface{}{"arr": []int{0, 1, 2}},
+		nil, nil, nil,
+		`Length: 3`,
+	},
+	{
+		"length method on an array, like with JS engines",
+		"Length: {{arr.length}}",
+		map[string]interface{}{"arr": [...]int{0, 1, 2, 3}},
+		nil, nil, nil,
+		`Length: 4`,
+	},
 
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
 }

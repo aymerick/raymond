@@ -364,6 +364,14 @@ func (v *evalVisitor) evalMethod(ctx reflect.Value, name string, exprRoot bool) 
 	}
 
 	if !method.IsValid() {
+		// Special case for "length" for slices, arrays to provide the same behaviour as JavaScript engines
+		// where the "length" method is implicit.
+		if name == "length" {
+			switch ctx.Kind() {
+			case reflect.Slice, reflect.Array:
+				return reflect.ValueOf(ctx.Len()), true
+			}
+		}
 		return zero, false
 	}
 
