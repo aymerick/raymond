@@ -1104,11 +1104,11 @@ For example, that template and context:
 ```go
 source := "I {{feeling}} you"
 
+rand.Seed(time.Now().UTC().UnixNano())
+feelings := []string{"hate", "love"}
+
 ctx := map[string]interface{}{
     "feeling": func() string {
-        rand.Seed(time.Now().UTC().UnixNano())
-
-        feelings := []string{"hate", "love"}
         return feelings[rand.Intn(len(feelings))]
     },
 }
@@ -1197,12 +1197,11 @@ tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
 })
+rand.Seed(time.Now().UTC().UnixNano())
+names := []string{"foo", "baz"}
 
 ctx := map[string]interface{}{
     "whichPartial": func() string {
-        rand.Seed(time.Now().UTC().UnixNano())
-
-        names := []string{"foo", "baz"}
         return names[rand.Intn(len(names))]
     },
 }
