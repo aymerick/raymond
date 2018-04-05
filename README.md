@@ -1104,7 +1104,7 @@ For example, that template and context:
 ```go
 source := "I {{feeling}} you"
 
-rand.Seed(time.Now().UTC().UnixNano())
+rand.Seed(time.Now().UnixNano())
 feelings := []string{"hate", "love"}
 
 ctx := map[string]interface{}{
@@ -1197,7 +1197,7 @@ tpl.RegisterPartials(map[string]string{
     "foo": "<span>bar</span>",
     "baz": "<span>bat</span>",
 })
-rand.Seed(time.Now().UTC().UnixNano())
+rand.Seed(time.Now().UnixNano())
 names := []string{"foo", "baz"}
 
 ctx := map[string]interface{}{
