@@ -19,21 +19,6 @@ const (
 	// TokenClose is the CLOSE token
 	TokenClose
 
-	// TokenOpenRawBlock is the OPEN_RAW_BLOCK token
-	TokenOpenRawBlock
-
-	// TokenCloseRawBlock is the CLOSE_RAW_BLOCK token
-	TokenCloseRawBlock
-
-	// TokenOpenEndRawBlock is the END_RAW_BLOCK token
-	TokenOpenEndRawBlock
-
-	// TokenOpenUnescaped is the OPEN_UNESCAPED token
-	TokenOpenUnescaped
-
-	// TokenCloseUnescaped is the CLOSE_UNESCAPED token
-	TokenCloseUnescaped
-
 	// TokenOpenBlock is the OPEN_BLOCK token
 	TokenOpenBlock
 
@@ -128,13 +113,8 @@ var tokenName = map[TokenKind]string{
 	TokenComment:          "Comment",
 	TokenOpen:             "Open",
 	TokenClose:            "Close",
-	TokenOpenUnescaped:    "OpenUnescaped",
-	TokenCloseUnescaped:   "CloseUnescaped",
 	TokenOpenBlock:        "OpenBlock",
 	TokenOpenEndBlock:     "OpenEndBlock",
-	TokenOpenRawBlock:     "OpenRawBlock",
-	TokenCloseRawBlock:    "CloseRawBlock",
-	TokenOpenEndRawBlock:  "OpenEndRawBlock",
 	TokenOpenBlockParams:  "OpenBlockParams",
 	TokenCloseBlockParams: "CloseBlockParams",
 	TokenInverse:          "Inverse",

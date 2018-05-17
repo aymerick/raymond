@@ -31,10 +31,6 @@ var tokOpenPartial = Token{TokenOpenPartial, "{{>", 0, 1}
 var tokClose = Token{TokenClose, "}}", 0, 1}
 var tokOpenStrip = Token{TokenOpen, "{{~", 0, 1}
 var tokCloseStrip = Token{TokenClose, "~}}", 0, 1}
-var tokOpenUnescaped = Token{TokenOpenUnescaped, "{{{", 0, 1}
-var tokCloseUnescaped = Token{TokenCloseUnescaped, "}}}", 0, 1}
-var tokOpenUnescapedStrip = Token{TokenOpenUnescaped, "{{~{", 0, 1}
-var tokCloseUnescapedStrip = Token{TokenCloseUnescaped, "}~}}", 0, 1}
 var tokOpenBlock = Token{TokenOpenBlock, "{{#", 0, 1}
 var tokOpenEndBlock = Token{TokenOpenEndBlock, "{{/", 0, 1}
 var tokOpenInverse = Token{TokenOpenInverse, "{{^", 0, 1}
@@ -43,9 +39,6 @@ var tokOpenSexpr = Token{TokenOpenSexpr, "(", 0, 1}
 var tokCloseSexpr = Token{TokenCloseSexpr, ")", 0, 1}
 var tokOpenBlockParams = Token{TokenOpenBlockParams, "as |", 0, 1}
 var tokCloseBlockParams = Token{TokenCloseBlockParams, "|", 0, 1}
-var tokOpenRawBlock = Token{TokenOpenRawBlock, "{{{{", 0, 1}
-var tokCloseRawBlock = Token{TokenCloseRawBlock, "}}}}", 0, 1}
-var tokOpenEndRawBlock = Token{TokenOpenEndRawBlock, "{{{{/", 0, 1}
 
 var lexTests = []lexTest{
 	{"empty", "", []Token{tokEOF}},
@@ -63,16 +56,6 @@ var lexTests = []lexTest{
 		[]Token{tokOpen, tokID("foo"), tokID("falsebar"), tokClose, tokEOF},
 	},
 	{
-		`tokenizes raw block`,
-		`{{{{foo}}}} {{{{/foo}}}}`,
-		[]Token{tokOpenRawBlock, tokID("foo"), tokCloseRawBlock, tokContent(" "), tokOpenEndRawBlock, tokID("foo"), tokCloseRawBlock, tokEOF},
-	},
-	{
-		`tokenizes raw block with mustaches in content`,
-		`{{{{foo}}}}{{bar}}{{{{/foo}}}}`,
-		[]Token{tokOpenRawBlock, tokID("foo"), tokCloseRawBlock, tokContent("{{bar}}"), tokOpenEndRawBlock, tokID("foo"), tokCloseRawBlock, tokEOF},
-	},
-	{
 		`tokenizes @../foo`,
 		`{{@../foo}}`,
 		[]Token{tokOpen, tokData, tokID(".."), tokSep("/"), tokID("foo"), tokClose, tokEOF},
@@ -86,11 +69,6 @@ var lexTests = []lexTest{
 		`tokenizes strip mustaches`,
 		`{{~ foo ~}}`,
 		[]Token{tokOpenStrip, tokID("foo"), tokCloseStrip, tokEOF},
-	},
-	{
-		`tokenizes unescaped strip mustaches`,
-		`{{~{ foo }~}}`,
-		[]Token{tokOpenUnescapedStrip, tokID("foo"), tokCloseUnescapedStrip, tokEOF},
 	},
 
 	//
@@ -106,56 +84,6 @@ var lexTests = []lexTest{
 		`supports unescaping with &`,
 		`{{&bar}}`,
 		[]Token{tokOpenAmp, tokID("bar"), tokClose, tokEOF},
-	},
-	{
-		`supports unescaping with {{{`,
-		`{{{bar}}}`,
-		[]Token{tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokEOF},
-	},
-	{
-		`supports escaping delimiters`,
-		"{{foo}} \\{{bar}} {{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} "), tokOpen, tokID("baz"), tokClose, tokEOF},
-	},
-	{
-		`supports escaping multiple delimiters`,
-		"{{foo}} \\{{bar}} \\{{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} "), tokContent("{{baz}}"), tokEOF},
-	},
-	{
-		`supports escaping a triple stash`,
-		"{{foo}} \\{{{bar}}} {{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{{bar}}} "), tokOpen, tokID("baz"), tokClose, tokEOF},
-	},
-	{
-		`supports escaping escape character`,
-		"{{foo}} \\\\{{bar}} {{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokOpen, tokID("baz"), tokClose, tokEOF},
-	},
-	{
-		`supports escaping multiple escape characters`,
-		"{{foo}} \\\\{{bar}} \\\\{{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpen, tokID("bar"), tokClose, tokContent(" \\"), tokOpen, tokID("baz"), tokClose, tokEOF},
-	},
-	{
-		`supports escaped mustaches after escaped escape characters`,
-		"{{foo}} \\\\{{bar}} \\{{baz}}",
-		// NOTE: JS implementation returns:
-		//   ['OPEN', 'ID', 'CLOSE', 'CONTENT', 'OPEN', 'ID', 'CLOSE', 'CONTENT', 'CONTENT', 'CONTENT'],
-		// WTF is the last CONTENT ?
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpen, tokID("bar"), tokClose, tokContent(" "), tokContent("{{baz}}"), tokEOF},
-	},
-	{
-		`supports escaped escape characters after escaped mustaches`,
-		"{{foo}} \\{{bar}} \\\\{{baz}}",
-		// NOTE: JS implementation returns:
-		//   []Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} "), tokContent("\\"), tokOpen, tokID("baz"), tokClose, tokEOF},
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" "), tokContent("{{bar}} \\"), tokOpen, tokID("baz"), tokClose, tokEOF},
-	},
-	{
-		`supports escaped escape character on a triple stash`,
-		"{{foo}} \\\\{{{bar}}} {{baz}}",
-		[]Token{tokOpen, tokID("foo"), tokClose, tokContent(" \\"), tokOpenUnescaped, tokID("bar"), tokCloseUnescaped, tokContent(" "), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
 	{
 		`tokenizes a simple path`,
@@ -246,16 +174,6 @@ var lexTests = []lexTest{
 		`tokenizes a comment as "COMMENT"`,
 		`foo {{! this is a comment }} bar {{ baz }}`,
 		[]Token{tokContent("foo "), tokComment("{{! this is a comment }}"), tokContent(" bar "), tokOpen, tokID("baz"), tokClose, tokEOF},
-	},
-	{
-		`tokenizes a block comment as "COMMENT"`,
-		`foo {{!-- this is a {{comment}} --}} bar {{ baz }}`,
-		[]Token{tokContent("foo "), tokComment("{{!-- this is a {{comment}} --}}"), tokContent(" bar "), tokOpen, tokID("baz"), tokClose, tokEOF},
-	},
-	{
-		`tokenizes a block comment with whitespace as "COMMENT"`,
-		"foo {{!-- this is a\n{{comment}}\n--}} bar {{ baz }}",
-		[]Token{tokContent("foo "), tokComment("{{!-- this is a\n{{comment}}\n--}}"), tokContent(" bar "), tokOpen, tokID("baz"), tokClose, tokEOF},
 	},
 	{
 		`tokenizes open and closing blocks as OPEN_BLOCK, ID, CLOSE ..., OPEN_ENDBLOCK ID CLOSE`,
@@ -513,9 +431,6 @@ func TestLexer(t *testing.T) {
 		}
 	}
 }
-
-// @todo Test errors:
-//   `{{{{raw foo`
 
 // package example
 func Example() {

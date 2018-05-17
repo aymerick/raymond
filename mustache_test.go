@@ -157,21 +157,13 @@ var mustacheLambdasTests = []Test{
 
 	{
 		"Interpolation - Multiple Calls",
-		"{{lambda}} == {{{lambda}}} == {{lambda}}",
+		"{{lambda}} == {{lambda}} == {{lambda}}",
 		map[string]interface{}{"lambda": func() string {
 			musTestLambdaInterMult++
 			return Str(musTestLambdaInterMult)
 		}},
 		nil, nil, nil,
 		"1 == 2 == 3",
-	},
-
-	{
-		"Escaping",
-		"<{{lambda}}{{{lambda}}}",
-		map[string]interface{}{"lambda": func() string { return ">" }},
-		nil, nil, nil,
-		"<&gt;>",
 	},
 
 	// // SKIP: "Lambdas used for sections should receive the raw section string."

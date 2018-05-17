@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aymerick/raymond"
+	"github.com/cmaster11/raymond"
 )
 
 //
@@ -19,41 +19,6 @@ var basicTests = []Test{
 		map[string]string{"foo": "foo"},
 		nil, nil, nil,
 		"foo",
-	},
-	{
-		"escaping (1)",
-		"\\{{foo}}",
-		map[string]string{"foo": "food"},
-		nil, nil, nil,
-		"{{foo}}",
-	},
-	{
-		"escaping (2)",
-		"content \\{{foo}}",
-		map[string]string{},
-		nil, nil, nil,
-		"content {{foo}}",
-	},
-	{
-		"escaping (3)",
-		"\\\\{{foo}}",
-		map[string]string{"foo": "food"},
-		nil, nil, nil,
-		"\\food",
-	},
-	{
-		"escaping (4)",
-		"content \\\\{{foo}}",
-		map[string]string{"foo": "food"},
-		nil, nil, nil,
-		"content \\food",
-	},
-	{
-		"escaping (5)",
-		"\\\\ {{foo}}",
-		map[string]string{"foo": "food"},
-		nil, nil, nil,
-		"\\\\ food",
 	},
 	{
 		"compiling with a basic context",
@@ -174,20 +139,6 @@ var basicTests = []Test{
 		"val: false",
 	},
 	{
-		"false (4)",
-		"val1: {{{val1}}}, val2: {{{val2}}}",
-		map[string]interface{}{"val1": false, "val2": false},
-		nil, nil, nil,
-		"val1: false, val2: false",
-	},
-	{
-		"false (5)",
-		"val: {{{val1/val2}}}",
-		map[string]map[string]interface{}{"val1": {"val2": false}},
-		nil, nil, nil,
-		"val: false",
-	},
-	{
 		"newlines (1)",
 		"Alan's\nTest",
 		nil, nil, nil, nil,
@@ -235,37 +186,9 @@ var basicTests = []Test{
 		" ' ' ",
 	},
 	{
-		"escaping expressions (6)",
-		"{{{awesome}}}",
-		map[string]string{"awesome": "&'\\<>"},
-		nil, nil, nil,
-		"&'\\<>",
-	},
-	{
 		"escaping expressions (7)",
 		"{{&awesome}}",
 		map[string]string{"awesome": "&'\\<>"},
-		nil, nil, nil,
-		"&'\\<>",
-	},
-	{
-		"escaping expressions (8)",
-		"{{awesome}}",
-		map[string]string{"awesome": "&\"'`\\<>"},
-		nil, nil, nil,
-		"&amp;&quot;&apos;`\\&lt;&gt;",
-	},
-	{
-		"escaping expressions (9)",
-		"{{awesome}}",
-		map[string]string{"awesome": "Escaped, <b> looks like: &lt;b&gt;"},
-		nil, nil, nil,
-		"Escaped, &lt;b&gt; looks like: &amp;lt;b&amp;gt;",
-	},
-	{
-		"functions returning safestrings shouldn't be escaped",
-		"{{awesome}}",
-		map[string]interface{}{"awesome": func() raymond.SafeString { return raymond.SafeString("&'\\<>") }},
 		nil, nil, nil,
 		"&'\\<>",
 	},

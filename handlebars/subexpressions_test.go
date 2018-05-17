@@ -3,7 +3,7 @@ package handlebars
 import (
 	"testing"
 
-	"github.com/aymerick/raymond"
+	"github.com/cmaster11/raymond"
 )
 
 //
@@ -156,11 +156,11 @@ var subexpressionsTests = []Test{
 		map[string]interface{}{},
 		nil,
 		map[string]interface{}{
-			"input": func(options *raymond.Options) raymond.SafeString {
-				return raymond.SafeString(`<input aria-label="` + options.HashStr("aria-label") + `" placeholder="` + options.HashStr("placeholder") + `" />`)
+			"input": func(options *raymond.Options) string {
+				return `<input aria-label="` + options.HashStr("aria-label") + `" placeholder="` + options.HashStr("placeholder") + `" />`
 			},
-			"t": func(param string) raymond.SafeString {
-				return raymond.SafeString(param)
+			"t": func(param string) string {
+				return param
 			},
 		},
 		nil,
@@ -172,11 +172,11 @@ var subexpressionsTests = []Test{
 		map[string]map[string]string{"item": {"field": "Name", "placeholder": "Example User"}},
 		nil,
 		map[string]interface{}{
-			"input": func(options *raymond.Options) raymond.SafeString {
-				return raymond.SafeString(`<input aria-label="` + options.HashStr("aria-label") + `" placeholder="` + options.HashStr("placeholder") + `" />`)
+			"input": func(options *raymond.Options) string {
+				return `<input aria-label="` + options.HashStr("aria-label") + `" placeholder="` + options.HashStr("placeholder") + `" />`
 			},
-			"t": func(param string) raymond.SafeString {
-				return raymond.SafeString(param)
+			"t": func(param string) string {
+				return param
 			},
 		},
 		nil,

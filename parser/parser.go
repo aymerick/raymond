@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/aymerick/raymond/ast"
-	"github.com/aymerick/raymond/lexer"
+	"github.com/cmaster11/raymond/ast"
+	"github.com/cmaster11/raymond/lexer"
 )
 
 // References:
@@ -37,7 +37,7 @@ var (
 )
 
 // new instanciates a new parser
-func new(input string) *parser {
+func newParser(input string) *parser {
 	return &parser{
 		lex: lexer.Scan(input),
 	}
@@ -48,7 +48,7 @@ func Parse(input string) (result *ast.Program, err error) {
 	// recover error
 	defer errRecover(&err)
 
-	parser := new(input)
+	parser := newParser(input)
 
 	// parse
 	result = parser.parseProgram()
@@ -120,7 +120,7 @@ func (p *parser) parseStatement() ast.Node {
 	tok := p.next()
 
 	switch tok.Kind {
-	case lexer.TokenOpen, lexer.TokenOpenUnescaped:
+	case lexer.TokenOpen:
 		// mustache
 		result = p.parseMustache()
 	case lexer.TokenOpenBlock:
@@ -129,9 +129,6 @@ func (p *parser) parseStatement() ast.Node {
 	case lexer.TokenOpenInverse:
 		// block
 		result = p.parseInverse()
-	case lexer.TokenOpenRawBlock:
-		// rawBlock
-		result = p.parseRawBlock()
 	case lexer.TokenOpenPartial:
 		// partial
 		result = p.parsePartial()
@@ -153,8 +150,8 @@ func (p *parser) isStatement() bool {
 	}
 
 	switch p.next().Kind {
-	case lexer.TokenOpen, lexer.TokenOpenUnescaped, lexer.TokenOpenBlock,
-		lexer.TokenOpenInverse, lexer.TokenOpenRawBlock, lexer.TokenOpenPartial,
+	case lexer.TokenOpen, lexer.TokenOpenBlock,
+		lexer.TokenOpenInverse, lexer.TokenOpenPartial,
 		lexer.TokenContent, lexer.TokenComment:
 		return true
 	}
@@ -215,63 +212,6 @@ func (p *parser) parseExpression(tok *lexer.Token) *ast.Expression {
 
 	// param* hash?
 	result.Params, result.Hash = p.parseExpressionParamsHash()
-
-	return result
-}
-
-// rawBlock : openRawBlock content endRawBlock
-// openRawBlock : OPEN_RAW_BLOCK helperName param* hash? CLOSE_RAW_BLOCK
-// endRawBlock : OPEN_END_RAW_BLOCK helperName CLOSE_RAW_BLOCK
-func (p *parser) parseRawBlock() *ast.BlockStatement {
-	// OPEN_RAW_BLOCK
-	tok := p.shift()
-
-	result := ast.NewBlockStatement(tok.Pos, tok.Line)
-
-	// helperName param* hash?
-	result.Expression = p.parseExpression(tok)
-
-	openName := result.Expression.Canonical()
-
-	// CLOSE_RAW_BLOCK
-	tok = p.shift()
-	if tok.Kind != lexer.TokenCloseRawBlock {
-		errExpected(lexer.TokenCloseRawBlock, tok)
-	}
-
-	// content
-	// @todo Is content mandatory in a raw block ?
-	content := p.parseContent()
-
-	program := ast.NewProgram(tok.Pos, tok.Line)
-	program.AddStatement(content)
-
-	result.Program = program
-
-	// OPEN_END_RAW_BLOCK
-	tok = p.shift()
-	if tok.Kind != lexer.TokenOpenEndRawBlock {
-		// should never happen as it is caught by lexer
-		errExpected(lexer.TokenOpenEndRawBlock, tok)
-	}
-
-	// helperName
-	endID := p.parseHelperName()
-
-	closeName, ok := ast.HelperNameStr(endID)
-	if !ok {
-		errNode(endID, "Erroneous closing expression")
-	}
-
-	if openName != closeName {
-		errNode(endID, fmt.Sprintf("%s doesn't match %s", openName, closeName))
-	}
-
-	// CLOSE_RAW_BLOCK
-	tok = p.shift()
-	if tok.Kind != lexer.TokenCloseRawBlock {
-		errExpected(lexer.TokenCloseRawBlock, tok)
-	}
 
 	return result
 }
@@ -468,16 +408,8 @@ func (p *parser) parseMustache() *ast.MustacheStatement {
 	tok := p.shift()
 
 	closeToken := lexer.TokenClose
-	if tok.Kind == lexer.TokenOpenUnescaped {
-		closeToken = lexer.TokenCloseUnescaped
-	}
 
-	unescaped := false
-	if (tok.Kind == lexer.TokenOpenUnescaped) || (rOpenAmp.MatchString(tok.Val)) {
-		unescaped = true
-	}
-
-	result := ast.NewMustacheStatement(tok.Pos, tok.Line, unescaped)
+	result := ast.NewMustacheStatement(tok.Pos, tok.Line)
 
 	// helperName param* hash?
 	result.Expression = p.parseExpression(tok)

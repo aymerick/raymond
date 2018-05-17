@@ -245,7 +245,7 @@ func TestRemoveHelper(t *testing.T) {
 }
 
 //
-// Fixes: https://github.com/aymerick/raymond/issues/2
+// Fixes: https://github.com/cmaster11/raymond/issues/2
 //
 
 type Author struct {
@@ -254,13 +254,13 @@ type Author struct {
 }
 
 func TestHelperCtx(t *testing.T) {
-	RegisterHelper("template", func(name string, options *Options) SafeString {
+	RegisterHelper("template", func(name string, options *Options) string {
 		context := options.Ctx()
 
 		template := name + " - {{ firstName }} {{ lastName }}"
 		result, _ := Render(template, context)
 
-		return SafeString(result)
+		return result
 	})
 
 	template := `By {{ template "namefile" }}`

@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/aymerick/raymond/ast"
-	"github.com/aymerick/raymond/parser"
+	"github.com/cmaster11/raymond/ast"
+	"github.com/cmaster11/raymond/parser"
 )
 
 // Template represents a handlebars template.

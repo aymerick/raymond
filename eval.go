@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aymerick/raymond/ast"
+	"github.com/cmaster11/raymond/ast"
 )
 
 var (
@@ -797,15 +797,8 @@ func (v *evalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	// evaluate expression
 	expr := node.Expression.Accept(v)
 
-	// check if this is a safe string
-	isSafe := isSafeString(expr)
-
 	// get string value
 	str := Str(expr)
-	if !isSafe && !node.Unescaped {
-		// escape html
-		str = Escape(str)
-	}
 
 	return str
 }

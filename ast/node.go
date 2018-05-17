@@ -195,7 +195,6 @@ type MustacheStatement struct {
 	NodeType
 	Loc
 
-	Unescaped  bool
 	Expression *Expression
 
 	// whitespace management
@@ -203,11 +202,10 @@ type MustacheStatement struct {
 }
 
 // NewMustacheStatement instanciates a new mustache node.
-func NewMustacheStatement(pos int, line int, unescaped bool) *MustacheStatement {
+func NewMustacheStatement(pos int, line int) *MustacheStatement {
 	return &MustacheStatement{
 		NodeType:  NodeMustache,
 		Loc:       Loc{pos, line},
-		Unescaped: unescaped,
 	}
 }
 
