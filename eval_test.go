@@ -81,14 +81,14 @@ var evalErrors = []Test{
 		"{{foo}}",
 		map[string]interface{}{"foo": func() {}},
 		nil, nil, nil,
-		"Helper function must return a string or a SafeString",
+		"Helper function must return a string",
 	},
 	{
 		"functions with wrong number of returned values (2)",
 		"{{foo}}",
 		map[string]interface{}{"foo": func() (string, bool, string) { return "foo", true, "bar" }},
 		nil, nil, nil,
-		"Helper function must return a string or a SafeString",
+		"Helper function must return a string",
 	},
 }
 

@@ -30,7 +30,7 @@ var (
 	rPartialIndent = regexp.MustCompile(`([ \t]+$)`)
 )
 
-// newWhitespaceVisitor instanciates a new whitespaceVisitor
+// newWhitespaceVisitor instantiates a new whitespaceVisitor
 func newWhitespaceVisitor() *whitespaceVisitor {
 	return &whitespaceVisitor{}
 }

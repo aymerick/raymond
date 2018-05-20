@@ -18,9 +18,12 @@ type Template struct {
 	helpers  map[string]reflect.Value
 	partials map[string]*partial
 	mutex    sync.RWMutex // protects helpers and partials
+
+	// Content processing hook, which mutates content before outputting it
+	OnContent func(nodeType ast.NodeType, text string) string
 }
 
-// newTemplate instanciate a new template without parsing it
+// newTemplate instantiate a new template without parsing it
 func newTemplate(source string) *Template {
 	return &Template{
 		source:   source,
@@ -29,19 +32,30 @@ func newTemplate(source string) *Template {
 	}
 }
 
-// Parse instanciates a template by parsing given source.
+// Parse instantiates a template by parsing given source.
 func Parse(source string) (*Template, error) {
 	tpl := newTemplate(source)
 
 	// parse template
-	if err := tpl.parse(); err != nil {
+	if err := tpl.parse(nil); err != nil {
 		return nil, err
 	}
 
 	return tpl, nil
 }
 
-// MustParse instanciates a template by parsing given source. It panics on error.
+func ParseWithOptions(source string, parserOptions *parser.ParserOptions) (*Template, error) {
+	tpl := newTemplate(source)
+
+	// parse template
+	if err := tpl.parse(parserOptions); err != nil {
+		return nil, err
+	}
+
+	return tpl, nil
+}
+
+// MustParse instantiates a template by parsing given source. It panics on error.
 func MustParse(source string) *Template {
 	result, err := Parse(source)
 	if err != nil {
@@ -63,11 +77,11 @@ func ParseFile(filePath string) (*Template, error) {
 // parse parses the template
 //
 // It can be called several times, the parsing will be done only once.
-func (tpl *Template) parse() error {
+func (tpl *Template) parse(parserOptions *parser.ParserOptions) error {
 	if tpl.program == nil {
 		var err error
 
-		tpl.program, err = parser.Parse(tpl.source)
+		tpl.program, err = parser.Parse(tpl.source, parserOptions)
 		if err != nil {
 			return err
 		}
@@ -208,7 +222,7 @@ func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result stri
 	defer errRecover(&err)
 
 	// parses template if necessary
-	err = tpl.parse()
+	err = tpl.parse(nil)
 	if err != nil {
 		return
 	}
@@ -240,7 +254,7 @@ func errRecover(errp *error) {
 
 // PrintAST returns string representation of parsed template.
 func (tpl *Template) PrintAST() string {
-	if err := tpl.parse(); err != nil {
+	if err := tpl.parse(nil); err != nil {
 		return fmt.Sprintf("PARSER ERROR: %s", err)
 	}
 

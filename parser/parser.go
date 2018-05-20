@@ -28,6 +28,8 @@ type parser struct {
 
 	// All tokens have been retreieved from lexer
 	lexOver bool
+
+	options *ParserOptions
 }
 
 var (
@@ -36,19 +38,29 @@ var (
 	rOpenAmp      = regexp.MustCompile(`^\{\{~?&`)
 )
 
-// new instanciates a new parser
+// new instantiates a new parser
 func newParser(input string) *parser {
 	return &parser{
 		lex: lexer.Scan(input),
 	}
 }
 
+type ParserOptions struct {
+	// On content hook
+	OnContent func(text string) string
+}
+
 // Parse analyzes given input and returns the AST root node.
-func Parse(input string) (result *ast.Program, err error) {
+func Parse(input string, options *ParserOptions) (result *ast.Program, err error) {
 	// recover error
 	defer errRecover(&err)
 
 	parser := newParser(input)
+
+	if options == nil {
+		options = &ParserOptions{}
+	}
+	parser.options = options
 
 	// parse
 	result = parser.parseProgram()
@@ -168,7 +180,13 @@ func (p *parser) parseContent() *ast.ContentStatement {
 		errExpected(lexer.TokenContent, tok)
 	}
 
-	return ast.NewContentStatement(tok.Pos, tok.Line, tok.Val)
+	stmt := ast.NewContentStatement(tok.Pos, tok.Line, tok.Val)
+
+	if p.options.OnContent != nil {
+		stmt.Value = p.options.OnContent(stmt.Value)
+	}
+
+	return stmt
 }
 
 // COMMENT

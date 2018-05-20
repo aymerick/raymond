@@ -125,7 +125,7 @@ type Strip struct {
 	InlineStandalone bool
 }
 
-// NewStrip instanciates a Strip for given open and close mustaches.
+// NewStrip instantiates a Strip for given open and close mustaches.
 func NewStrip(openStr, closeStr string) *Strip {
 	return &Strip{
 		Open:  (len(openStr) > 2) && openStr[2] == '~',
@@ -133,7 +133,7 @@ func NewStrip(openStr, closeStr string) *Strip {
 	}
 }
 
-// NewStripForStr instanciates a Strip for given tag.
+// NewStripForStr instantiates a Strip for given tag.
 func NewStripForStr(str string) *Strip {
 	return &Strip{
 		Open:  (len(str) > 2) && str[2] == '~',
@@ -163,7 +163,7 @@ type Program struct {
 	Strip *Strip
 }
 
-// NewProgram instanciates a new program node.
+// NewProgram instantiates a new program node.
 func NewProgram(pos int, line int) *Program {
 	return &Program{
 		NodeType: NodeProgram,
@@ -201,7 +201,7 @@ type MustacheStatement struct {
 	Strip *Strip
 }
 
-// NewMustacheStatement instanciates a new mustache node.
+// NewMustacheStatement instantiates a new mustache node.
 func NewMustacheStatement(pos int, line int) *MustacheStatement {
 	return &MustacheStatement{
 		NodeType:  NodeMustache,
@@ -239,7 +239,7 @@ type BlockStatement struct {
 	CloseStrip   *Strip
 }
 
-// NewBlockStatement instanciates a new block node.
+// NewBlockStatement instantiates a new block node.
 func NewBlockStatement(pos int, line int) *BlockStatement {
 	return &BlockStatement{
 		NodeType: NodeBlock,
@@ -275,7 +275,7 @@ type PartialStatement struct {
 	Indent string
 }
 
-// NewPartialStatement instanciates a new partial node.
+// NewPartialStatement instantiates a new partial node.
 func NewPartialStatement(pos int, line int) *PartialStatement {
 	return &PartialStatement{
 		NodeType: NodePartial,
@@ -310,7 +310,7 @@ type ContentStatement struct {
 	LeftStripped  bool
 }
 
-// NewContentStatement instanciates a new content node.
+// NewContentStatement instantiates a new content node.
 func NewContentStatement(pos int, line int, val string) *ContentStatement {
 	return &ContentStatement{
 		NodeType: NodeContent,
@@ -346,7 +346,7 @@ type CommentStatement struct {
 	Strip *Strip
 }
 
-// NewCommentStatement instanciates a new comment node.
+// NewCommentStatement instantiates a new comment node.
 func NewCommentStatement(pos int, line int, val string) *CommentStatement {
 	return &CommentStatement{
 		NodeType: NodeComment,
@@ -380,7 +380,7 @@ type Expression struct {
 	Hash   *Hash
 }
 
-// NewExpression instanciates a new expression node.
+// NewExpression instantiates a new expression node.
 func NewExpression(pos int, line int) *Expression {
 	return &Expression{
 		NodeType: NodeExpression,
@@ -498,7 +498,7 @@ type SubExpression struct {
 	Expression *Expression
 }
 
-// NewSubExpression instanciates a new subexpression node.
+// NewSubExpression instantiates a new subexpression node.
 func NewSubExpression(pos int, line int) *SubExpression {
 	return &SubExpression{
 		NodeType: NodeSubExpression,
@@ -532,7 +532,7 @@ type PathExpression struct {
 	Scoped   bool
 }
 
-// NewPathExpression instanciates a new path expression node.
+// NewPathExpression instantiates a new path expression node.
 func NewPathExpression(pos int, line int, data bool) *PathExpression {
 	result := &PathExpression{
 		NodeType: NodePath,
@@ -595,7 +595,7 @@ type StringLiteral struct {
 	Value string
 }
 
-// NewStringLiteral instanciates a new string node.
+// NewStringLiteral instantiates a new string node.
 func NewStringLiteral(pos int, line int, val string) *StringLiteral {
 	return &StringLiteral{
 		NodeType: NodeString,
@@ -628,7 +628,7 @@ type BooleanLiteral struct {
 	Original string
 }
 
-// NewBooleanLiteral instanciates a new boolean node.
+// NewBooleanLiteral instantiates a new boolean node.
 func NewBooleanLiteral(pos int, line int, val bool, original string) *BooleanLiteral {
 	return &BooleanLiteral{
 		NodeType: NodeBoolean,
@@ -672,7 +672,7 @@ type NumberLiteral struct {
 	Original string
 }
 
-// NewNumberLiteral instanciates a new number node.
+// NewNumberLiteral instantiates a new number node.
 func NewNumberLiteral(pos int, line int, val float64, isInt bool, original string) *NumberLiteral {
 	return &NumberLiteral{
 		NodeType: NodeNumber,
@@ -724,7 +724,7 @@ type Hash struct {
 	Pairs []*HashPair
 }
 
-// NewHash instanciates a new hash node.
+// NewHash instantiates a new hash node.
 func NewHash(pos int, line int) *Hash {
 	return &Hash{
 		NodeType: NodeHash,
@@ -764,7 +764,7 @@ type HashPair struct {
 	Val Node // Expression
 }
 
-// NewHashPair instanciates a new hash pair node.
+// NewHashPair instantiates a new hash pair node.
 func NewHashPair(pos int, line int) *HashPair {
 	return &HashPair{
 		NodeType: NodeHashPair,
