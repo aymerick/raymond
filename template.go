@@ -13,6 +13,7 @@ import (
 
 // Template represents a handlebars template.
 type Template struct {
+	parserOptions *parser.ParserOptions
 	source   string
 	program  *ast.Program
 	helpers  map[string]reflect.Value
@@ -37,7 +38,7 @@ func Parse(source string) (*Template, error) {
 	tpl := newTemplate(source)
 
 	// parse template
-	if err := tpl.parse(nil); err != nil {
+	if err := tpl.parse(); err != nil {
 		return nil, err
 	}
 
@@ -46,9 +47,10 @@ func Parse(source string) (*Template, error) {
 
 func ParseWithOptions(source string, parserOptions *parser.ParserOptions) (*Template, error) {
 	tpl := newTemplate(source)
+	tpl.parserOptions = parserOptions
 
 	// parse template
-	if err := tpl.parse(parserOptions); err != nil {
+	if err := tpl.parse(); err != nil {
 		return nil, err
 	}
 
@@ -77,11 +79,11 @@ func ParseFile(filePath string) (*Template, error) {
 // parse parses the template
 //
 // It can be called several times, the parsing will be done only once.
-func (tpl *Template) parse(parserOptions *parser.ParserOptions) error {
+func (tpl *Template) parse() error {
 	if tpl.program == nil {
 		var err error
 
-		tpl.program, err = parser.Parse(tpl.source, parserOptions)
+		tpl.program, err = parser.Parse(tpl.source, tpl.parserOptions)
 		if err != nil {
 			return err
 		}
@@ -222,7 +224,7 @@ func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result stri
 	defer errRecover(&err)
 
 	// parses template if necessary
-	err = tpl.parse(nil)
+	err = tpl.parse()
 	if err != nil {
 		return
 	}
@@ -254,9 +256,13 @@ func errRecover(errp *error) {
 
 // PrintAST returns string representation of parsed template.
 func (tpl *Template) PrintAST() string {
-	if err := tpl.parse(nil); err != nil {
+	if err := tpl.parse(); err != nil {
 		return fmt.Sprintf("PARSER ERROR: %s", err)
 	}
 
 	return ast.Print(tpl.program)
+}
+
+func (tpl *Template) Serialize() string {
+	return tpl.program.Serialize()
 }

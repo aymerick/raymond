@@ -4,19 +4,19 @@ import (
 	"github.com/cmaster11/raymond/ast"
 	"fmt"
 	"github.com/cmaster11/raymond/parser"
-	"log"
+	"testing"
 )
 
 type Map = map[string]interface{}
 type Array = []interface{}
 
-var source = `
+var serializeSource = `
 Hello! My name is {{name}}.
 {{#brum}}I have a brum named {{brum.name}}!{{else}}I don't have a brum{{/brum}}
 I think {{> mmm}}
 `
 
-func ExampleTemplate_OnContent() {
+func TestTemplate_Serialize(t *testing.T) {
 
 	onParserContent := func(text string) string {
 		return "((" + text + "))"
@@ -26,12 +26,14 @@ func ExampleTemplate_OnContent() {
 		OnContent: onParserContent,
 	}
 
-	tpl, err := ParseWithOptions(source, parserOptions)
+	tpl, err := ParseWithOptions(serializeSource, parserOptions)
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 
 	tpl.RegisterPartial("mmm", "{{#each thoughts as |th idx|}}{{idx}}: {{th}}\n{{/each}}")
+
+	fmt.Println(tpl.Serialize())
 
 	tpl.OnContent = func(nodeType ast.NodeType, text string) string {
 		switch nodeType {
@@ -56,5 +58,5 @@ func ExampleTemplate_OnContent() {
 
 	output := tpl.MustExec(ctx)
 
-	fmt.Print(output)
+	fmt.Println(output)
 }

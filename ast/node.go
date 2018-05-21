@@ -24,6 +24,9 @@ type Node interface {
 
 	// accepts visitor
 	Accept(Visitor) interface{}
+
+	// writes back to textual form
+	Serialize() string
 }
 
 // Visitor is the interface to visit an AST.
@@ -62,46 +65,46 @@ func (t NodeType) Type() NodeType {
 
 const (
 	// NodeProgram is the program node
-	NodeProgram NodeType = iota
+	NodeProgram NodeType = iota // 0
 
 	// NodeMustache is the mustache statement node
-	NodeMustache
+	NodeMustache  // 1
 
 	// NodeBlock is the block statement node
-	NodeBlock
+	NodeBlock  // 2
 
 	// NodePartial is the partial statement node
-	NodePartial
+	NodePartial  // 3
 
 	// NodeContent is the content statement node
-	NodeContent
+	NodeContent  // 4
 
 	// NodeComment is the comment statement node
-	NodeComment
+	NodeComment  // 5
 
 	// NodeExpression is the expression node
-	NodeExpression
+	NodeExpression  // 6
 
 	// NodeSubExpression is the subexpression node
-	NodeSubExpression
+	NodeSubExpression  // 7
 
 	// NodePath is the expression path node
-	NodePath
+	NodePath  // 8
 
 	// NodeBoolean is the literal boolean node
-	NodeBoolean
+	NodeBoolean  // 9
 
 	// NodeNumber is the literal number node
-	NodeNumber
+	NodeNumber  // 10
 
 	// NodeString is the literal string node
-	NodeString
+	NodeString  // 11
 
 	// NodeHash is the hash node
-	NodeHash
+	NodeHash  // 12
 
 	// NodeHashPair is the hash pair node
-	NodeHashPair
+	NodeHashPair  // 13
 )
 
 // Loc represents the position of a parsed node in source file.
@@ -186,6 +189,19 @@ func (node *Program) AddStatement(statement Node) {
 	node.Body = append(node.Body, statement)
 }
 
+// Writes node back to textual form
+func (node *Program) Serialize() string {
+	content := ""
+
+	// TODO Chained
+
+	for _, node := range node.Body {
+		content += node.Serialize()
+	}
+
+	return content
+}
+
 //
 // Mustache Statement
 //
@@ -204,8 +220,8 @@ type MustacheStatement struct {
 // NewMustacheStatement instantiates a new mustache node.
 func NewMustacheStatement(pos int, line int) *MustacheStatement {
 	return &MustacheStatement{
-		NodeType:  NodeMustache,
-		Loc:       Loc{pos, line},
+		NodeType: NodeMustache,
+		Loc:      Loc{pos, line},
 	}
 }
 
@@ -217,6 +233,25 @@ func (node *MustacheStatement) String() string {
 // Accept is the receiver entry point for visitors.
 func (node *MustacheStatement) Accept(visitor Visitor) interface{} {
 	return visitor.VisitMustache(node)
+}
+
+// Writes node back to textual form
+func (node *MustacheStatement) Serialize() string {
+	content := "{{"
+
+	if node.Strip != nil && node.Strip.Open {
+		content += "~"
+	}
+
+	content += node.Expression.Serialize()
+
+	if node.Strip != nil && node.Strip.Close {
+		content += "~"
+	}
+
+	content += "}}"
+
+	return content
 }
 
 //
@@ -257,6 +292,81 @@ func (node *BlockStatement) Accept(visitor Visitor) interface{} {
 	return visitor.VisitBlock(node)
 }
 
+// Writes node back to textual form
+func (node *BlockStatement) Serialize() string {
+	content := ""
+
+	if !node.Program.Chained {
+		// Open
+		content += "{{"
+
+		if node.OpenStrip != nil && node.OpenStrip.Open {
+			content += "~"
+		}
+
+		content += "#"
+	}
+
+	content += node.Expression.Serialize()
+
+	for _, p := range node.Program.BlockParams {
+		content += " " + p
+	}
+
+	if node.OpenStrip != nil && node.OpenStrip.Close {
+		content += "~"
+	}
+
+	content += "}}"
+
+	// Content
+	content += node.Program.Serialize()
+
+	// Inverse
+	if node.Inverse != nil {
+		content += "{{"
+
+		if node.InverseStrip != nil && node.InverseStrip.Open {
+			content += "~"
+		}
+
+		content += "^"
+
+		for _, p := range node.Inverse.BlockParams {
+			content += " " + p
+		}
+
+		if !node.Inverse.Chained {
+			if node.InverseStrip != nil && node.InverseStrip.Close {
+				content += "~"
+			}
+
+			content += "}}"
+		}
+
+		content += node.Inverse.Serialize()
+	}
+
+	// Close
+	content += "{{"
+
+	if node.CloseStrip != nil && node.CloseStrip.Open {
+		content += "~"
+	}
+
+	content += "/"
+
+	content += node.Expression.Serialize()
+
+	if node.CloseStrip != nil && node.CloseStrip.Close {
+		content += "~"
+	}
+
+	content += "}}"
+
+	return content
+}
+
 //
 // Partial Statement
 //
@@ -291,6 +401,35 @@ func (node *PartialStatement) String() string {
 // Accept is the receiver entry point for visitors.
 func (node *PartialStatement) Accept(visitor Visitor) interface{} {
 	return visitor.VisitPartial(node)
+}
+
+// Writes node back to textual form
+func (node *PartialStatement) Serialize() string {
+	content := node.Indent + "{{"
+
+	if node.Strip != nil && node.Strip.Open {
+		content += "~"
+	}
+
+	content += "> "
+
+	content += node.Name.Serialize()
+
+	for _, p := range node.Params {
+		content += " " + p.Serialize()
+	}
+
+	if node.Hash != nil {
+		content += " " + node.Hash.Serialize()
+	}
+
+	if node.Strip != nil && node.Strip.Close {
+		content += "~"
+	}
+
+	content += "}}"
+
+	return content
 }
 
 //
@@ -331,6 +470,11 @@ func (node *ContentStatement) Accept(visitor Visitor) interface{} {
 	return visitor.VisitContent(node)
 }
 
+// Writes node back to textual form
+func (node *ContentStatement) Serialize() string {
+	return node.Original
+}
+
 //
 // Comment Statement
 //
@@ -364,6 +508,25 @@ func (node *CommentStatement) String() string {
 // Accept is the receiver entry point for visitors.
 func (node *CommentStatement) Accept(visitor Visitor) interface{} {
 	return visitor.VisitComment(node)
+}
+
+// Writes node back to textual form
+func (node *CommentStatement) Serialize() string {
+	content := "{{"
+
+	if node.Strip != nil && node.Strip.Open {
+		content += "~"
+	}
+
+	content += "!" + node.Value
+
+	if node.Strip != nil && node.Strip.Close {
+		content += "~"
+	}
+
+	content += "}}"
+
+	return content
 }
 
 //
@@ -434,6 +597,21 @@ func (node *Expression) Canonical() string {
 	}
 
 	return ""
+}
+
+// Writes node back to textual form
+func (node *Expression) Serialize() string {
+	content := node.Path.Serialize()
+
+	for _, p := range node.Params {
+		content += " " + p.Serialize()
+	}
+
+	if node.Hash != nil {
+		content += " " + node.Hash.Serialize()
+	}
+
+	return content
 }
 
 // HelperNameStr returns the string representation of a helper name, with a boolean set to false if this is not a valid helper name.
@@ -516,6 +694,11 @@ func (node *SubExpression) Accept(visitor Visitor) interface{} {
 	return visitor.VisitSubExpression(node)
 }
 
+// Writes node back to textual form
+func (node *SubExpression) Serialize() string {
+	return node.Expression.Serialize()
+}
+
 //
 // Path Expression
 //
@@ -583,6 +766,11 @@ func (node *PathExpression) IsDataRoot() bool {
 	return node.Data && (node.Parts[0] == "root")
 }
 
+// Writes node back to textual form
+func (node *PathExpression) Serialize() string {
+	return node.Original
+}
+
 //
 // String Literal
 //
@@ -613,6 +801,11 @@ func (node *StringLiteral) String() string {
 // Accept is the receiver entry point for visitors.
 func (node *StringLiteral) Accept(visitor Visitor) interface{} {
 	return visitor.VisitString(node)
+}
+
+// Writes node back to textual form
+func (node *StringLiteral) Serialize() string {
+	return "\"" + node.Value + "\""
 }
 
 //
@@ -656,6 +849,11 @@ func (node *BooleanLiteral) Canonical() string {
 	}
 
 	return "false"
+}
+
+// Writes node back to textual form
+func (node *BooleanLiteral) Serialize() string {
+	return node.Original
 }
 
 //
@@ -712,6 +910,11 @@ func (node *NumberLiteral) Number() interface{} {
 	return node.Value
 }
 
+// Writes node back to textual form
+func (node *NumberLiteral) Serialize() string {
+	return node.Original
+}
+
 //
 // Hash
 //
@@ -751,6 +954,21 @@ func (node *Hash) Accept(visitor Visitor) interface{} {
 	return visitor.VisitHash(node)
 }
 
+// Writes node back to textual form
+func (node *Hash) Serialize() string {
+	content := ""
+
+	lastIdx := len(node.Pairs) - 1
+	for i, p := range node.Pairs {
+		content += p.Serialize()
+		if i < lastIdx {
+			content += " "
+		}
+	}
+
+	return content
+}
+
 //
 // HashPair
 //
@@ -780,4 +998,11 @@ func (node *HashPair) String() string {
 // Accept is the receiver entry point for visitors.
 func (node *HashPair) Accept(visitor Visitor) interface{} {
 	return visitor.VisitHashPair(node)
+}
+
+// Writes node back to textual form
+func (node *HashPair) Serialize() string {
+	content := node.Key + "=" + node.Val.Serialize()
+
+	return content
 }
