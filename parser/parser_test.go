@@ -90,7 +90,7 @@ func TestParser(t *testing.T) {
 	for _, test := range parserTests {
 		output := ""
 
-		node, err := Parse(test.input)
+		node, err := Parse(test.input, nil)
 		if err == nil {
 			output = ast.Print(node)
 		}
@@ -148,7 +148,7 @@ func TestParserErrors(t *testing.T) {
 	t.Parallel()
 
 	for _, test := range parserErrorTests {
-		node, err := Parse(test.input)
+		node, err := Parse(test.input, nil)
 		if err == nil {
 			output := ast.Print(node)
 			tokens := lexer.Collect(test.input)
@@ -172,7 +172,7 @@ func Example() {
 	source := "You know {{nothing}} John Snow"
 
 	// parse template
-	program, err := Parse(source)
+	program, err := Parse(source, nil)
 	if err != nil {
 		panic(err)
 	}
