@@ -72,18 +72,19 @@ var parserTests = []parserTest{
 
 	{"parses an inverse section", `{{#foo}} bar {{^}} baz {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n    CONTENT[ ' baz ' ]\n", ``},
 	{"parses an inverse (else-style) section", `{{#foo}} bar {{else}} baz {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n    CONTENT[ ' baz ' ]\n", `{{#foo}} bar {{^}} baz {{/foo}}`},
-	{"parses multiple inverse sections", `{{#foo}} bar {{else if bar}}{{else}} baz {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n    BLOCK:\n      PATH:if [PATH:bar]\n      PROGRAM:\n      {{^}}\n        CONTENT[ ' baz ' ]\n", ``},
+	{"parses many multiple inverse sections", `{{#foo}} bar {{else if bar}} hello {{else if brrrr}} gna {{else}} baz {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n    BLOCK:\n      PATH:if [PATH:bar]\n      PROGRAM:\n        CONTENT[ ' hello ' ]\n      {{^}}\n        BLOCK:\n          PATH:if [PATH:brrrr]\n          PROGRAM:\n            CONTENT[ ' gna ' ]\n          {{^}}\n            CONTENT[ ' baz ' ]\n", `{{#foo}} bar {{else if bar}} hello {{else if brrrr}} gna {{^}} baz {{/foo}}`},
+	{"parses multiple inverse sections", `{{#foo}} bar {{else if bar}}{{else}} baz {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n    BLOCK:\n      PATH:if [PATH:bar]\n      PROGRAM:\n      {{^}}\n        CONTENT[ ' baz ' ]\n", `{{#foo}} bar {{else if bar}}{{^}} baz {{/foo}}`},
 	{"parses empty blocks", `{{#foo}}{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n", ``},
 	{"parses empty blocks with empty inverse section", `{{#foo}}{{^}}{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n", ``},
-	{"parses empty blocks with empty inverse (else-style) section", `{{#foo}}{{else}}{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n", ``},
+	{"parses empty blocks with empty inverse (else-style) section", `{{#foo}}{{else}}{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n", `{{#foo}}{{^}}{{/foo}}`},
 	{"parses non-empty blocks with empty inverse section", `{{#foo}} bar {{^}}{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n", ``},
-	{"parses non-empty blocks with empty inverse (else-style) section", `{{#foo}} bar {{else}}{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n", ``},
+	{"parses non-empty blocks with empty inverse (else-style) section", `{{#foo}} bar {{else}}{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    CONTENT[ ' bar ' ]\n  {{^}}\n", `{{#foo}} bar {{^}}{{/foo}}`},
 	{"parses empty blocks with non-empty inverse section", `{{#foo}}{{^}} bar {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    CONTENT[ ' bar ' ]\n", ``},
-	{"parses empty blocks with non-empty inverse (else-style) section", `{{#foo}}{{else}} bar {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    CONTENT[ ' bar ' ]\n", ``},
-	{"parses a standalone inverse section", `{{^foo}}bar{{/foo}}`, "BLOCK:\n  PATH:foo []\n  {{^}}\n    CONTENT[ 'bar' ]\n", ``},
+	{"parses empty blocks with non-empty inverse (else-style) section", `{{#foo}}{{else}} bar {{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    CONTENT[ ' bar ' ]\n", `{{#foo}}{{^}} bar {{/foo}}`},
+	{"parses a standalone inverse section", `{{^foo}}bar{{/foo}}`, "BLOCK:\n  PATH:foo []\n  {{^}}\n    CONTENT[ 'bar' ]\n", `{{^foo}}bar{{/foo}}`},
 	{"parses block with block params", `{{#foo as |bar baz|}}content{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n    BLOCK PARAMS: [ bar baz ]\n    CONTENT[ 'content' ]\n", ``},
 	{"parses inverse block with block params", `{{^foo as |bar baz|}}content{{/foo}}`, "BLOCK:\n  PATH:foo []\n  {{^}}\n    BLOCK PARAMS: [ bar baz ]\n    CONTENT[ 'content' ]\n", ``},
-	{"parses chained inverse block with block params", `{{#foo}}{{else foo as |bar baz|}}content{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    BLOCK:\n      PATH:foo []\n      PROGRAM:\n        BLOCK PARAMS: [ bar baz ]\n        CONTENT[ 'content' ]\n", ``},
+	{"parses chained inverse block with block params", `{{#foo}}{{else foo as |bar baz|}}content{{/foo}}`, "BLOCK:\n  PATH:foo []\n  PROGRAM:\n  {{^}}\n    BLOCK:\n      PATH:foo []\n      PROGRAM:\n        BLOCK PARAMS: [ bar baz ]\n        CONTENT[ 'content' ]\n", `{{#foo}}{{else foo as |bar baz|}}content{{/foo}}`},
 }
 
 func TestParser(t *testing.T) {
@@ -111,6 +112,12 @@ func TestParser(t *testing.T) {
 		if serialized != expected {
 			m, _ := json.MarshalIndent(node, "", " ")
 			t.Errorf("Serialization '%s' failed.\nExpected: %s\nGot: %s\nTree: %s", test.name, expected, serialized, string(m))
+		}
+
+		// Try to parse serialized, just to make sure
+		_, err = Parse(serialized, nil)
+		if err != nil {
+			t.Errorf("Test '%s' failed parsing serialized\ninput:\n\t'%s'\nerror:\n\t%s", test.name, serialized, err)
 		}
 	}
 }

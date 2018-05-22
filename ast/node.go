@@ -4,6 +4,7 @@ package ast
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // References:
@@ -294,10 +295,13 @@ func (node *BlockStatement) Accept(visitor Visitor) interface{} {
 
 // Writes node back to textual form
 func (node *BlockStatement) Serialize() string {
+	program := node.Program
+	inverse := node.Inverse
+
 	content := ""
 
-	if !node.Program.Chained {
-		// Open
+	if program != nil {
+		// Open block
 		content += "{{"
 
 		if node.OpenStrip != nil && node.OpenStrip.Open {
@@ -305,46 +309,93 @@ func (node *BlockStatement) Serialize() string {
 		}
 
 		content += "#"
-	}
 
-	content += node.Expression.Serialize()
+		content += node.Expression.Serialize()
 
-	for _, p := range node.Program.BlockParams {
-		content += " " + p
-	}
+		// Open
+		if len(program.BlockParams) > 0 {
+			content += " as |"
+			content += strings.Join(program.BlockParams, " ")
+			content += "|"
+		}
 
-	if node.OpenStrip != nil && node.OpenStrip.Close {
-		content += "~"
-	}
-
-	content += "}}"
-
-	// Content
-	content += node.Program.Serialize()
-
-	// Inverse
-	if node.Inverse != nil {
-		content += "{{"
-
-		if node.InverseStrip != nil && node.InverseStrip.Open {
+		if node.OpenStrip != nil && node.OpenStrip.Close {
 			content += "~"
 		}
 
-		content += "^"
+		content += "}}"
+		// Content
+		content += program.Serialize()
+	}
 
-		for _, p := range node.Inverse.BlockParams {
-			content += " " + p
+	// Inverse
+	if inverse != nil {
+		lastInverse := inverse
+
+		if inverse.Chained {
+			var inverseBlocks []*BlockStatement
+
+			for lastInverse != nil && lastInverse.Chained {
+				lastInverseBlock := lastInverse.Body[len(lastInverse.Body)-1].(*BlockStatement)
+				lastInverse = lastInverseBlock.Inverse
+				inverseBlocks = append(inverseBlocks, lastInverseBlock)
+			}
+
+			for _, block := range inverseBlocks {
+				content += "{{"
+
+				if block.OpenStrip != nil && block.OpenStrip.Open {
+					content += "~"
+				}
+
+				content += "else "
+
+				content += block.Expression.Serialize()
+
+				if len(block.Program.BlockParams) > 0 {
+					content += " as |"
+					content += strings.Join(block.Program.BlockParams, " ")
+					content += "|"
+				}
+
+				if block.OpenStrip != nil && block.OpenStrip.Close {
+					content += "~"
+				}
+
+				content += "}}"
+
+				content += block.Program.Serialize()
+			}
 		}
 
-		if !node.Inverse.Chained {
-			if node.InverseStrip != nil && node.InverseStrip.Close {
+		if lastInverse != nil {
+			content += "{{"
+
+			if lastInverse.Strip != nil && lastInverse.Strip.Open {
+				content += "~"
+			}
+
+			content += "^"
+
+			// Pure inverse section
+			if program == nil {
+				content += node.Expression.Serialize()
+				if len(lastInverse.BlockParams) > 0 {
+					content += " as |"
+					content += strings.Join(lastInverse.BlockParams, " ")
+					content += "|"
+				}
+			}
+
+			if lastInverse.Strip != nil && lastInverse.Strip.Close {
 				content += "~"
 			}
 
 			content += "}}"
+
+			content += lastInverse.Serialize()
 		}
 
-		content += node.Inverse.Serialize()
 	}
 
 	// Close
