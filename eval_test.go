@@ -52,20 +52,6 @@ var evalTests = []Test{
 		" baz",
 	},
 	{
-		"block helper returns a SafeString",
-		"{{title}} - {{#bold}}{{body}}{{/bold}}",
-		map[string]string{
-			"title": "My new blog post",
-			"body":  "I have so many things to say!",
-		},
-		nil,
-		map[string]interface{}{"bold": func(options *Options) SafeString {
-			return SafeString(`<div class="mybold">` + options.Fn() + "</div>")
-		}},
-		nil,
-		`My new blog post - <div class="mybold">I have so many things to say!</div>`,
-	},
-	{
 		"chained blocks",
 		"{{#if a}}A{{else if b}}B{{else}}C{{/if}}",
 		map[string]interface{}{"b": false},
@@ -95,14 +81,14 @@ var evalErrors = []Test{
 		"{{foo}}",
 		map[string]interface{}{"foo": func() {}},
 		nil, nil, nil,
-		"Helper function must return a string or a SafeString",
+		"Helper function must return a string",
 	},
 	{
 		"functions with wrong number of returned values (2)",
 		"{{foo}}",
 		map[string]interface{}{"foo": func() (string, bool, string) { return "foo", true, "bar" }},
 		nil, nil, nil,
-		"Helper function must return a string or a SafeString",
+		"Helper function must return a string",
 	},
 }
 

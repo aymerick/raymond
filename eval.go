@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aymerick/raymond/ast"
+	"github.com/cmaster11/raymond/ast"
 )
 
 var (
@@ -797,14 +797,11 @@ func (v *evalVisitor) VisitMustache(node *ast.MustacheStatement) interface{} {
 	// evaluate expression
 	expr := node.Expression.Accept(v)
 
-	// check if this is a safe string
-	isSafe := isSafeString(expr)
-
 	// get string value
 	str := Str(expr)
-	if !isSafe && !node.Unescaped {
-		// escape html
-		str = Escape(str)
+
+	if v.tpl.OnContent != nil {
+		return v.tpl.OnContent(node.NodeType, str)
 	}
 
 	return str
@@ -880,7 +877,13 @@ func (v *evalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 		v.errorf("Partial not found: %s", name)
 	}
 
-	return v.evalPartial(partial, node)
+	str := v.evalPartial(partial, node)
+
+	if v.tpl.OnContent != nil {
+		return v.tpl.OnContent(node.NodeType, str)
+	}
+
+	return str
 }
 
 // VisitContent implements corresponding Visitor interface method

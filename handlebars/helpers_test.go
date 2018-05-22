@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aymerick/raymond"
+	"github.com/cmaster11/raymond"
 )
 
 //
@@ -101,30 +101,12 @@ func detectDataHelper(options *raymond.Options) string {
 var helpersTests = []Test{
 	{
 		"helper with complex lookup",
-		"{{#goodbyes}}{{{link ../prefix}}}{{/goodbyes}}",
+		"{{#goodbyes}}{{link ../prefix}}{{/goodbyes}}",
 		map[string]interface{}{"prefix": "/root", "goodbyes": []map[string]string{{"text": "Goodbye", "url": "goodbye"}}},
 		nil,
 		map[string]interface{}{"link": linkHelper},
 		nil,
 		`<a href="/root/goodbye">Goodbye</a>`,
-	},
-	{
-		"helper for raw block gets raw content",
-		"{{{{raw}}}} {{test}} {{{{/raw}}}}",
-		map[string]interface{}{"test": "hello"},
-		nil,
-		map[string]interface{}{"raw": rawHelper},
-		nil,
-		" {{test}} ",
-	},
-	{
-		"helper for raw block gets parameters",
-		"{{{{raw 1 2 3}}}} {{test}} {{{{/raw}}}}",
-		map[string]interface{}{"test": "hello"},
-		nil,
-		map[string]interface{}{"raw": rawThreeHelper},
-		nil,
-		" {{test}} 123",
 	},
 	{
 		"helper block with complex lookup expression",
@@ -265,7 +247,7 @@ var helpersTests = []Test{
 		nil,
 		map[string]interface{}{"list": listHelper},
 		nil,
-		`<p>Nobody&apos;s here</p>`,
+		`<p>Nobody's here</p>`,
 	},
 
 	{
@@ -315,7 +297,7 @@ var helpersTests = []Test{
 	},
 	{
 		"helpers hash - in cases of conflict, helpers win (1)",
-		"{{{lookup}}}",
+		"{{lookup}}",
 		map[string]interface{}{"lookup": "Explicit"},
 		nil,
 		map[string]interface{}{"lookup": func() string { return "helpers" }},
@@ -413,27 +395,6 @@ var helpersTests = []Test{
 	},
 
 	// @todo "using a quote in the middle of a parameter raises an error"
-
-	{
-		"String literal parameters - escaping a String is possible",
-		"Message: {{{hello \"\\\"world\\\"\"}}}",
-		nil, nil,
-		map[string]interface{}{"hello": func(param string) string {
-			return "Hello " + param
-		}},
-		nil,
-		`Message: Hello "world"`,
-	},
-	{
-		"String literal parameters - it works with ' marks",
-		"Message: {{{hello \"Alan's world\"}}}",
-		nil, nil,
-		map[string]interface{}{"hello": func(param string) string {
-			return "Hello " + param
-		}},
-		nil,
-		`Message: Hello Alan's world`,
-	},
 
 	{
 		"multiple parameters - simple multi-params work",

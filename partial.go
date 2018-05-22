@@ -22,7 +22,7 @@ func init() {
 	partials = make(map[string]*partial)
 }
 
-// newPartial instanciates a new partial
+// newPartial instantiates a new partial
 func newPartial(name string, source string, tpl *Template) *partial {
 	return &partial{
 		name:   name,

@@ -116,7 +116,7 @@ var builtinsTests = []Test{
 		map[string]interface{}{
 			"person": func() map[string]string { return map[string]string{"first": "Alan", "last": "Johnson"} },
 		}, nil, nil, nil,
-		"Alan Johnson",
+		   "Alan Johnson",
 	},
 	{
 		"#with - with with else",
@@ -166,9 +166,15 @@ var builtinsTests = []Test{
 	{
 		"#each - each with an object and @key (map)",
 		"{{#each goodbyes}}{{@key}}. {{text}}! {{/each}}cruel {{world}}!",
-		map[string]interface{}{"goodbyes": map[interface{}]map[string]string{"<b>#1</b>": {"text": "goodbye"}, 2: {"text": "GOODBYE"}}, "world": "world"},
+		map[string]interface{}{
+			"goodbyes": map[interface{}]map[string]string{
+				"<b>#1</b>": {"text": "goodbye"},
+				2:           {"text": "GOODBYE"},
+			},
+			"world": "world",
+		},
 		nil, nil, nil,
-		[]string{"&lt;b&gt;#1&lt;/b&gt;. goodbye! 2. GOODBYE! cruel world!", "2. GOODBYE! &lt;b&gt;#1&lt;/b&gt;. goodbye! cruel world!"},
+		[]string{"<b>#1</b>. goodbye! 2. GOODBYE! cruel world!", "2. GOODBYE! <b>#1</b>. goodbye! cruel world!"},
 	},
 	// NOTE: An additional test with a struct, but without an html stuff for the key, because it is impossible
 	{

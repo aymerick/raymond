@@ -10,14 +10,14 @@ type DataFrame struct {
 	data   map[string]interface{}
 }
 
-// NewDataFrame instanciates a new private data frame.
+// NewDataFrame instantiates a new private data frame.
 func NewDataFrame() *DataFrame {
 	return &DataFrame{
 		data: make(map[string]interface{}),
 	}
 }
 
-// Copy instanciates a new private data frame with receiver as parent.
+// Copy instantiates a new private data frame with receiver as parent.
 func (p *DataFrame) Copy() *DataFrame {
 	result := NewDataFrame()
 
@@ -30,7 +30,7 @@ func (p *DataFrame) Copy() *DataFrame {
 	return result
 }
 
-// newIterDataFrame instanciates a new private data frame with receiver as parent and with iteration data set (@index, @key, @first, @last)
+// newIterDataFrame instantiates a new private data frame with receiver as parent and with iteration data set (@index, @key, @first, @last)
 func (p *DataFrame) newIterDataFrame(length int, i int, key interface{}) *DataFrame {
 	result := p.Copy()
 

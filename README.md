@@ -1,11 +1,10 @@
-# raymond [![Build Status](https://secure.travis-ci.org/aymerick/raymond.svg?branch=master)](http://travis-ci.org/aymerick/raymond) [![GoDoc](https://godoc.org/github.com/aymerick/raymond?status.svg)](http://godoc.org/github.com/aymerick/raymond)
+# raymond (STRIPPED VERSION!)
 
-Handlebars for [golang](https://golang.org) with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
+Handlebars for [golang](https://golang.org) with ALMOST the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
-The full API documentation is available here: <http://godoc.org/github.com/aymerick/raymond>.
+The full API documentation is available here: <http://godoc.org/github.com/cmaster11/raymond>.
 
-![Raymond Logo](https://github.com/aymerick/raymond/blob/master/raymond.png?raw=true "Raymond")
-
+![Raymond Logo](https://github.com/cmaster11/raymond/blob/master/raymond.png?raw=true "Raymond")
 
 # Table of Contents
 
@@ -56,7 +55,7 @@ The full API documentation is available here: <http://godoc.org/github.com/aymer
 
 ## Quick Start
 
-    $ go get github.com/aymerick/raymond
+    $ go get github.com/cmaster11/raymond
 
 The quick and dirty way of rendering a handlebars template:
 
@@ -66,7 +65,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/cmaster11/raymond"
 )
 
 func main() {
@@ -116,7 +115,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/cmaster11/raymond"
 )
 
 func main() {
@@ -200,7 +199,7 @@ package main
 import (
   "fmt"
 
-  "github.com/aymerick/raymond"
+  "github.com/cmaster11/raymond"
 )
 
 func main() {
@@ -265,62 +264,7 @@ Output:
 
 ## HTML Escaping
 
-By default, the result of a mustache expression is HTML escaped. Use the triple mustache `{{{` to output unescaped values.
-
-```go
-source := `<div class="entry">
-  <h1>{{title}}</h1>
-  <div class="body">
-    {{{body}}}
-  </div>
-</div>
-`
-
-ctx := map[string]string{
-    "title": "All about <p> Tags",
-    "body":  "<p>This is a post about &lt;p&gt; tags</p>",
-}
-
-tpl := raymond.MustParse(source)
-result := tpl.MustExec(ctx)
-
-fmt.Print(result)
-```
-
-Output:
-
-```html
-<div class="entry">
-  <h1>All about &lt;p&gt; Tags</h1>
-  <div class="body">
-    <p>This is a post about &lt;p&gt; tags</p>
-  </div>
-</div>
-```
-
-When returning HTML from a helper, you should return a `SafeString` if you don't want it to be escaped by default. When using `SafeString` all unknown or unsafe data should be manually escaped with the `Escape` method.
-
-```go
-raymond.RegisterHelper("link", func(url, text string) raymond.SafeString {
-    return raymond.SafeString("<a href='" + raymond.Escape(url) + "'>" + raymond.Escape(text) + "</a>")
-})
-
-tpl := raymond.MustParse("{{link url text}}")
-
-ctx := map[string]string{
-    "url":  "http://www.aymerick.com/",
-    "text": "This is a <em>cool</em> website",
-}
-
-result := tpl.MustExec(ctx)
-fmt.Print(result)
-```
-
-Output:
-
-```html
-<a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>
-```
+In this stripped version, there is NO HTML escaping.
 
 
 ## Helpers
@@ -1315,7 +1259,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/lexer"
+    "github.com/cmaster11/raymond/lexer"
 )
 
 func main() {
@@ -1357,8 +1301,8 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/ast"
-    "github.com/aymerick/raymond/parser"
+    "github.com/cmaster11/raymond/ast"
+    "github.com/cmaster11/raymond/parser"
 )
 
 fu  nc main() {

@@ -81,7 +81,7 @@ func ensureValidHelper(name string, funcValue reflect.Value) {
 	funcType := funcValue.Type()
 
 	if funcType.NumOut() != 1 {
-		panic(fmt.Errorf("Helper function must return a string or a SafeString: %s", name))
+		panic(fmt.Errorf("Helper function must return a string: %s", name))
 	}
 
 	// @todo Check if first returned value is a string, SafeString or interface{} ?
@@ -95,7 +95,7 @@ func findHelper(name string) reflect.Value {
 	return helpers[name]
 }
 
-// newOptions instanciates a new Options
+// newOptions instantiates a new Options
 func newOptions(eval *evalVisitor, params []interface{}, hash map[string]interface{}) *Options {
 	return &Options{
 		eval:   eval,
@@ -104,7 +104,7 @@ func newOptions(eval *evalVisitor, params []interface{}, hash map[string]interfa
 	}
 }
 
-// newEmptyOptions instanciates a new empty Options
+// newEmptyOptions instantiates a new empty Options
 func newEmptyOptions(eval *evalVisitor) *Options {
 	return &Options{
 		eval: eval,
@@ -197,14 +197,14 @@ func (options *Options) DataFrame() *DataFrame {
 	return options.eval.dataFrame
 }
 
-// NewDataFrame instanciates a new data frame that is a copy of current evaluation data frame.
+// NewDataFrame instantiates a new data frame that is a copy of current evaluation data frame.
 //
 // Parent of returned data frame is set to current evaluation data frame.
 func (options *Options) NewDataFrame() *DataFrame {
 	return options.eval.dataFrame.Copy()
 }
 
-// newIterDataFrame instanciates a new data frame and set iteration specific vars
+// newIterDataFrame instantiates a new data frame and set iteration specific vars
 func (options *Options) newIterDataFrame(length int, i int, key interface{}) *DataFrame {
 	return options.eval.dataFrame.newIterDataFrame(length, i, key)
 }
@@ -388,7 +388,7 @@ func lookupHelper(obj interface{}, field string, options *Options) interface{} {
 }
 
 // #equal helper
-// Ref: https://github.com/aymerick/raymond/issues/7
+// Ref: https://github.com/cmaster11/raymond/issues/7
 func equalHelper(a interface{}, b interface{}, options *Options) interface{} {
 	if Str(a) == Str(b) {
 		return options.Fn()
