@@ -86,6 +86,13 @@ var evalTests = []Test{
 		nil, nil, nil,
 		`Length: 4`,
 	},
+	{
+		"length method on a string, like with JS engines",
+		"Length: {{str.length}}",
+		map[string]interface{}{"str": "abcde"},
+		nil, nil, nil,
+		`Length: 5`,
+	},
 
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
 }

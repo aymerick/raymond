@@ -368,7 +368,7 @@ func (v *evalVisitor) evalMethod(ctx reflect.Value, name string, exprRoot bool) 
 		// where the "length" method is implicit.
 		if name == "length" {
 			switch ctx.Kind() {
-			case reflect.Slice, reflect.Array:
+			case reflect.Slice, reflect.Array, reflect.String:
 				return reflect.ValueOf(ctx.Len()), true
 			}
 		}
