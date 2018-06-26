@@ -394,5 +394,5 @@ func equalHelper(a interface{}, b interface{}, options *Options) interface{} {
 		return options.Fn()
 	}
 
-	return ""
+	return options.Inverse()
 }
