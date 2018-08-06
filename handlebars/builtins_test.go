@@ -334,6 +334,45 @@ var builtinsTests = []Test{
 		nil, nil, nil,
 		"",
 	},
+	{
+		"#lookup - should lookup in subexpression",
+		"{{#with (lookup data goodbyes)}}{{abc}}{{/with}}",
+		map[string]interface{}{"goodbyes": "foo", "data": map[string]interface{}{
+			"foo": map[string]string{"abc": "foo1"},
+			"bar": map[string]string{"abc": "bar1"}}},
+		nil, nil, nil,
+		"foo1",
+	},
+	{
+		"#lookup - should lookup array element deeply in subexpression",
+		"{{#each goodbyes}}{{#with (lookup ../data @index)}}{{foo}}{{bar}}{{/with}}{{/each}}",
+		map[string]interface{}{"goodbyes": []int{0, 1}, "data": []map[string]interface{}{
+			{"foo": "baz1", "bar": "bat1"},
+			{"foo": "baz2", "bar": "bat2"}}},
+		nil, nil, nil,
+		"baz1bat1baz2bat2",
+	},
+	{
+		"#lookup - should lookup map element deeply in subexpression",
+		"{{#each goodbyes}}{{#with (lookup ../data .)}}{{foo}}{{bar}}{{/with}}{{/each}}",
+		map[string]interface{}{"goodbyes": []string{"0", "1"}, "data": map[string]interface{}{
+			"0": map[string]string{"foo": "baz1", "bar": "bat1"},
+			"1": map[string]string{"foo": "baz2", "bar": "bat2"}}},
+		nil, nil, nil,
+		"baz1bat1baz2bat2",
+	},
+	{
+		"#lookup - should lookup struct element deeply in subexpression",
+		"{{#each goodbyes}}{{#with (lookup ../data .)}}{{foo}}{{bar}}{{/with}}{{/each}}",
+		map[string]interface{}{"goodbyes": []string{"One", "Two"}, "data": struct {
+			One map[string]string
+			Two map[string]string
+		}{
+			One: map[string]string{"foo": "baz1", "bar": "bat1"},
+			Two: map[string]string{"foo": "baz2", "bar": "bat2"}}},
+		nil, nil, nil,
+		"baz1bat1baz2bat2",
+	},
 }
 
 func TestBuiltins(t *testing.T) {

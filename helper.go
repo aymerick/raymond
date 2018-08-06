@@ -384,7 +384,7 @@ func logHelper(message string) interface{} {
 
 // #lookup helper
 func lookupHelper(obj interface{}, field string, options *Options) interface{} {
-	return Str(options.Eval(obj, field))
+	return options.Eval(obj, field)
 }
 
 // #equal helper
