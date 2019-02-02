@@ -44,7 +44,7 @@ type evalVisitor struct {
 	curNode ast.Node
 }
 
-// NewEvalVisitor instanciate a new evaluation visitor with given context and initial private data frame
+// NewEvalVisitor instantiates a new evaluation visitor with given context and initial private data frame
 //
 // If privData is nil, then a default data frame is created
 func newEvalVisitor(tpl *Template, ctx interface{}, privData *DataFrame) *evalVisitor {
