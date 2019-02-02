@@ -20,7 +20,7 @@ type Template struct {
 	mutex    sync.RWMutex // protects helpers and partials
 }
 
-// newTemplate instanciate a new template without parsing it
+// newTemplate instantiates a new template without parsing it
 func newTemplate(source string) *Template {
 	return &Template{
 		source:   source,
@@ -29,7 +29,7 @@ func newTemplate(source string) *Template {
 	}
 }
 
-// Parse instanciates a template by parsing given source.
+// Parse instantiates a template by parsing given source.
 func Parse(source string) (*Template, error) {
 	tpl := newTemplate(source)
 
@@ -41,7 +41,7 @@ func Parse(source string) (*Template, error) {
 	return tpl, nil
 }
 
-// MustParse instanciates a template by parsing given source. It panics on error.
+// MustParse instantiates a template by parsing given source. It panics on error.
 func MustParse(source string) *Template {
 	result, err := Parse(source)
 	if err != nil {
