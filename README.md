@@ -34,7 +34,7 @@ The full API documentation is available here: <http://godoc.org/github.com/aymer
     - [Context Values](#context-values)
     - [Helper Hash Arguments](#helper-hash-arguments)
     - [Private Data](#private-data)
-  - [Utilites](#utilites)
+  - [Utilities](#utilities)
     - [`Str()`](#str)
     - [`IsTrue()`](#istrue)
 - [Context Functions](#context-functions)
@@ -922,7 +922,7 @@ ctx := map[string]interface{}{
 }
 ```
 
-Actually, raymond perfoms automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper outputs:
+Actually, raymond performs automatic string conversion. So because the first parameter of the helper is typed as `string`, the first argument will be converted from the `10` integer to `"10"`, and the helper outputs:
 
 ```html
 10 VALJEAN
@@ -1040,9 +1040,9 @@ raymond.RegisterHelper("voodoo", func(options *raymond.Options) string {
 Helpers that need to evaluate the block with a private data frame and a new context can call `options.FnCtxData()`.
 
 
-### Utilites
+### Utilities
 
-In addition to `Escape()`, raymond provides utility functions that can be usefull for helpers.
+In addition to `Escape()`, raymond provides utility functions that can be useful for helpers.
 
 
 #### `Str()`
@@ -1267,7 +1267,7 @@ My hero is Goldorak
 
 ## Utility Functions
 
-You can use following utility fuctions to parse and register partials from files:
+You can use following utility functions to parse and register partials from files:
 
 - `ParseFile()` - reads a file and return parsed template
 - `Template.RegisterPartialFile()` - reads a file and registers its content as a partial with given name
@@ -1293,7 +1293,7 @@ These handlebars options are currently NOT implemented:
 - `noEscape` - disables HTML escaping globally
 - `strict` - templates will throw rather than silently ignore missing fields
 - `assumeObjects` - removes object existence checks when traversing paths
-- `preventIndent` - disables the auto-indententation of nested partials
+- `preventIndent` - disables the auto-indentation of nested partials
 - `stringParams` - resolves a parameter to it's name if the value isn't present in the context stack
 
 These handlebars features are currently NOT implemented:
