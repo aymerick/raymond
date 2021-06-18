@@ -57,6 +57,7 @@ func TestMustache(t *testing.T) {
 func testsFromMustacheFile(fileName string) []Test {
 	result := []Test{}
 
+	// These files are pulled in from https://github.com/mustache/spec/tree/83b0721610a4e11832e83df19c73ace3289972b9
 	fileData, err := ioutil.ReadFile(path.Join("mustache", "specs", fileName))
 	if err != nil {
 		panic(err)
