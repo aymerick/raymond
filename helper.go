@@ -1,9 +1,11 @@
 package raymond
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
+	"strconv"
 	"sync"
 )
 
@@ -304,16 +306,19 @@ func ifHelper(conditional interface{}, options *Options) interface{} {
 }
 
 func ifGtHelper(a, b interface{}, options *Options) interface{} {
-	// Non-integer comparisons are not supported by the ifGt helper. Return empty string.
-	var aInt, bInt int
-	var ok bool
-	if aInt, ok = a.(int); !ok {
+	var aFloat, bFloat float64
+	var err error
+
+	if aFloat, err = floatValue(a); err != nil {
+		// TODO: Log conversion failure.
 		return ""
 	}
-	if bInt, ok = b.(int); !ok {
+	if bFloat, err = floatValue(b); err != nil {
+		// TODO: Log conversion failure
 		return ""
 	}
-	if aInt > bInt {
+
+	if aFloat > bFloat {
 		return options.Fn()
 	}
 	// Evaluate possible else condition.
@@ -413,4 +418,28 @@ func equalHelper(a interface{}, b interface{}, options *Options) interface{} {
 	}
 
 	return ""
+}
+
+// floatValue attempts to convert value into a float64 and returns an error if it fails.
+func floatValue(value interface{}) (result float64, err error) {
+	val := reflect.ValueOf(value)
+
+	switch val.Kind() {
+	case reflect.Bool:
+		result = 0
+		if val.Bool() {
+			result = 1
+		}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		result = float64(val.Int())
+	case reflect.Float32, reflect.Float64:
+		result = val.Float()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		result = float64(val.Uint())
+	case reflect.String:
+		result, err = strconv.ParseFloat(val.String(), 64)
+	default:
+		err = errors.New(fmt.Sprintf("uable to convert type '%s' to float64", val.Kind().String()))
+	}
+	return
 }

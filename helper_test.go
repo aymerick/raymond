@@ -210,17 +210,17 @@ var helperTests = []Test{
 	},
 	{
 		"#ifGt helper with true literal from params",
-		`{{#ifGt foo bar}}foo is greater than 10{{/ifGt}}`,
+		`{{#ifGt foo bar}}foo is greater than bar{{/ifGt}}`,
 		map[string]interface{}{"foo": 5, "bar": 0},
 		nil, nil, nil,
-		`foo is greater than 10`,
+		`foo is greater than bar`,
 	},
 	{
-		"#ifGt helper with string comparison, is improper imput should return empty string",
-		`{{#ifGt foo bar}}foo is greater than 10{{/ifGt}}`,
+		"#ifGt helper with string comparison",
+		`{{#ifGt foo bar}}foo is greater than bar{{/ifGt}}`,
 		map[string]interface{}{"foo": "5", "bar": "0"},
 		nil, nil, nil,
-		``,
+		`foo is greater than bar`,
 	},
 	{
 		"#ifGt helper with false literal from params",
