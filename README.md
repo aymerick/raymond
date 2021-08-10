@@ -66,7 +66,7 @@ package main
 import (
     "fmt"
 
-    "github.com/mailgun/raymond"
+    "github.com/mailgun/raymond/v2"
 )
 
 func main() {
@@ -116,7 +116,7 @@ package main
 import (
     "fmt"
 
-    "github.com/mailgun/raymond"
+    "github.com/mailgun/raymond/v2"
 )
 
 func main() {
@@ -200,7 +200,7 @@ package main
 import (
   "fmt"
 
-  "github.com/mailgun/raymond"
+  "github.com/mailgun/raymond/v2"
 )
 
 func main() {
@@ -1315,7 +1315,7 @@ package main
 import (
     "fmt"
 
-    "github.com/mailgun/raymond/lexer"
+    "github.com/mailgun/raymond/v2/lexer"
 )
 
 func main() {
@@ -1357,8 +1357,8 @@ package main
 import (
     "fmt"
 
-    "github.com/mailgun/raymond/ast"
-    "github.com/mailgun/raymond/parser"
+    "github.com/mailgun/raymond/v2/ast"
+    "github.com/mailgun/raymond/v2/parser"
 )
 
 fu  nc main() {

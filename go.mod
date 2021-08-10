@@ -1,4 +1,4 @@
-module github.com/mailgun/raymond
+module github.com/mailgun/raymond/v2
 
 go 1.16
 
