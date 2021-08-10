@@ -32,6 +32,7 @@ func init() {
 	RegisterHelper("log", logHelper)
 	RegisterHelper("lookup", lookupHelper)
 	RegisterHelper("equal", equalHelper)
+	RegisterHelper("ifGt", ifGtHelper)
 }
 
 // RegisterHelper registers a global helper. That helper will be available to all templates.
@@ -299,6 +300,23 @@ func ifHelper(conditional interface{}, options *Options) interface{} {
 		return options.Fn()
 	}
 
+	return options.Inverse()
+}
+
+func ifGtHelper(a, b interface{}, options *Options) interface{} {
+	// Non-integer comparisons are not supported by the ifGt helper. Return empty string.
+	var aInt, bInt int
+	var ok bool
+	if aInt, ok = a.(int); !ok {
+		return ""
+	}
+	if bInt, ok = b.(int); !ok {
+		return ""
+	}
+	if aInt > bInt {
+		return options.Fn()
+	}
+	// Evaluate possible else condition.
 	return options.Inverse()
 }
 
