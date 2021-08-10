@@ -3,7 +3,7 @@ package parser
 import (
 	"regexp"
 
-	"github.com/mailgun/raymond/ast"
+	"github.com/mailgun/raymond/v2/ast"
 )
 
 // whitespaceVisitor walks through the AST to perform whitespace control
