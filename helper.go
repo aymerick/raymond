@@ -35,6 +35,7 @@ func init() {
 	RegisterHelper("lookup", lookupHelper)
 	RegisterHelper("equal", equalHelper)
 	RegisterHelper("ifGt", ifGtHelper)
+	RegisterHelper("ifLt", ifLtHelper)
 }
 
 // RegisterHelper registers a global helper. That helper will be available to all templates.
@@ -311,14 +312,34 @@ func ifGtHelper(a, b interface{}, options *Options) interface{} {
 
 	if aFloat, err = floatValue(a); err != nil {
 		// TODO: Log conversion failure.
-		return ""
+		return options.Inverse()
 	}
 	if bFloat, err = floatValue(b); err != nil {
 		// TODO: Log conversion failure
-		return ""
+		return options.Inverse()
 	}
 
 	if aFloat > bFloat {
+		return options.Fn()
+	}
+	// Evaluate possible else condition.
+	return options.Inverse()
+}
+
+func ifLtHelper(a, b interface{}, options *Options) interface{} {
+	var aFloat, bFloat float64
+	var err error
+
+	if aFloat, err = floatValue(a); err != nil {
+		// TODO: Log conversion failure.
+		return options.Inverse()
+	}
+	if bFloat, err = floatValue(b); err != nil {
+		// TODO: Log conversion failure
+		return options.Inverse()
+	}
+
+	if aFloat < bFloat {
 		return options.Fn()
 	}
 	// Evaluate possible else condition.
