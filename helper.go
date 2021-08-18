@@ -3,8 +3,8 @@ package raymond
 import (
 	"errors"
 	"fmt"
-	"log"
 	"reflect"
+	"regexp"
 	"strconv"
 	"sync"
 )
@@ -37,6 +37,7 @@ func init() {
 	RegisterHelper("ifGt", ifGtHelper)
 	RegisterHelper("ifLt", ifLtHelper)
 	RegisterHelper("ifEq", ifEqHelper)
+	RegisterHelper("ifMatchesRegexStr", ifMatchesRegexStr)
 }
 
 // RegisterHelper registers a global helper. That helper will be available to all templates.
@@ -312,11 +313,11 @@ func ifGtHelper(a, b interface{}, options *Options) interface{} {
 	var err error
 
 	if aFloat, err = floatValue(a); err != nil {
-		// TODO: Log conversion failure.
+		log.WithError(err).Errorf("failed to convert value to float '%v'", a)
 		return options.Inverse()
 	}
 	if bFloat, err = floatValue(b); err != nil {
-		// TODO: Log conversion failure
+		log.WithError(err).Errorf("failed to convert value to float '%v'", b)
 		return options.Inverse()
 	}
 
@@ -332,11 +333,11 @@ func ifLtHelper(a, b interface{}, options *Options) interface{} {
 	var err error
 
 	if aFloat, err = floatValue(a); err != nil {
-		// TODO: Log conversion failure.
+		log.WithError(err).Errorf("failed to convert value to float '%v'", a)
 		return options.Inverse()
 	}
 	if bFloat, err = floatValue(b); err != nil {
-		// TODO: Log conversion failure
+		log.WithError(err).Errorf("failed to convert value to float '%v'", b)
 		return options.Inverse()
 	}
 
@@ -352,11 +353,11 @@ func ifEqHelper(a, b interface{}, options *Options) interface{} {
 	var err error
 
 	if aFloat, err = floatValue(a); err != nil {
-		// TODO: Log conversion failure.
+		log.WithError(err).Errorf("failed to convert value to float '%v'", a)
 		return options.Inverse()
 	}
 	if bFloat, err = floatValue(b); err != nil {
-		// TODO: Log conversion failure
+		log.WithError(err).Errorf("failed to convert value to float '%v'", b)
 		return options.Inverse()
 	}
 
@@ -364,6 +365,24 @@ func ifEqHelper(a, b interface{}, options *Options) interface{} {
 		return options.Fn()
 	}
 	// Evaluate possible else condition.
+	return options.Inverse()
+}
+
+// ifMatchesRegexStr is helper function which does a regex match, where a is the expression to compile and
+// b is the string to match against.
+func ifMatchesRegexStr(a, b interface{}, options *Options) interface{} {
+	exp := Str(a)
+	match := Str(b)
+
+	re, err := regexp.Compile(exp)
+	if err != nil {
+		log.WithError(err).Errorf("failed to compile regex '%v'", a)
+		return options.Inverse()
+	}
+
+	if re.MatchString(match) {
+		return options.Fn()
+	}
 	return options.Inverse()
 }
 

@@ -363,6 +363,87 @@ var helperTests = []Test{
 		`foo or bar are not numbers`,
 	},
 	{
+		"#ifMatchesRegexStr helper simple string match",
+		`{{#ifMatchesRegexStr "foo" bar}}The expression matches{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{"bar": "foo"},
+		nil, nil, nil,
+		`The expression matches`,
+	},
+	{
+		"#ifMatchesRegexStr regex match",
+		`{{#ifMatchesRegexStr regex phone}}The expression matches{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{
+			"regex": "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$",
+			"phone": "555-333-4545",
+		},
+		nil, nil, nil,
+		`The expression matches`,
+	},
+	{
+		"#ifMatchesRegexStr regex match with string conversion",
+		`{{#ifMatchesRegexStr regex phone}}The expression matches{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{
+			"regex": "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?\\d{3}\\d{4}$",
+			"phone": 5553334545,
+		},
+		nil, nil, nil,
+		`The expression matches`,
+	},
+	{
+		"#ifMatchesRegexStr helper simple string does not match",
+		`{{#ifMatchesRegexStr "foo" bar}}The expression matches{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{"bar": "bar"},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"#ifMatchesRegexStr regex does not match",
+		`{{#ifMatchesRegexStr regex phone}}The expression matches{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{
+			"regex": "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$",
+			"phone": "5553334545",
+		},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"#ifMatchesRegexStr regex does not match with string conversion",
+		`{{#ifMatchesRegexStr regex phone}}The expression matches{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{
+			"regex": "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?\\d{3}\\d{4}$",
+			"phone": 1,
+		},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"#ifMatchesRegexStr helper simple string trigger else",
+		`{{#ifMatchesRegexStr "foo" bar}}The expression matches{{else}}The expression does not match{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{"bar": "bar"},
+		nil, nil, nil,
+		`The expression does not match`,
+	},
+	{
+		"#ifMatchesRegexStr regex trigger else",
+		`{{#ifMatchesRegexStr regex phone}}The expression matches{{else}}The expression does not match{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{
+			"regex": "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?[\\s.-]\\d{3}[\\s.-]\\d{4}$",
+			"phone": "5553334545",
+		},
+		nil, nil, nil,
+		`The expression does not match`,
+	},
+	{
+		"#ifMatchesRegexStr regex trigger else with string conversion",
+		`{{#ifMatchesRegexStr regex phone}}The expression matches{{else}}The expression does not match{{/ifMatchesRegexStr}}`,
+		map[string]interface{}{
+			"regex": "^(\\+\\d{1,2}\\s)?\\(?\\d{3}\\)?\\d{3}\\d{4}$",
+			"phone": 1,
+		},
+		nil, nil, nil,
+		`The expression does not match`,
+	},
+	{
 		"#equal helper inside HTML tag",
 		`<option value="test" {{#equal value "test"}}selected{{/equal}}>Test</option>`,
 		map[string]interface{}{"value": "test"},
