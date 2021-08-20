@@ -44,6 +44,7 @@ func init() {
 	RegisterHelper("ifLt", ifLtHelper)
 	RegisterHelper("ifEq", ifEqHelper)
 	RegisterHelper("ifMatchesRegexStr", ifMatchesRegexStr)
+	RegisterHelper("pluralize", pluralizeHelper)
 
 	// Register builtin param helpers.
 	RegisterParamHelper("length", lengthParamHelper)
@@ -393,6 +394,13 @@ func ifMatchesRegexStr(a, b interface{}, options *Options) interface{} {
 		return options.Fn()
 	}
 	return options.Inverse()
+}
+
+func pluralizeHelper(count, plural, singular interface{}) interface{} {
+	if c, err := floatValue(count); err != nil || c <= 1 {
+		return singular
+	}
+	return plural
 }
 
 // #unless block helper
