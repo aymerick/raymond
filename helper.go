@@ -19,14 +19,20 @@ type Options struct {
 	hash   map[string]interface{}
 }
 
-// helpers stores all globally registered helpers
-var helpers = make(map[string]reflect.Value)
+var (
+	// helpers stores all globally registered helpers
+	helpers      = make(map[string]reflect.Value)
+	paramHelpers = make(map[string]paramHelperFunc)
 
-// protects global helpers
-var helpersMutex sync.RWMutex
+	// protects global helpers
+	helpersMutex sync.RWMutex
+
+	// protects global param helpers
+	paramHelpersMutex sync.RWMutex
+)
 
 func init() {
-	// register builtin helpers
+	// Register builtin helpers.
 	RegisterHelper("if", ifHelper)
 	RegisterHelper("unless", unlessHelper)
 	RegisterHelper("with", withHelper)
@@ -38,6 +44,9 @@ func init() {
 	RegisterHelper("ifLt", ifLtHelper)
 	RegisterHelper("ifEq", ifEqHelper)
 	RegisterHelper("ifMatchesRegexStr", ifMatchesRegexStr)
+
+	// Register builtin param helpers.
+	RegisterParamHelper("length", lengthParamHelper)
 }
 
 // RegisterHelper registers a global helper. That helper will be available to all templates.
@@ -503,4 +512,53 @@ func floatValue(value interface{}) (result float64, err error) {
 		err = errors.New(fmt.Sprintf("uable to convert type '%s' to float64", val.Kind().String()))
 	}
 	return
+}
+
+// A paramHelperFunc is a function that will mutate the input by performing some kind of
+// operation on it. Such as getting the length of a string, slice, or map.
+type paramHelperFunc func(value reflect.Value) reflect.Value
+
+// RegisterParamHelper registers a global param helper. That helper will be available to all templates.
+func RegisterParamHelper(name string, helper paramHelperFunc) {
+	paramHelpersMutex.Lock()
+	defer paramHelpersMutex.Unlock()
+
+	if _, ok := paramHelpers[name]; ok {
+		panic(fmt.Errorf("Param helper already registered: %s", name))
+	}
+
+	paramHelpers[name] = helper
+}
+
+// RemoveParamHelper unregisters a global param helper
+func RemoveParamHelper(name string) {
+	paramHelpersMutex.Lock()
+	defer paramHelpersMutex.Unlock()
+
+	delete(paramHelpers, name)
+}
+
+// findParamHelper finds a globally registered param helper
+func findParamHelper(name string) paramHelperFunc {
+	paramHelpersMutex.RLock()
+	defer paramHelpersMutex.RUnlock()
+
+	return paramHelpers[name]
+}
+
+// lengthParamHelper is a helper func to return the length of the value passed. It
+// will only return the length if the value  is an array, slice, map, or string. Otherwise,
+// it returns zero value.
+// e.g. foo == "foo" -> foo.length -> 3
+func lengthParamHelper(ctx reflect.Value) reflect.Value {
+	if ctx == zero {
+		return ctx
+	}
+
+	switch ctx.Kind() {
+	case reflect.Array, reflect.Slice, reflect.Map, reflect.String:
+		return reflect.ValueOf(ctx.Len())
+
+	}
+	return zero
 }

@@ -1,6 +1,12 @@
 package raymond
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
 
 const (
 	VERBOSE = false
@@ -444,6 +450,84 @@ var helperTests = []Test{
 		`The expression does not match`,
 	},
 	{
+		"length helper on map",
+		"{{#ifEq foo.length 3}}Length is equal to 3{{/ifEq}}",
+		map[string]interface{}{"foo": map[string]string{
+			"rick":   "bird person",
+			"beth":   "jerry",
+			"summer": "morty",
+		},
+		},
+		nil, nil, nil,
+		`Length is equal to 3`,
+	},
+	{
+		"length helper on slice",
+		"{{#ifEq foo.length 2}}Length is equal to 2{{/ifEq}}",
+		map[string]interface{}{"foo": []string{"foo", "bar"}},
+		nil, nil, nil,
+		`Length is equal to 2`,
+	},
+	{
+		"length helper on string",
+		"{{#ifEq foo.length 3}}Length is equal to 3{{/ifEq}}",
+		map[string]interface{}{"foo": "bar"},
+		nil, nil, nil,
+		`Length is equal to 3`,
+	},
+	{
+		"length helper on map false condition",
+		"{{#ifEq foo.length 4}}Length is equal to 4{{/ifEq}}",
+		map[string]interface{}{"foo": map[string]string{
+			"rick":   "bird person",
+			"beth":   "jerry",
+			"summer": "morty",
+		},
+		},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"length helper on slice false condition",
+		"{{#ifEq foo.length 4}}Length is equal to 4{{/ifEq}}",
+		map[string]interface{}{"foo": []string{"foo", "bar"}},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"length helper on string false condition",
+		"{{#ifEq foo.length 4}}Length is equal to 4{{/ifEq}}",
+		map[string]interface{}{"foo": "bar"},
+		nil, nil, nil,
+		``,
+	},
+	{
+		"length helper on map else condition",
+		"{{#ifEq foo.length 4}}Length is equal to 4{{else}}Length is not equal to 4{{/ifEq}}",
+		map[string]interface{}{"foo": map[string]string{
+			"rick":   "bird person",
+			"beth":   "jerry",
+			"summer": "morty",
+		},
+		},
+		nil, nil, nil,
+		`Length is not equal to 4`,
+	},
+	{
+		"length helper on slice else condition",
+		"{{#ifEq foo.length 4}}Length is equal to 4{{else}}Length is not equal to 4{{/ifEq}}",
+		map[string]interface{}{"foo": []string{"foo", "bar"}},
+		nil, nil, nil,
+		`Length is not equal to 4`,
+	},
+	{
+		"length helper on string else condition",
+		"{{#ifEq foo.length 4}}Length is equal to 4{{else}}Length is not equal to 4{{/ifEq}}",
+		map[string]interface{}{"foo": "bar"},
+		nil, nil, nil,
+		`Length is not equal to 4`,
+	},
+	{
 		"#equal helper inside HTML tag",
 		`<option value="test" {{#equal value "test"}}selected{{/equal}}>Test</option>`,
 		map[string]interface{}{"value": "test"},
@@ -519,4 +603,20 @@ func TestHelperCtx(t *testing.T) {
 	if result != "By namefile - Alan Johnson" {
 		t.Errorf("Failed to render template in helper: %q", result)
 	}
+}
+
+func TestRegisterParamHelper(t *testing.T) {
+	pHelper := func(v reflect.Value) reflect.Value { return v }
+	RegisterParamHelper("test", pHelper)
+
+	gotFunc := findParamHelper("test")
+	require.NotNil(t, gotFunc)
+
+	value := reflect.ValueOf("rick")
+	got := gotFunc(value)
+	assert.Equal(t, value.String(), got.String())
+
+	RemoveParamHelper("test")
+	gotFunc = findParamHelper("test")
+	assert.Nil(t, gotFunc)
 }

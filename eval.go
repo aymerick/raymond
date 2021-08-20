@@ -342,6 +342,14 @@ func (v *evalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 		}
 	}
 
+	// Perform an operation to the param if the result is zero and the field name
+	// matches a param helper. This is to support mutations to user params such as
+	// 'foo.length'.
+	var helper paramHelperFunc
+	if helper = findParamHelper(fieldName); helper != nil && result == zero {
+		result = helper(ctx)
+	}
+
 	// check if result is a function
 	result, _ = indirect(result)
 	if result.Kind() == reflect.Func {
