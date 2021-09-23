@@ -867,7 +867,12 @@ func (v *evalVisitor) VisitPartial(node *ast.PartialStatement) interface{} {
 	name, ok := ast.HelperNameStr(node.Name)
 	if !ok {
 		if subExpr, ok := node.Name.(*ast.SubExpression); ok {
-			name, _ = subExpr.Accept(v).(string)
+			switch subExprResult := subExpr.Accept(v).(type) {
+			case string:
+				name = subExprResult
+			case SafeString:
+				name = string(subExprResult)
+			}
 		}
 	}
 
