@@ -72,6 +72,19 @@ var evalTests = []Test{
 		nil, nil, nil,
 		"C",
 	},
+	{
+		name:     "dynamic partial from subexpression",
+		input:    `{{> (whichPartial)}}`,
+		data:     map[string]string{"slug": "slug"},
+		privData: map[string]interface{}{},
+		helpers: map[string]interface{}{
+			"whichPartial": func() string { return "dynamicPartial" },
+		},
+		partials: map[string]string{
+			"dynamicPartial": `<div>dynamic</div>`,
+		},
+		output: `<div>dynamic</div>`,
+	},
 
 	// @todo Test with a "../../path" (depth 2 path) while context is only depth 1
 }

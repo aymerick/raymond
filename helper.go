@@ -388,7 +388,7 @@ func lookupHelper(obj interface{}, field string, options *Options) interface{} {
 }
 
 // #equal helper
-// Ref: https://github.com/aymerick/raymond/issues/7
+// Ref: https://github.com/mancusi/raymond/issues/7
 func equalHelper(a interface{}, b interface{}, options *Options) interface{} {
 	if Str(a) == Str(b) {
 		return options.Fn()
