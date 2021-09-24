@@ -1,10 +1,10 @@
-# raymond [![Build Status](https://secure.travis-ci.org/aymerick/raymond.svg?branch=master)](http://travis-ci.org/aymerick/raymond) [![GoDoc](https://godoc.org/github.com/aymerick/raymond?status.svg)](http://godoc.org/github.com/aymerick/raymond)
+# raymond [![Build Status](https://github.com/mancusi/raymond/actions/workflows/go.yml/badge.svg)](http://travis-ci.org/mancusi/raymond) [![GoDoc](https://godoc.org/github.com/mancusi/raymond?status.svg)](https://pkg.go.dev/github.com/mancusi/raymond)
 
 Handlebars for [golang](https://golang.org) with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
-The full API documentation is available here: <http://godoc.org/github.com/aymerick/raymond>.
+The full API documentation is available here: <https://pkg.go.dev/github.com/mancusi/raymond>.
 
-![Raymond Logo](https://github.com/aymerick/raymond/blob/master/raymond.png?raw=true "Raymond")
+![Raymond Logo](https://github.com/mancusi/raymond/blob/master/raymond.png?raw=true "Raymond")
 
 
 # Table of Contents
@@ -56,7 +56,7 @@ The full API documentation is available here: <http://godoc.org/github.com/aymer
 
 ## Quick Start
 
-    $ go get github.com/aymerick/raymond
+    $ go get github.com/mancusi/raymond
 
 The quick and dirty way of rendering a handlebars template:
 
@@ -66,7 +66,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/mancusi/raymond"
 )
 
 func main() {
@@ -116,7 +116,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/mancusi/raymond"
 )
 
 func main() {
@@ -200,7 +200,7 @@ package main
 import (
   "fmt"
 
-  "github.com/aymerick/raymond"
+  "github.com/mancusi/raymond"
 )
 
 func main() {
@@ -1315,7 +1315,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/lexer"
+    "github.com/mancusi/raymond/lexer"
 )
 
 func main() {
@@ -1357,8 +1357,8 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/ast"
-    "github.com/aymerick/raymond/parser"
+    "github.com/mancusi/raymond/ast"
+    "github.com/mancusi/raymond/parser"
 )
 
 fu  nc main() {
