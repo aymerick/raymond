@@ -1,8 +1,8 @@
-# raymond [![Build Status](https://secure.travis-ci.org/mancusi/raymond.svg?branch=master)](http://travis-ci.org/mancusi/raymond) [![GoDoc](https://godoc.org/github.com/mancusi/raymond?status.svg)](http://godoc.org/github.com/mancusi/raymond)
+# raymond [![Build Status](https://secure.travis-ci.org/mancusi/raymond.svg?branch=master)](http://travis-ci.org/mancusi/raymond) [![GoDoc](https://godoc.org/github.com/mancusi/raymond?status.svg)](https://pkg.go.dev/github.com/mancusi/raymond)
 
 Handlebars for [golang](https://golang.org) with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
-The full API documentation is available here: <http://godoc.org/github.com/mancusi/raymond>.
+The full API documentation is available here: <https://pkg.go.dev/github.com/mancusi/raymond>.
 
 ![Raymond Logo](https://github.com/mancusi/raymond/blob/master/raymond.png?raw=true "Raymond")
 
