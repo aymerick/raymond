@@ -1,4 +1,4 @@
-name: Go Build
+name: Go
 
 on:
   push:
@@ -10,9 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    uses: actions/checkout@v2
-    with:
-      submodules: recursive
+    - name: Checkout mustache submodule
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: Set up Go
       uses: actions/setup-go@v2
