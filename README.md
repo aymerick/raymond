@@ -66,7 +66,7 @@ package main
 import (
     "fmt"
 
-    "github.com/mancusi/raymond"
+    "github.com/mancusi/raymond/v3"
 )
 
 func main() {
@@ -116,7 +116,7 @@ package main
 import (
     "fmt"
 
-    "github.com/mancusi/raymond"
+    "github.com/mancusi/raymond/v3"
 )
 
 func main() {
@@ -200,7 +200,7 @@ package main
 import (
   "fmt"
 
-  "github.com/mancusi/raymond"
+  "github.com/mancusi/raymond/v3"
 )
 
 func main() {
@@ -1315,7 +1315,7 @@ package main
 import (
     "fmt"
 
-    "github.com/mancusi/raymond/lexer"
+    "github.com/mancusi/raymond/v3/lexer"
 )
 
 func main() {
@@ -1357,7 +1357,7 @@ package main
 import (
     "fmt"
 
-    "github.com/mancusi/raymond/ast"
+    "github.com/mancusi/raymond/v3/ast"
     "github.com/mancusi/raymond/parser"
 )
 

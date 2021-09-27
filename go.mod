@@ -1,4 +1,4 @@
-module github.com/mancusi/raymond
+module github.com/mancusi/raymond/v3
 
 go 1.16
 

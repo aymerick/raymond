@@ -1,11 +1,11 @@
 # Raymond Changelog
 
-### HEAD
-
-- [IMPROVEMENT] Add `RemoveHelper` and `RemoveAllHelpers` functions
+### Handlebars 3.0.0 _(September 27, 2021)_
+- Update to major version number 3
 
 ### Raymond 2.0.2 _(March 22, 2018)_
 
+- [IMPROVEMENT] Add `RemoveHelper` and `RemoveAllHelpers` functions
 - [IMPROVEMENT] Add the #equal helper (#7)
 - [IMPROVEMENT] Add struct tag template variable support (#8)
 

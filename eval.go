@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mancusi/raymond/ast"
+	"github.com/mancusi/raymond/v3/ast"
 )
 
 var (

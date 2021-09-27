@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mancusi/raymond"
+	"github.com/mancusi/raymond/v3"
 )
 
 //
