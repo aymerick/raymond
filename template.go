@@ -136,6 +136,14 @@ func (tpl *Template) addPartial(name string, source string, template *Template) 
 	tpl.partials[name] = newPartial(name, source, template)
 }
 
+// ReplacePartial replaces or create a partial
+func (tpl *Template) ReplacePartial(name string, source string) {
+	tpl.mutex.Lock()
+	defer tpl.mutex.Unlock()
+
+	tpl.partials[name] = newPartial(name, source, nil)
+}
+
 func (tpl *Template) findPartial(name string) *partial {
 	tpl.mutex.RLock()
 	defer tpl.mutex.RUnlock()
