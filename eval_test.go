@@ -1,6 +1,8 @@
 package raymond
 
-import "testing"
+import (
+	"testing"
+)
 
 var evalTests = []Test{
 	{

@@ -598,6 +598,7 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 	// check parameters number
 	addOptions := false
 	numIn := funcType.NumIn()
+	variadic := funcType.IsVariadic()
 
 	if numIn == len(params)+1 {
 		lastArgType := funcType.In(numIn - 1)
@@ -606,15 +607,26 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 		}
 	}
 
-	if !addOptions && (len(params) != numIn) {
+	if !addOptions && (len(params) != numIn && !variadic) {
 		v.errorf("Helper '%s' called with wrong number of arguments, needed %d but got %d", name, numIn, len(params))
 	}
 
+	vaCount := len(params) - numIn
+	if vaCount < 0 {
+		vaCount = 0
+	}
+
 	// check and collect arguments
-	args := make([]reflect.Value, numIn)
+	args := make([]reflect.Value, numIn+vaCount)
 	for i, param := range params {
 		arg := reflect.ValueOf(param)
-		argType := funcType.In(i)
+		var argType reflect.Type
+
+		if vaCount > 0 && i >= numIn {
+			argType = funcType.In(numIn - 1)
+		} else {
+			argType = funcType.In(i)
+		}
 
 		if !arg.IsValid() {
 			if canBeNil(argType) {
@@ -627,7 +639,7 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 			}
 		}
 
-		if !arg.Type().AssignableTo(argType) {
+		if !arg.Type().AssignableTo(argType) && !variadic {
 			if strType.AssignableTo(argType) {
 				// convert parameter to string
 				arg = reflect.ValueOf(strValue(arg))
@@ -644,7 +656,7 @@ func (v *evalVisitor) callFunc(name string, funcVal reflect.Value, options *Opti
 	}
 
 	if addOptions {
-		args[numIn-1] = reflect.ValueOf(options)
+		args[numIn+vaCount-1] = reflect.ValueOf(options)
 	}
 
 	result := funcVal.Call(args)
