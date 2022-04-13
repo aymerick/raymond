@@ -2,6 +2,7 @@ package raymond
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,6 +43,10 @@ func gnakHelper(nb int) string {
 	}
 
 	return result
+}
+
+func variadicHelper(values ...string) string {
+	return strings.Join(values, ",")
 }
 
 //
@@ -105,6 +110,14 @@ var helperTests = []Test{
 		map[string]interface{}{"echo": echoHelper},
 		nil,
 		`GnAK!GnAK!GnAK!`,
+	},
+	{
+		"helper with variadic parameters",
+		`{{join "foo" "bar" "baz"}}`,
+		nil, nil,
+		map[string]interface{}{"join": variadicHelper},
+		nil,
+		`foo,bar,baz`,
 	},
 	{
 		"#if helper with true literal",
