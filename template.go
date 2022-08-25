@@ -223,6 +223,25 @@ func (tpl *Template) ExecWith(ctx interface{}, privData *DataFrame) (result stri
 	return
 }
 
+func (tpl *Template) ExtractTemplateVars() (result map[string]interface{}, err error) {
+	defer errRecover(&err)
+
+	// parses template if necessary
+	err = tpl.parse()
+	if err != nil {
+		return
+	}
+
+	// setup visitor
+	v := newJSONVisitor()
+
+	// visit AST
+	result, _ = tpl.program.Accept(v).(map[string]interface{})
+
+	// named return values
+	return
+}
+
 // errRecover recovers evaluation panic
 func errRecover(errp *error) {
 	e := recover()

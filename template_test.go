@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var sourceBasic = `<div class="entry">
+const sourceBasic = `<div class="entry">
   <h1>{{title}}</h1>
   <div class="body">
     {{body}}
