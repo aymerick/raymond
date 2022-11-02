@@ -52,8 +52,8 @@ func TestJSONVisitor(t *testing.T) {
 		},
 	}, {
 		name:   "if block with incomplete foo path and complete foo path",
-		source: `{{#if foo}} {{foo.bar.baz}} {{/if}}`,
-		want:   map[string]interface{}{"foo": map[string]interface{}{"bar": map[string]interface{}{"baz": "test_baz"}}},
+		source: `{{#if floo}} {{floo.blar.blaz}} {{/if}}`,
+		want:   map[string]interface{}{"floo": map[string]interface{}{"blar": map[string]interface{}{"blaz": "test_blaz"}}},
 	}, {
 		name:   "accesses multiple elements of a map in multiple paths",
 		source: `{{bar.baz}} {{name.first}}{{name.last}}`,
@@ -73,6 +73,10 @@ func TestJSONVisitor(t *testing.T) {
 		source: "{{#with foo as |bee|}}{{#with bee.bar as |bazinga|}}{{bazinga.baz}}{{/with}}{{/with}}",
 		want:   map[string]interface{}{"foo": map[string]interface{}{"bar": map[string]interface{}{"baz": "test_baz"}}},
 	}, {
+		name:   "each this",
+		source: "{{#each user.services}}{{this.service}}{{this.date}}{{/each}}",
+		want:   map[string]interface{}{"user": map[string]interface{}{"services": newList(map[string]interface{}{"service": "test_service", "date": "test_date"})}},
+	}, {
 		name:   "multi multi with",
 		source: "{{#with fizz}}{{#with foo}}{{#with bar}}{{baz}}{{bop}}{{/with}}{{/with}}{{/with}}",
 		want:   map[string]interface{}{"fizz": map[string]interface{}{"foo": map[string]interface{}{"bar": map[string]interface{}{"baz": "test_baz", "bop": "test_bop"}}}},
@@ -90,8 +94,8 @@ func TestJSONVisitor(t *testing.T) {
 		want:   map[string]interface{}{"people": newList("test_people"), "cities": newList("test_cities")},
 	}, {
 		name:   "each lookup complex",
-		source: "{{#each people}} {{./foo/bar/baz}} lives in {{lookup ../cities @index}}{{/each}}",
-		want:   map[string]interface{}{"people": newList(map[string]interface{}{"foo": map[string]interface{}{"bar": map[string]interface{}{"baz": "test_baz"}}}), "cities": newList("test_cities")},
+		source: "{{#each people}} {{./fioo/biar/biaz}} lives in {{lookup ../cities @index}}{{/each}}",
+		want:   map[string]interface{}{"people": newList(map[string]interface{}{"fioo": map[string]interface{}{"biar": map[string]interface{}{"biaz": "test_biaz"}}}), "cities": newList("test_cities")},
 	}, {
 		name:   "each",
 		source: "{{#with foo}}{{#each foo}}{{baz}}{{/each}}{{/with}}",

@@ -12,6 +12,14 @@ func (l *list) Add(item interface{}) {
 	*l = append(*l, item)
 }
 
+func (l *list) Get() interface{} {
+	return (*l)[0]
+}
+
+func (l *list) Len() int {
+	return len(*l)
+}
+
 func newList(item interface{}) *list {
 	l := new(list)
 	l.Add(item)
@@ -200,94 +208,140 @@ func (v *JSONVisitor) appendToJSON(templateLabels []string) {
 	var tmp interface{}
 	tmp = v.JSON
 	for idx, name := range templateLabels {
+		var onArrayLabel, isArray, isLastLabel bool
+		//Figure out if name is an array Label.
+		if strings.HasPrefix(name, "[") {
+			onArrayLabel = true
+		}
+		//Figure out if we are on a simple last label.
+		if idx == len(templateLabels)-1 {
+			isLastLabel = true
+		}
+		//Figure out if the next label is an array label.
+		if !isLastLabel {
+			if strings.HasPrefix(templateLabels[idx+1], "[") {
+				isArray = true
+			}
+		}
+		//Complex isLastLabel check.
+		//Since we skip onArrayLabels not nested with another array.
+		//foo.[0].[0] would not skip first array label.
+		//This allows us to know it's a nested array
+		//and not a struct value with an array.
+		// foo.[0].baz would skip array label.
+		// If isArray and is not isLastLabel and if
+		// the idx is equal to the length of the slice - 2
+		// We know this is actually the last label as we skip single instances
+		// of an array label.
+		if isArray && !isLastLabel {
+			if idx == len(templateLabels)-2 {
+				isLastLabel = true
+			}
+		}
+		//If onArrayLabel and not isArray
+		//Skip this iteration because we only care about
+		// array labels for nested arrays.
+		if onArrayLabel && !isArray {
+			continue
+		}
 		switch c := tmp.(type) {
 		case map[string]interface{}:
 			if _, ok := c[name]; !ok {
-				// Peak at the next value to determine if
-				// it is an array or map.
-				var isArray bool
-				if idx < len(templateLabels)-1 {
-					if strings.HasPrefix(templateLabels[idx+1], "[") {
-						isArray = true
-					}
-				}
-				// If it is the last value.
-				if idx == len(templateLabels)-1 {
+				//If the name does not exist in the map
+				//And is the last label.
+				if isLastLabel {
+					//If that last label is an array.
 					if isArray {
-						//If last value and is array add a mocked string value into the array
-						c[name] = newList(mockStringValue(templateLabels[idx-1]))
-						//If not just add a mocked string value
+						//Use the provided name to make a new list and mock the string value.
+						c[name] = newList(mockStringValue(name))
 					} else {
+						//If it is not an array. Add the value as a mocked string value set to the current name.
 						c[name] = mockStringValue(name)
 					}
 				} else {
+					//If it is not the last label.
+					// And the label value is an array.
 					if isArray {
-						//If not last value just add array
+						//Set the label name to a new list value
 						c[name] = new(list)
 					} else {
-						//If not an array it is a map.
+						//If the value is not an array and it is not the last value.
+						//It must be a map
 						c[name] = map[string]interface{}{}
 					}
 				}
 			} else {
-				//if item is not set in the child path make it.
-				if idx < len(templateLabels)-1 {
-					//Check to see if nested content is an array.
-					if strings.HasPrefix(name, "[") {
-						if li, ok := c[name].(list); ok {
-							//If it is check to see if this is the last item.
-							if idx == len(templateLabels)-1 {
-								//Always use the parent name as the name for an array value.
-								li.Add(mockStringValue(templateLabels[idx-1]))
-								c[name] = li
-							} else {
-								//Add an empty list
-								c[name] = new(list)
-							}
-						}
-					} else {
-						//If it's not an array see if it is a map.
-						if _, ok := c[name].(map[string]interface{}); !ok {
-							//If it's not anything yet... Make it a map.
-							c[name] = map[string]interface{}{}
-						}
-
+				//If the name does exist in the map lets determine its type.
+				if li, ok := c[name].(list); ok {
+					//If it's a list and is the last value.
+					//Set the the 0 index of the list to name
+					//If it is not already set.
+					if isLastLabel && li.Len() == 0 {
+						li.Add(mockStringValue(name))
+					}
+				} else if _, ok := c[name].(string); ok {
+					//If c[name]'s value is a string and it is not the last label
+					//c[name] had been used in an if or other reference that made us
+					// determine it was a string value. That is false turn it into a map.
+					if !isLastLabel {
+						c[name] = map[string]interface{}{}
 					}
 				}
-
 			}
+			//Update tmp to the next deepest value
 			tmp = c[name]
 		case *list:
-			var isArray bool
-			if idx < len(templateLabels)-1 {
-				//Check to see if item is an array.
-				if strings.HasPrefix(templateLabels[idx+1], "[") {
-					isArray = true
+			//If type is list.
+			//If it is the last label and is array and on array label.
+			//This is a special case where we know our final value is an array.
+			//So we can just add the array and the final value.
+			//However cause these arrays are nested at an unknown depth we use test_value
+			//Rather than replacing it with name, because name is actually an array label.
+			if isLastLabel && isArray && onArrayLabel {
+				if c.Len() == 0 {
+					c.Add(newList("test_value"))
 				}
-			}
-			if idx == len(templateLabels)-1 {
-				//If we are on the last value just add the name to the array as a value.
-				c.Add(mockStringValue(templateLabels[idx-1]))
+			} else if isArray && isLastLabel {
+				//If isArray and isLastLabel.
+				//We know that it is safe to use name for the value.
+				//So we set it as such.
+				if c.Len() == 0 {
+					c.Add(mockStringValue(name))
+				}
 			} else if isArray {
-				//If it is an array and it's the lst item add both the new array and it's parent name.
-				if idx == len(templateLabels)-1 {
-					c.Add(mockStringValue(templateLabels[idx-1]))
-				} else {
-					//If it is not the last item just add an array.
+				//If it is not the last item just add an array.
+				if c.Len() == 0 {
 					c.Add(new(list))
 				}
-
 			} else {
-				//If it's not an array it's gotta be a map.
-				//Check to see if it's the last item.
-				if idx == len(templateLabels)-1 {
-					//If it is add a map and name with mocked value.
-					c.Add(map[string]interface{}{name: mockStringValue(name)})
+				if c.Len() == 0 {
+					if isLastLabel {
+						//If already in an array and no string values have been applied above.
+						//Then this indicates a map to end this label resolution
+						c.Add(map[string]interface{}{name: mockStringValue(name)})
+					} else {
+						//If not last label and not a future nested array as determined above.
+						//Then make this a map.
+						c.Add(map[string]interface{}{name: map[string]interface{}{}})
+					}
 				} else {
-					//If it's not the last item... Add just the map.
-					c.Add(map[string]interface{}{})
+					//If c.Len is greater than zero we have already added to this array.
+					//The only case that should fall through here is a previously created map.
+					if _, ok := (*c)[0].(map[string]interface{}); ok {
+						if isLastLabel {
+							//If this is the last label assign it to the map and mock it's value.
+							(*c)[0].(map[string]interface{})[name] = mockStringValue(name)
+						} else {
+							//If it's not the last label. Add just the map.
+							(*c)[0].(map[string]interface{})[name] = (map[string]interface{}{})
+						}
+					}
 				}
+				//If we had to mess with maps assign tmp the map value matching name within the array.
+				tmp = (*c)[0].(map[string]interface{})[name]
+				continue
 			}
+			//Assign tmp to the 0 index of the array. *Note we should never have any arrays larger than a length of 1.
 			tmp = (*c)[0]
 
 		}
