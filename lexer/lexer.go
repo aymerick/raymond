@@ -179,7 +179,7 @@ func (l *Lexer) emitString(delimiter rune) {
 	str := l.input[l.start:l.pos]
 
 	// replace escaped delimiters
-	str = strings.Replace(str, "\\"+string(delimiter), string(delimiter), -1)
+	str = strings.ReplaceAll(str, "\\"+string(delimiter), string(delimiter))
 
 	l.produce(TokenString, str)
 }
@@ -205,7 +205,7 @@ func (l *Lexer) ignore() {
 
 // accept scans the next character if it is included in given string
 func (l *Lexer) accept(valid string) bool {
-	if strings.IndexRune(valid, l.next()) >= 0 {
+	if strings.ContainsRune(valid, l.next()) {
 		return true
 	}
 
@@ -216,7 +216,7 @@ func (l *Lexer) accept(valid string) bool {
 
 // acceptRun scans all following characters that are part of given string
 func (l *Lexer) acceptRun(valid string) {
-	for strings.IndexRune(valid, l.next()) >= 0 {
+	for strings.ContainsRune(valid, l.next()) {
 	}
 
 	l.backup()
@@ -464,7 +464,7 @@ func lexExpression(l *Lexer) lexFunc {
 		return lexNumber
 	case r == '[':
 		return lexPathLiteral
-	case strings.IndexRune(unallowedIDChars, r) < 0:
+	case !strings.ContainsRune(unallowedIDChars, r):
 		l.backup()
 		return lexIdentifier
 	default:

@@ -56,7 +56,7 @@ func escape(w writer, s string) error {
 //
 // It can be used by helpers that return a SafeString and that need to escape some content by themselves.
 func Escape(s string) string {
-	if strings.IndexAny(s, escapedChars) == -1 {
+	if !strings.ContainsAny(s, escapedChars) {
 		return s
 	}
 	var buf bytes.Buffer

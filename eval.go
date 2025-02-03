@@ -320,7 +320,7 @@ func (v *evalVisitor) evalField(ctx reflect.Value, fieldName string, exprRoot bo
 		switch ctx.Kind() {
 		case reflect.Struct:
 			// example: firstName => FirstName
-			expFieldName := strings.Title(fieldName)
+			expFieldName := cases.Title(language.Und, cases.NoLower).String(fieldName)
 
 			// check if struct have this field and that it is exported
 			if tField, ok := ctx.Type().FieldByName(expFieldName); ok && (tField.PkgPath == "") {
@@ -362,7 +362,7 @@ func (v *evalVisitor) evalMethod(ctx reflect.Value, name string, exprRoot bool) 
 	method := ctx.MethodByName(name)
 	if !method.IsValid() {
 		// example: subject() => Subject()
-		method = ctx.MethodByName(strings.Title(name))
+		method = ctx.MethodByName(cases.Title(language.Und, cases.NoLower).String(name))
 	}
 
 	if !method.IsValid() {

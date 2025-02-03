@@ -173,7 +173,7 @@ func NewProgram(pos int, line int) *Program {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *Program) String() string {
-	return fmt.Sprintf("Program{Pos: %d}", node.Loc.Pos)
+	return fmt.Sprintf("Program{Pos: %d}", node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -213,7 +213,7 @@ func NewMustacheStatement(pos int, line int, unescaped bool) *MustacheStatement 
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *MustacheStatement) String() string {
-	return fmt.Sprintf("Mustache{Pos: %d}", node.Loc.Pos)
+	return fmt.Sprintf("Mustache{Pos: %d}", node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -251,7 +251,7 @@ func NewBlockStatement(pos int, line int) *BlockStatement {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *BlockStatement) String() string {
-	return fmt.Sprintf("Block{Pos: %d}", node.Loc.Pos)
+	return fmt.Sprintf("Block{Pos: %d}", node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -287,7 +287,7 @@ func NewPartialStatement(pos int, line int) *PartialStatement {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *PartialStatement) String() string {
-	return fmt.Sprintf("Partial{Name:%s, Pos:%d}", node.Name, node.Loc.Pos)
+	return fmt.Sprintf("Partial{Name:%s, Pos:%d}", node.Name, node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -325,7 +325,7 @@ func NewContentStatement(pos int, line int, val string) *ContentStatement {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *ContentStatement) String() string {
-	return fmt.Sprintf("Content{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
+	return fmt.Sprintf("Content{Value:'%s', Pos:%d}", node.Value, node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -360,7 +360,7 @@ func NewCommentStatement(pos int, line int, val string) *CommentStatement {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *CommentStatement) String() string {
-	return fmt.Sprintf("Comment{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
+	return fmt.Sprintf("Comment{Value:'%s', Pos:%d}", node.Value, node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -392,7 +392,7 @@ func NewExpression(pos int, line int) *Expression {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *Expression) String() string {
-	return fmt.Sprintf("Expr{Path:%s, Pos:%d}", node.Path, node.Loc.Pos)
+	return fmt.Sprintf("Expr{Path:%s, Pos:%d}", node.Path, node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -510,7 +510,7 @@ func NewSubExpression(pos int, line int) *SubExpression {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *SubExpression) String() string {
-	return fmt.Sprintf("Sexp{Path:%s, Pos:%d}", node.Expression.Path, node.Loc.Pos)
+	return fmt.Sprintf("Sexp{Path:%s, Pos:%d}", node.Expression.Path, node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -552,7 +552,7 @@ func NewPathExpression(pos int, line int, data bool) *PathExpression {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *PathExpression) String() string {
-	return fmt.Sprintf("Path{Original:'%s', Pos:%d}", node.Original, node.Loc.Pos)
+	return fmt.Sprintf("Path{Original:'%s', Pos:%d}", node.Original, node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -609,7 +609,7 @@ func NewStringLiteral(pos int, line int, val string) *StringLiteral {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *StringLiteral) String() string {
-	return fmt.Sprintf("String{Value:'%s', Pos:%d}", node.Value, node.Loc.Pos)
+	return fmt.Sprintf("String{Value:'%s', Pos:%d}", node.Value, node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -643,7 +643,7 @@ func NewBooleanLiteral(pos int, line int, val bool, original string) *BooleanLit
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *BooleanLiteral) String() string {
-	return fmt.Sprintf("Boolean{Value:%s, Pos:%d}", node.Canonical(), node.Loc.Pos)
+	return fmt.Sprintf("Boolean{Value:%s, Pos:%d}", node.Canonical(), node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -688,7 +688,7 @@ func NewNumberLiteral(pos int, line int, val float64, isInt bool, original strin
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *NumberLiteral) String() string {
-	return fmt.Sprintf("Number{Value:%s, Pos:%d}", node.Canonical(), node.Loc.Pos)
+	return fmt.Sprintf("Number{Value:%s, Pos:%d}", node.Canonical(), node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.
@@ -736,7 +736,7 @@ func NewHash(pos int, line int) *Hash {
 
 // String returns a string representation of receiver that can be used for debugging.
 func (node *Hash) String() string {
-	result := fmt.Sprintf("Hash{[%d", node.Loc.Pos)
+	result := fmt.Sprintf("Hash{[%d", node.Pos)
 
 	for i, p := range node.Pairs {
 		if i > 0 {
@@ -745,7 +745,7 @@ func (node *Hash) String() string {
 		result += p.String()
 	}
 
-	return result + fmt.Sprintf("], Pos:%d}", node.Loc.Pos)
+	return result + fmt.Sprintf("], Pos:%d}", node.Pos)
 }
 
 // Accept is the receiver entry point for visitors.

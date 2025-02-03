@@ -1,7 +1,7 @@
 package raymond
 
 import (
-	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -53,7 +53,7 @@ func TestMustache(t *testing.T) {
 func testsFromMustacheFile(fileName string) []Test {
 	result := []Test{}
 
-	fileData, err := ioutil.ReadFile(path.Join("mustache", "specs", fileName))
+	fileData, err := os.ReadFile(path.Join("mustache", "specs", fileName))
 	if err != nil {
 		panic(err)
 	}
@@ -111,7 +111,7 @@ func haveAltDelimiter(test mustacheTest) bool {
 func mustacheTestFiles() []string {
 	var result []string
 
-	files, err := ioutil.ReadDir(path.Join("mustache", "specs"))
+	files, err := os.ReadDir(path.Join("mustache", "specs"))
 	if err != nil {
 		panic(err)
 	}

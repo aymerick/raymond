@@ -475,11 +475,7 @@ func (p *parser) parseMustache() *ast.MustacheStatement {
 		closeToken = lexer.TokenCloseUnescaped
 	}
 
-	unescaped := false
-	if (tok.Kind == lexer.TokenOpenUnescaped) || (rOpenAmp.MatchString(tok.Val)) {
-		unescaped = true
-	}
-
+	unescaped := (tok.Kind == lexer.TokenOpenUnescaped) || (rOpenAmp.MatchString(tok.Val))
 	result := ast.NewMustacheStatement(tok.Pos, tok.Line, unescaped)
 
 	// helperName param* hash?
@@ -615,7 +611,7 @@ func (p *parser) parseBlockParams() []string {
 	var result []string
 
 	// OPEN_BLOCK_PARAMS
-	tok := p.shift()
+	_ = p.shift()
 
 	// ID+
 	for p.isID() {
@@ -627,7 +623,7 @@ func (p *parser) parseBlockParams() []string {
 	}
 
 	// CLOSE_BLOCK_PARAMS
-	tok = p.shift()
+	tok := p.shift()
 	if tok.Kind != lexer.TokenCloseBlockParams {
 		errExpected(lexer.TokenCloseBlockParams, tok)
 	}

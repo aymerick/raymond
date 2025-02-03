@@ -169,7 +169,7 @@ func (t Token) String() string {
 		result += fmt.Sprintf("%d:", t.Pos)
 	}
 
-	result += fmt.Sprintf("%s", t.Kind)
+	result += t.Kind.String()
 
 	if (dumpAllTokensVal || (t.Kind >= TokenContent)) && len(t.Val) > 0 {
 		if len(t.Val) > 100 {
