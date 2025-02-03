@@ -1,11 +1,13 @@
-# raymond [![Build Status](https://secure.travis-ci.org/aymerick/raymond.svg?branch=master)](http://travis-ci.org/aymerick/raymond) [![GoDoc](https://godoc.org/github.com/aymerick/raymond?status.svg)](http://godoc.org/github.com/aymerick/raymond)
+# raymond [![GoDoc](https://godoc.org/github.com/helixerio/raymond/v2?status.svg)](http://godoc.org/github.com/helixerio/raymond/v2)
+
+This repository is forked from <https://github.com/aymerick/raymond> and is updated to
+be compatible with Go modules (as the original repository is not maintained anymore).
 
 Handlebars for [golang](https://golang.org) with the same features as [handlebars.js](http://handlebarsjs.com) `3.0`.
 
-The full API documentation is available here: <http://godoc.org/github.com/aymerick/raymond>.
+The full API documentation is available here: <http://godoc.org/github.com/helixerio/raymond/v2>.
 
-![Raymond Logo](https://github.com/aymerick/raymond/blob/master/raymond.png?raw=true "Raymond")
-
+![Raymond Logo](https://github.com/helixerio/raymond/blob/master/raymond.png?raw=true "Raymond")
 
 # Table of Contents
 
@@ -53,10 +55,9 @@ The full API documentation is available here: <http://godoc.org/github.com/aymer
 - [References](#references)
 - [Others Implementations](#others-implementations)
 
-
 ## Quick Start
 
-    $ go get github.com/aymerick/raymond
+    $ go get github.com/helixerio/raymond/v2
 
 The quick and dirty way of rendering a handlebars template:
 
@@ -66,7 +67,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/helixerio/raymond/v2"
 )
 
 func main() {
@@ -97,14 +98,11 @@ Displays:
 ```html
 <div class="entry">
   <h1>My New Post</h1>
-  <div class="body">
-    This is my first post!
-  </div>
+  <div class="body">This is my first post!</div>
 </div>
 ```
 
 Please note that the template will be parsed everytime you call `Render()` function. So you probably want to read the next section.
-
 
 ## Correct Usage
 
@@ -116,7 +114,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond"
+    "github.com/helixerio/raymond/v2"
 )
 
 func main() {
@@ -163,15 +161,11 @@ Displays:
 ```html
 <div class="entry">
   <h1>My New Post</h1>
-  <div class="body">
-    This is my first post!
-  </div>
+  <div class="body">This is my first post!</div>
 </div>
 <div class="entry">
   <h1>Here is another post</h1>
-  <div class="body">
-    This is my second post!
-  </div>
+  <div class="body">This is my second post!</div>
 </div>
 ```
 
@@ -184,7 +178,6 @@ tpl := raymond.MustParse(source)
 // render template
 result := tpl.MustExec(ctx)
 ```
-
 
 ## Context
 
@@ -200,7 +193,7 @@ package main
 import (
   "fmt"
 
-  "github.com/aymerick/raymond"
+  "github.com/helixerio/raymond/v2"
 )
 
 func main() {
@@ -319,9 +312,10 @@ fmt.Print(result)
 Output:
 
 ```html
-<a href='http://www.aymerick.com/'>This is a &lt;em&gt;cool&lt;/em&gt; website</a>
+<a href="http://www.aymerick.com/"
+  >This is a &lt;em&gt;cool&lt;/em&gt; website</a
+>
 ```
-
 
 ## Helpers
 
@@ -437,7 +431,6 @@ raymond.RemoveHelper("fullname")
 raymond.RemoveAllHelpers()
 ```
 
-
 ### Template Helpers
 
 You can register a helper on a specific template, and in that case that helper will be available to that template only:
@@ -450,11 +443,9 @@ tpl.RegisterHelper("fullName", func(firstName, lastName string) string {
 })
 ```
 
-
 ### Built-In Helpers
 
 Those built-in helpers are available to all templates.
-
 
 #### The `if` block helper
 
@@ -463,7 +454,7 @@ You can use the `if` helper to conditionally render a block. If its argument ret
 ```html
 <div class="entry">
   {{#if author}}
-    <h1>{{firstName}} {{lastName}}</h1>
+  <h1>{{firstName}} {{lastName}}</h1>
   {{/if}}
 </div>
 ```
@@ -473,9 +464,9 @@ When using a block expression, you can specify a template section to run if the 
 ```html
 <div class="entry">
   {{#if author}}
-    <h1>{{firstName}} {{lastName}}</h1>
+  <h1>{{firstName}} {{lastName}}</h1>
   {{else}}
-    <h1>Unknown Author</h1>
+  <h1>Unknown Author</h1>
   {{/if}}
 </div>
 ```
@@ -484,11 +475,11 @@ You can chain several blocks. For example that template:
 
 ```html
 {{#if isActive}}
-  <img src="star.gif" alt="Active">
+<img src="star.gif" alt="Active" />
 {{else if isInactive}}
-  <img src="cry.gif" alt="Inactive">
+<img src="cry.gif" alt="Inactive" />
 {{else}}
-  <img src="wat.gif" alt="Unknown">
+<img src="wat.gif" alt="Unknown" />
 {{/if}}
 ```
 
@@ -504,9 +495,8 @@ ctx := map[string]interface{}{
 Outputs:
 
 ```html
- <img src="wat.gif" alt="Unknown">
+<img src="wat.gif" alt="Unknown" />
 ```
-
 
 #### The `unless` block helper
 
@@ -520,7 +510,6 @@ You can use the `unless` helper as the inverse of the `if` helper. Its block wil
 </div>
 ```
 
-
 #### The `each` block helper
 
 You can iterate over an array, a slice, a map or a struct instance using this built-in `each` helper. Inside the block, you can use `this` to reference the element being iterated over.
@@ -530,7 +519,7 @@ For example:
 ```html
 <ul class="people">
   {{#each people}}
-    <li>{{this}}</li>
+  <li>{{this}}</li>
   {{/each}}
 </ul>
 ```
@@ -559,30 +548,25 @@ You can optionally provide an `{{else}}` section which will display only when th
 
 ```html
 {{#each paragraphs}}
-  <p>{{this}}</p>
+<p>{{this}}</p>
 {{else}}
-  <p class="empty">No content</p>
+<p class="empty">No content</p>
 {{/each}}
 ```
 
 When looping through items in `each`, you can optionally reference the current loop index via `{{@index}}`.
 
 ```html
-{{#each array}}
-  {{@index}}: {{this}}
-{{/each}}
+{{#each array}} {{@index}}: {{this}} {{/each}}
 ```
 
 Additionally for map and struct instance iteration, `{{@key}}` references the current map key or struct field name:
 
 ```html
-{{#each map}}
-  {{@key}}: {{this}}
-{{/each}}
+{{#each map}} {{@key}}: {{this}} {{/each}}
 ```
 
 The first and last steps of iteration are noted via the `@first` and `@last` variables.
-
 
 #### The `with` block helper
 
@@ -624,23 +608,19 @@ You can optionally provide an `{{else}}` section which will display only when th
 
 ```html
 {{#with author}}
-  <p>{{name}}</p>
+<p>{{name}}</p>
 {{else}}
-  <p class="empty">No content</p>
+<p class="empty">No content</p>
 {{/with}}
 ```
-
 
 #### The `lookup` helper
 
 The `lookup` helper allows for dynamic parameter resolution using handlebars variables.
 
 ```html
-{{#each bar}}
-  {{lookup ../foo @index}}
-{{/each}}
+{{#each bar}} {{lookup ../foo @index}} {{/each}}
 ```
-
 
 #### The `log` helper
 
@@ -652,7 +632,6 @@ The `log` helper allows for logging while rendering a template.
 
 Note that the handlebars.js `@level` variable is not supported.
 
-
 #### The `equal` helper
 
 The `equal` helper renders a block if the string version of both arguments are equals.
@@ -660,11 +639,10 @@ The `equal` helper renders a block if the string version of both arguments are e
 For example that template:
 
 ```html
-{{#equal foo "bar"}}foo is bar{{/equal}}
-{{#equal foo baz}}foo is the same as baz{{/equal}}
-{{#equal nb 0}}nothing{{/equal}}
-{{#equal nb 1}}there is one{{/equal}}
-{{#equal nb "1"}}everything is stringified before comparison{{/equal}}
+{{#equal foo "bar"}}foo is bar{{/equal}} {{#equal foo baz}}foo is the same as
+baz{{/equal}} {{#equal nb 0}}nothing{{/equal}} {{#equal nb 1}}there is
+one{{/equal}} {{#equal nb "1"}}everything is stringified before
+comparison{{/equal}}
 ```
 
 With that context:
@@ -680,18 +658,13 @@ ctx := map[string]interface{}{
 Outputs:
 
 ```html
-foo is bar
-foo is the same as baz
-
-there is one
-everything is stringified before comparison
+foo is bar foo is the same as baz there is one everything is stringified before
+comparison
 ```
-
 
 ### Block Helpers
 
 Block helpers make it possible to define custom iterators and other functionality that can invoke the passed block with a new context.
-
 
 #### Block Evaluation
 
@@ -700,9 +673,7 @@ As an example, let's define a block helper that adds some markup to the wrapped 
 ```html
 <div class="entry">
   <h1>{{title}}</h1>
-  <div class="body">
-    {{#bold}}{{body}}{{/bold}}
-  </div>
+  <div class="body">{{#bold}}{{body}}{{/bold}}</div>
 </div>
 ```
 
@@ -730,7 +701,6 @@ With that template:
 {{#avec obj.text}}{{this}}{{/avec}}
 ```
 
-
 #### Conditional
 
 Let's write a french version of `if` block helper:
@@ -756,7 +726,6 @@ ctx := map[string]interface{}{"yep": "message"}
 
 Here, `"message"` is converted to `true` because it is an non-empty string. See `IsTrue()` function for more informations on boolean conversion.
 
-
 #### Else Block Evaluation
 
 We can enhance the `si` block helper to evaluate the `else block` by calling `options.Inverse()` if conditional is false:
@@ -775,19 +744,17 @@ raymond.RegisterHelper("si", func(conditional bool, options *raymond.Options) st
 ```
 
 Outputs:
+
 ```
 NOP !
 ```
-
 
 #### Block Parameters
 
 It's possible to receive named parameters from supporting helpers.
 
 ```html
-{{#each users as |user userId|}}
-  Id: {{userId}} Name: {{user.name}}
-{{/each}}
+{{#each users as |user userId|}} Id: {{userId}} Name: {{user.name}} {{/each}}
 ```
 
 In this particular example, `user` will have the same value as the current context and `userId` will have the index/key value for the iteration.
@@ -797,11 +764,8 @@ This allows for nested helpers to avoid name conflicts.
 For example:
 
 ```html
-{{#each users as |user userId|}}
-  {{#each user.books as |book bookId|}}
-    User: {{userId}} Book: {{bookId}}
-  {{/each}}
-{{/each}}
+{{#each users as |user userId|}} {{#each user.books as |book bookId|}} User:
+{{userId}} Book: {{bookId}} {{/each}} {{/each}}
 ```
 
 With this context:
@@ -828,10 +792,8 @@ ctx := map[string]interface{}{
 Outputs:
 
 ```html
-  User: marcel Book: book1
-  User: marcel Book: book2
-  User: didier Book: bookA
-  User: didier Book: bookB
+User: marcel Book: book1 User: marcel Book: book2 User: didier Book: bookA User:
+didier Book: bookB
 ```
 
 As you can see, the second block parameter is the map key. When using structs, it is the struct field name.
@@ -862,12 +824,8 @@ ctx := map[string]interface{}{
 Outputs:
 
 ```html
-    User: 0 Book: 0
-    User: 0 Book: 1
-    User: 1 Book: 0
-    User: 1 Book: 1
+User: 0 Book: 0 User: 0 Book: 1 User: 1 Book: 0 User: 1 Book: 1
 ```
-
 
 ### Helper Parameters
 
@@ -888,7 +846,6 @@ raymond.RegisterHelper("add", func(val1, val2 int) string {
 ```
 
 Will simply panics, because we call the helper with one argument whereas it expects two.
-
 
 #### Automatic conversion
 
@@ -930,7 +887,6 @@ Actually, raymond perfoms automatic string conversion. So because the first para
 
 Note that this kind of automatic conversion is done with `bool` type too, thanks to the `IsTrue()` function.
 
-
 ### Options Argument
 
 If a helper needs the `Options` argument, just add it at the end of helper parameters:
@@ -944,7 +900,6 @@ raymond.RegisterHelper("add", func(val1, val2 int, options *raymond.Options) str
 Thanks to the `options` argument, helpers have access to the current evaluation context, to the `Hash` arguments, and they can manipulate the private data variables.
 
 The `Options` argument is even necessary for Block Helpers to evaluate block and "else block".
-
 
 #### Context Values
 
@@ -976,7 +931,6 @@ Marcel Beliveau FOREVER !
 
 Helpers can get the entire current context with `options.Ctx()` that returns an `interface{}`.
 
-
 #### Helper Hash Arguments
 
 Helpers access hash arguments with `options.HashProp()` and `options.HashStr()`.
@@ -1006,7 +960,6 @@ Marcel Beliveau FOREVER !
 ```
 
 Helpers can get the full hash with `options.Hash()` that returns a `map[string]interface{}`.
-
 
 #### Private Data
 
@@ -1039,11 +992,9 @@ raymond.RegisterHelper("voodoo", func(options *raymond.Options) string {
 
 Helpers that need to evaluate the block with a private data frame and a new context can call `options.FnCtxData()`.
 
-
 ### Utilites
 
 In addition to `Escape()`, raymond provides utility functions that can be usefull for helpers.
-
 
 #### `Str()`
 
@@ -1058,7 +1009,7 @@ raymond.Str(3) + " foos and " + raymond.Str(-1.25) + " bars"
 
 Numbers:
 
-``` go
+```go
 "everything is " + raymond.Str(true) + " and nothing is " + raymond.Str(false)
 // Outputs: "everything is true and nothing is false"
 ```
@@ -1077,23 +1028,21 @@ raymond.Str([]interface{}{true, 10, "foo", 5, "bar"})
 // Outputs: "true10foo5bar"
 ```
 
-
 #### `IsTrue()`
 
 `IsTrue()` returns the truthy version of its parameter.
 
 It returns `false` when parameter is either:
 
-  - an empty array
-  - an empty slice
-  - an empty map
-  - `""`
-  - `nil`
-  - `0`
-  - `false`
+- an empty array
+- an empty slice
+- an empty map
+- `""`
+- `nil`
+- `0`
+- `false`
 
 For all others values, `IsTrue()` returns `true`.
-
 
 ## Context Functions
 
@@ -1117,7 +1066,6 @@ ctx := map[string]interface{}{
 Randomly renders `I hate you` or `I love you`.
 
 Those context functions behave like helper functions: they can be called with parameters and they can have an `Options` argument.
-
 
 ## Partials
 
@@ -1158,7 +1106,6 @@ Output:
 <span>bar</span> and <span>bat</span>
 ```
 
-
 ### Global Partials
 
 You can registers global partials that will be accessible by all templates:
@@ -1183,7 +1130,6 @@ tpl := raymond.MustParse("{{> foo}} and {{> baz}}")
 result := tpl.MustExec(nil)
 fmt.Print(result)
 ```
-
 
 ### Dynamic Partials
 
@@ -1210,7 +1156,6 @@ ctx := map[string]interface{}{
 result := tpl.MustExec(ctx)
 fmt.Print(result)
 ```
-
 
 ### Partial Contexts
 
@@ -1239,7 +1184,6 @@ Displays:
 User: Jean Valjean
 ```
 
-
 ### Partial Parameters
 
 Custom data can be passed to partials through hash parameters.
@@ -1264,7 +1208,6 @@ Displays:
 My hero is Goldorak
 ```
 
-
 ## Utility Functions
 
 You can use following utility fuctions to parse and register partials from files:
@@ -1273,14 +1216,12 @@ You can use following utility fuctions to parse and register partials from files
 - `Template.RegisterPartialFile()` - reads a file and registers its content as a partial with given name
 - `Template.RegisterPartialFiles()` - reads several files and registers them as partials, the filename base is used as the partial name
 
-
 ## Mustache
 
 Handlebars is a superset of [mustache](https://mustache.github.io) but it differs on those points:
 
 - Alternative delimiters are not supported
 - There is no recursive lookup
-
 
 ## Limitations
 
@@ -1304,7 +1245,6 @@ These handlebars features are currently NOT implemented:
 - `@contextPath` - value set in `trackIds` mode that records the lookup path for the current context
 - `@level` - log level
 
-
 ## Handlebars Lexer
 
 You should not use the lexer directly, but for your information here is an example:
@@ -1315,7 +1255,7 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/lexer"
+    "github.com/helixerio/raymond/v2/lexer"
 )
 
 func main() {
@@ -1346,7 +1286,6 @@ Outputs:
 Content{"You know "} Open{"{{"} ID{"nothing"} Close{"}}"} Content{" John Snow"} EOF
 ```
 
-
 ## Handlebars Parser
 
 You should not use the parser directly, but for your information here is an example:
@@ -1357,8 +1296,8 @@ package main
 import (
     "fmt"
 
-    "github.com/aymerick/raymond/ast"
-    "github.com/aymerick/raymond/parser"
+    "github.com/helixerio/raymond/v2/ast"
+    "github.com/helixerio/raymond/v2/parser"
 )
 
 fu  nc main() {
@@ -1385,7 +1324,6 @@ CONTENT[ 'You know ' ]
 CONTENT[ ' John Snow' ]
 ```
 
-
 ## Test
 
 First, fetch mustache tests:
@@ -1408,14 +1346,12 @@ To test with race detection:
 
     $ go test -race ./...
 
-
 ## References
 
-  - <http://handlebarsjs.com/>
-  - <https://mustache.github.io/mustache.5.html>
-  - <https://github.com/golang/go/tree/master/src/text/template>
-  - <https://www.youtube.com/watch?v=HxaD_trXwRE>
-
+- <http://handlebarsjs.com/>
+- <https://mustache.github.io/mustache.5.html>
+- <https://github.com/golang/go/tree/master/src/text/template>
+- <https://www.youtube.com/watch?v=HxaD_trXwRE>
 
 ## Others Implementations
 
