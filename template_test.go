@@ -5,14 +5,14 @@ import (
 	"testing"
 )
 
-var sourceBasic = `<div class="entry">
+const sourceBasic = `<div class="entry">
   <h1>{{title}}</h1>
   <div class="body">
     {{body}}
   </div>
 </div>`
 
-var basicAST = `CONTENT[ '<div class="entry">
+const basicAST = `CONTENT[ '<div class="entry">
   <h1>' ]
 {{ PATH:title [] }}
 CONTENT[ '</h1>

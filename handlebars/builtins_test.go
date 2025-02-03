@@ -2,10 +2,9 @@ package handlebars
 
 import "testing"
 
-//
 // Those tests come from:
-//   https://github.com/wycats/handlebars.js/blob/master/spec/builtin.js
 //
+//	https://github.com/wycats/handlebars.js/blob/master/spec/builtin.js
 var builtinsTests = []Test{
 	{
 		"#if - if with boolean argument shows the contents when true",
@@ -115,7 +114,8 @@ var builtinsTests = []Test{
 		"{{#with person}}{{first}} {{last}}{{/with}}",
 		map[string]interface{}{
 			"person": func() map[string]string { return map[string]string{"first": "Alan", "last": "Johnson"} },
-		}, nil, nil, nil,
+		},
+		nil, nil, nil,
 		"Alan Johnson",
 	},
 	{

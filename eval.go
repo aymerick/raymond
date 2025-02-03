@@ -7,7 +7,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aymerick/raymond/ast"
+	"github.com/helixerio/raymond/v2/ast"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var (

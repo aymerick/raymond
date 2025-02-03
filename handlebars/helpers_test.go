@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aymerick/raymond"
+	"github.com/helixerio/raymond/v2"
 )
 
 //
@@ -94,10 +94,9 @@ func detectDataHelper(options *raymond.Options) string {
 	return ""
 }
 
-//
 // Those tests come from:
-//   https://github.com/wycats/handlebars.js/blob/master/spec/helper.js
 //
+//	https://github.com/wycats/handlebars.js/blob/master/spec/helper.js
 var helpersTests = []Test{
 	{
 		"helper with complex lookup",
@@ -275,7 +274,8 @@ var helpersTests = []Test{
 			"helper": func(param int) string { return "winning" },
 			"hash": map[string]interface{}{
 				"helper": func(param int) string { return "winning" },
-			}},
+			},
+		},
 		nil,
 		map[string]interface{}{"./helper": func(param int) string { return "fail" }},
 		nil,
@@ -288,7 +288,8 @@ var helpersTests = []Test{
 			"helper": func(param int) string { return "winning" },
 			"hash": map[string]interface{}{
 				"helper": func(param int) string { return "winning" },
-			}},
+			},
+		},
 		nil,
 		map[string]interface{}{"./helper": func(param int) string { return "fail" }},
 		nil,

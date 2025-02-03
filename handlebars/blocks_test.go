@@ -2,10 +2,9 @@ package handlebars
 
 import "testing"
 
-//
 // Those tests come from:
-//   https://github.com/wycats/handlebars.js/blob/master/spec/blocks.js
 //
+//	https://github.com/wycats/handlebars.js/blob/master/spec/blocks.js
 var blocksTests = []Test{
 	{
 		"array (1) - Arrays iterate over the contents when not empty",

@@ -30,13 +30,9 @@ type mustacheTestFile struct {
 	Tests    []mustacheTest
 }
 
-var (
-	rAltDelim = regexp.MustCompile(regexp.QuoteMeta("{{="))
-)
+var rAltDelim = regexp.MustCompile(regexp.QuoteMeta("{{="))
 
-var (
-	musTestLambdaInterMult = 0
-)
+var musTestLambdaInterMult = 0
 
 func TestMustache(t *testing.T) {
 	skipFiles := map[string]bool{

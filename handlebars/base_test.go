@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aymerick/raymond"
+	"github.com/helixerio/raymond/v2"
 )
 
 // cf. https://github.com/aymerick/go-fuzz-tests/raymond
@@ -34,7 +34,7 @@ func launchTests(t *testing.T, tests []Test) {
 
 		if dumpTpl {
 			filename := strconv.Itoa(dumpTplNb)
-			if err := ioutil.WriteFile(path.Join(".", "dump_tpl", filename), []byte(test.input), 0644); err != nil {
+			if err := ioutil.WriteFile(path.Join(".", "dump_tpl", filename), []byte(test.input), 0o644); err != nil {
 				panic(err)
 			}
 			dumpTplNb++

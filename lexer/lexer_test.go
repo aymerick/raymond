@@ -22,30 +22,32 @@ func tokBool(val string) Token    { return Token{TokenBoolean, val, 0, 1} }
 func tokError(val string) Token   { return Token{TokenError, val, 0, 1} }
 func tokComment(val string) Token { return Token{TokenComment, val, 0, 1} }
 
-var tokEOF = Token{TokenEOF, "", 0, 1}
-var tokEquals = Token{TokenEquals, "=", 0, 1}
-var tokData = Token{TokenData, "@", 0, 1}
-var tokOpen = Token{TokenOpen, "{{", 0, 1}
-var tokOpenAmp = Token{TokenOpen, "{{&", 0, 1}
-var tokOpenPartial = Token{TokenOpenPartial, "{{>", 0, 1}
-var tokClose = Token{TokenClose, "}}", 0, 1}
-var tokOpenStrip = Token{TokenOpen, "{{~", 0, 1}
-var tokCloseStrip = Token{TokenClose, "~}}", 0, 1}
-var tokOpenUnescaped = Token{TokenOpenUnescaped, "{{{", 0, 1}
-var tokCloseUnescaped = Token{TokenCloseUnescaped, "}}}", 0, 1}
-var tokOpenUnescapedStrip = Token{TokenOpenUnescaped, "{{~{", 0, 1}
-var tokCloseUnescapedStrip = Token{TokenCloseUnescaped, "}~}}", 0, 1}
-var tokOpenBlock = Token{TokenOpenBlock, "{{#", 0, 1}
-var tokOpenEndBlock = Token{TokenOpenEndBlock, "{{/", 0, 1}
-var tokOpenInverse = Token{TokenOpenInverse, "{{^", 0, 1}
-var tokOpenInverseChain = Token{TokenOpenInverseChain, "{{else", 0, 1}
-var tokOpenSexpr = Token{TokenOpenSexpr, "(", 0, 1}
-var tokCloseSexpr = Token{TokenCloseSexpr, ")", 0, 1}
-var tokOpenBlockParams = Token{TokenOpenBlockParams, "as |", 0, 1}
-var tokCloseBlockParams = Token{TokenCloseBlockParams, "|", 0, 1}
-var tokOpenRawBlock = Token{TokenOpenRawBlock, "{{{{", 0, 1}
-var tokCloseRawBlock = Token{TokenCloseRawBlock, "}}}}", 0, 1}
-var tokOpenEndRawBlock = Token{TokenOpenEndRawBlock, "{{{{/", 0, 1}
+var (
+	tokEOF                 = Token{TokenEOF, "", 0, 1}
+	tokEquals              = Token{TokenEquals, "=", 0, 1}
+	tokData                = Token{TokenData, "@", 0, 1}
+	tokOpen                = Token{TokenOpen, "{{", 0, 1}
+	tokOpenAmp             = Token{TokenOpen, "{{&", 0, 1}
+	tokOpenPartial         = Token{TokenOpenPartial, "{{>", 0, 1}
+	tokClose               = Token{TokenClose, "}}", 0, 1}
+	tokOpenStrip           = Token{TokenOpen, "{{~", 0, 1}
+	tokCloseStrip          = Token{TokenClose, "~}}", 0, 1}
+	tokOpenUnescaped       = Token{TokenOpenUnescaped, "{{{", 0, 1}
+	tokCloseUnescaped      = Token{TokenCloseUnescaped, "}}}", 0, 1}
+	tokOpenUnescapedStrip  = Token{TokenOpenUnescaped, "{{~{", 0, 1}
+	tokCloseUnescapedStrip = Token{TokenCloseUnescaped, "}~}}", 0, 1}
+	tokOpenBlock           = Token{TokenOpenBlock, "{{#", 0, 1}
+	tokOpenEndBlock        = Token{TokenOpenEndBlock, "{{/", 0, 1}
+	tokOpenInverse         = Token{TokenOpenInverse, "{{^", 0, 1}
+	tokOpenInverseChain    = Token{TokenOpenInverseChain, "{{else", 0, 1}
+	tokOpenSexpr           = Token{TokenOpenSexpr, "(", 0, 1}
+	tokCloseSexpr          = Token{TokenCloseSexpr, ")", 0, 1}
+	tokOpenBlockParams     = Token{TokenOpenBlockParams, "as |", 0, 1}
+	tokCloseBlockParams    = Token{TokenCloseBlockParams, "|", 0, 1}
+	tokOpenRawBlock        = Token{TokenOpenRawBlock, "{{{{", 0, 1}
+	tokCloseRawBlock       = Token{TokenCloseRawBlock, "}}}}", 0, 1}
+	tokOpenEndRawBlock     = Token{TokenOpenEndRawBlock, "{{{{/", 0, 1}
+)
 
 var lexTests = []lexTest{
 	{"empty", "", []Token{tokEOF}},

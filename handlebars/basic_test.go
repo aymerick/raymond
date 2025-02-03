@@ -5,13 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/aymerick/raymond"
+	"github.com/helixerio/raymond/v2"
 )
 
-//
 // Those tests come from:
-//   https://github.com/wycats/handlebars.js/blob/master/spec/basic.js
 //
+//	https://github.com/wycats/handlebars.js/blob/master/spec/basic.js
 var basicTests = []Test{
 	{
 		"most basic",

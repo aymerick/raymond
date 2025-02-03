@@ -155,7 +155,7 @@ func TestEvalStruct(t *testing.T) {
 		Person{"Jean", "Valjean"},
 		"Life is difficult",
 		[]Comment{
-			Comment{
+			{
 				Person{"Marcel", "Beliveau"},
 				"LOL!",
 			},
@@ -225,8 +225,7 @@ func TestEvalStructTag(t *testing.T) {
 	}
 }
 
-type TestFoo struct {
-}
+type TestFoo struct{}
 
 func (t *TestFoo) Subject() string {
 	return "foo"
@@ -246,8 +245,7 @@ func TestEvalMethod(t *testing.T) {
 	}
 }
 
-type TestBar struct {
-}
+type TestBar struct{}
 
 func (t *TestBar) Subject() interface{} {
 	return testBar
